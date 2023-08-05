@@ -1,0 +1,525 @@
+<svg host="65bd71144e" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="961px" height="902px" viewBox="-0.5 -0.5 961 902" content="&lt;mxfile&gt;&lt;diagram id=&quot;OLvUTpPHkAv0SEb8iX4a&quot; name=&quot;Page-1&quot;&gt;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&lt;/diagram&gt;&lt;/mxfile&gt;">
+    <defs/>
+    <g>
+        <path d="M 0 23 L 0 0 L 384 0 L 384 23" fill="none" stroke="none" pointer-events="all"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 382px; height: 1px; padding-top: 12px; margin-left: 1px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; font-weight: bold; white-space: normal; overflow-wrap: normal;">
+                                Fill Attribute TeTree and Topology Graph
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="192" y="15" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle" font-weight="bold">
+                    Fill Attribute TeTree and Topology Graph
+                </text>
+            </switch>
+        </g>
+        <path d="M 10 33 L 90 33 L 110 61.5 L 90 90 L 10 90 L 30 61.5 Z" fill="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 98px; height: 1px; padding-top: 62px; margin-left: 11px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                User
+                                <br/>
+                                aquires
+                                <br/>
+                                GenZone
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="60" y="65" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    User...
+                </text>
+            </switch>
+        </g>
+        <path d="M 98 33 L 178 33 L 198 61.5 L 178 90 L 98 90 L 118 61.5 Z" fill="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 98px; height: 1px; padding-top: 62px; margin-left: 99px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                3d array
+                                <br/>
+                                GenZone
+                                <br/>
+                                is filled
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="148" y="65" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    3d array...
+                </text>
+            </switch>
+        </g>
+        <path d="M 186 33 L 266 33 L 286 61.5 L 266 90 L 186 90 L 206 61.5 Z" fill="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 98px; height: 1px; padding-top: 62px; margin-left: 187px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                .complete();
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="236" y="65" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    .complete();
+                </text>
+            </switch>
+        </g>
+        <path d="M 274 33 L 354 33 L 374 61.5 L 354 90 L 274 90 L 294 61.5 Z" fill="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 98px; height: 1px; padding-top: 62px; margin-left: 275px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                checking
+                                <br/>
+                                in
+                                <br/>
+                                cache
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="324" y="65" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    checking...
+                </text>
+            </switch>
+        </g>
+        <path d="M 195.02 125.37 L 232.19 96.26" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 236.32 93.03 L 232.97 100.1 L 232.19 96.26 L 228.65 94.59 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 105 140 C 69 140 60 160 88.8 164 C 60 172.8 92.4 192 115.8 184 C 132 200 186 200 204 184 C 240 184 240 168 217.5 160 C 240 144 204 128 172.5 136 C 150 124 114 124 105 140 Z" fill="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 178px; height: 1px; padding-top: 160px; margin-left: 61px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                After this Zone cannot be changed
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="150" y="164" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    After this Zone cannot be chan...
+                </text>
+            </switch>
+        </g>
+        <path d="M 293.37 195.73 L 244.9 235.93" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 240.86 239.29 L 244.01 232.12 L 244.9 235.93 L 248.48 237.51 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <ellipse cx="324" cy="170" rx="40" ry="40" fill="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" pointer-events="none"/>
+        <path d="M 324 130 L 324 210" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 78px; height: 1px; padding-top: 170px; margin-left: 285px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                yes      no
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="324" y="174" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    yes      no
+                </text>
+            </switch>
+        </g>
+        <path d="M 324 90 L 324 123.63" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 324 128.88 L 320.5 121.88 L 324 123.63 L 327.5 121.88 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 240 300 L 240 313.63" fill="none" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <path d="M 240 318.88 L 236.5 311.88 L 240 313.63 L 243.5 311.88 Z" fill="rgb(0, 0, 0)" stroke="rgb(0, 0, 0)" stroke-miterlimit="10" pointer-events="none"/>
+        <rect x="180" y="240" width="120" height="60" rx="9" ry="9" fill="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 270px; margin-left: 181px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                Assigning node id to node
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="240" y="274" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    Assigning node id to...
+                </text>
+            </switch>
+        </g>
+        <rect x="180" y="320" width="120" height="60" rx="9" ry="9" fill="rgb(255, 255, 255)" stroke="rgb(0, 0, 0)" pointer-events="none"/>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe center; justify-content: unsafe center; width: 118px; height: 1px; padding-top: 350px; margin-left: 181px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: center;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                Saying tetree to register attribute
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="240" y="354" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px" text-anchor="middle">
+                    Saying tetree to reg...
+                </text>
+            </switch>
+        </g>
+        <g transform="translate(-0.5 -0.5)">
+            <switch>
+                <foreignObject pointer-events="none" width="100%" height="100%" requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility" style="overflow: visible; text-align: left;">
+                    <div xmlns="http://www.w3.org/1999/xhtml" style="display: flex; align-items: unsafe flex-start; justify-content: unsafe flex-start; width: 592px; height: 1px; padding-top: 140px; margin-left: 365px;">
+                        <div data-drawio-colors="color: rgb(0, 0, 0); " style="box-sizing: border-box; font-size: 0px; text-align: left; max-height: 760px; overflow: hidden;">
+                            <div style="display: inline-block; font-size: 12px; font-family: Helvetica; color: rgb(0, 0, 0); line-height: 1.2; pointer-events: none; white-space: normal; overflow-wrap: normal;">
+                                <h1>
+                                    Pseudocode
+                                </h1>
+                                <div>
+                                    <div style="color: rgb(92, 106, 114); background-color: rgb(253, 246, 227); font-family: &quot;Droid Sans Mono&quot;, &quot;monospace&quot;, monospace; font-size: 18px; line-height: 24px;">
+                                        <div>
+                                            <span style="color: #f85552;">
+                                                fn
+                                            </span>
+                                            <span style="color: #8da101;">
+                                                gen
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span style="color: #f85552;">
+                                                let
+                                            </span>
+                                            zone
+                                            <span style="color: #f57d26;">
+                                                :
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                &amp;
+                                            </span>
+                                            <span style="color: #f85552;">
+                                                mut
+                                            </span>
+                                            <span style="color: #3a94c5;">
+                                                GenZone
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                =
+                                            </span>
+                                            venx
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            <span style="color: #8da101;">
+                                                acq
+                                            </span>
+                                            (
+                                            <span style="color: #df69ba;">
+                                                1
+                                            </span>
+                                            ,
+                                            <span style="color: #df69ba;">
+                                                1
+                                            </span>
+                                            ,
+                                            <span style="color: #df69ba;">
+                                                1
+                                            </span>
+                                            )
+                                        </div>
+                                        <div>
+                                            zone[
+                                            <span style="color: #df69ba;">
+                                                1
+                                            </span>
+                                            ][
+                                            <span style="color: #df69ba;">
+                                                9
+                                            </span>
+                                            ][
+                                            <span style="color: #df69ba;">
+                                                1
+                                            </span>
+                                            ]
+                                            <span style="color: #f57d26;">
+                                                =
+                                            </span>
+                                            <span style="color: #3a94c5;">
+                                                Grass
+                                            </span>
+                                            ;
+                                        </div>
+                                        <div>
+                                            venx
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            <span style="color: #8da101;">
+                                                complete
+                                            </span>
+                                            (zone);
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            &gt;
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            <span style="color: #f85552;">
+                                                fn
+                                            </span>
+                                            <span style="color: #8da101;">
+                                            </span>
+                                            <span style="color: #8da101;">
+                                                complete
+                                            </span>
+                                            (
+                                            <span style="color: #f57d26;">
+                                                &amp;
+                                            </span>
+                                            <span style="color: #f85552;">
+                                                mut
+                                            </span>
+                                            <span style="color: #8da101;">
+                                            </span>
+                                            <span style="color: #df69ba;">
+                                                self
+                                            </span>
+                                            ,
+                                            <span style="color: #8da101;">
+                                            </span>
+                                            zone
+                                            <span style="color: #f57d26;">
+                                                :
+                                            </span>
+                                            <span style="color: #8da101;">
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                &amp;
+                                            </span>
+                                            <span style="color: #f85552;">
+                                                mut
+                                            </span>
+                                            <span style="color: #8da101;">
+                                            </span>
+                                            <span style="color: #3a94c5;">
+                                                GenZone
+                                            </span>
+                                            ){
+                                        </div>
+                                        <div>
+                                            <span style="color: #f85552;">
+                                                for
+                                            </span>
+                                            i
+                                            <span style="color: #f85552;">
+                                                in
+                                            </span>
+                                            zone
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            size
+                                            <span style="color: #f57d26;">
+                                                ..
+                                            </span>
+                                            <span style="color: #df69ba;">
+                                                2
+                                            </span>
+                                            {
+                                        </div>
+                                        <div>
+                                            <span style="color: #f85552;">
+                                                let
+                                            </span>
+                                            slice
+                                            <span style="color: #f57d26;">
+                                                =
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                ..
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span style="color: #f85552;">
+                                                if
+                                            </span>
+                                            <span style="color: #f85552;">
+                                                let
+                                            </span>
+                                            Some(id)
+                                            <span style="color: #f57d26;">
+                                                =
+                                            </span>
+                                            <span style="color: #df69ba;">
+                                                self
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            cache
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            <span style="color: #8da101;">
+                                                get
+                                            </span>
+                                            (slice){
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            <span style="color: #f85552;">
+                                                let
+                                            </span>
+                                            parent
+                                            <span style="color: #f57d26;">
+                                                =
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                ..
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            <span style="color: #f57d26;">
+                                                ..
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            <span style="color: #939f91;font-style: italic;">
+                                            </span>
+                                            <span style="color: #939f91;font-style: italic;">
+                                                // fill to zone level
+                                            </span>
+                                        </div>
+                                        <br/>
+                                        <br/>
+                                        <div>
+                                            parent
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            <span style="color: #8da101;">
+                                                add_child
+                                            </span>
+                                            (
+                                            <span style="color: #f57d26;">
+                                                ..
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            )
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            <span style="color: #df69ba;">
+                                                self
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            attributes
+                                            <span style="color: #f57d26;">
+                                                .
+                                            </span>
+                                            <span style="color: #8da101;">
+                                                insert
+                                            </span>
+                                            (slice);
+                                        </div>
+                                        <div>
+                                            }
+                                        </div>
+                                        <div>
+                                            }
+                                        </div>
+                                        <div>
+                                            }
+                                        </div>
+                                        <br/>
+                                        <div>
+                                            <span style="color: #f85552;">
+                                                fn
+                                            </span>
+                                            <span style="color: #8da101;">
+                                            </span>
+                                            <span style="color: #8da101;">
+                                                insert
+                                            </span>
+                                            (slice
+                                            <span style="color: #f57d26;">
+                                                :
+                                            </span>
+                                            <span style="color: #8da101;">
+                                            </span>
+                                            <span style="color: #f57d26;">
+                                                &amp;
+                                            </span>
+                                            [
+                                            <span style="color: #f57d26;">
+                                                &amp;
+                                            </span>
+                                            [
+                                            <span style="color: #f57d26;">
+                                                &amp;
+                                            </span>
+                                            [
+                                            <span style="color: #3a94c5;">
+                                                Block
+                                            </span>
+                                            ]]]){
+                                        </div>
+                                        <div>
+                                            <span style="color: #939f91;font-style: italic;">
+                                            </span>
+                                            <span style="color: #939f91;font-style: italic;">
+                                                // somehow translate this slice to array of colors
+                                            </span>
+                                        </div>
+                                        <div>
+                                            <span style="color: #939f91;font-style: italic;">
+                                            </span>
+                                            <span style="color: #939f91;font-style: italic;">
+                                                //
+                                            </span>
+                                        </div>
+                                        <div>
+                                            }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </foreignObject>
+                <text x="365" y="152" fill="rgb(0, 0, 0)" font-family="Helvetica" font-size="12px">
+                    Pseudocode...
+                </text>
+            </switch>
+        </g>
+    </g>
+    <switch>
+        <g requiredFeatures="http://www.w3.org/TR/SVG11/feature#Extensibility"/>
+        <a transform="translate(0,-5)" xlink:href="https://www.diagrams.net/doc/faq/svg-export-text-problems" target="_blank">
+            <text text-anchor="middle" font-size="10px" x="50%" y="100%">
+                Text is not SVG - cannot display
+            </text>
+        </a>
+    </switch>
+</svg>
