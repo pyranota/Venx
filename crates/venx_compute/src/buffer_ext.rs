@@ -1,7 +1,6 @@
-use anyhow::Result;
 use async_trait::async_trait;
 use bytemuck::{Pod, Zeroable};
-use wgpu::{Buffer, BufferView, BufferViewMut};
+use wgpu::{Buffer, BufferViewMut};
 
 #[async_trait]
 pub trait BufferRW {
@@ -46,7 +45,7 @@ impl BufferRW for Buffer {
         // Awaits until `buffer_future` can be read from
         //let res = receiver.receive().await;
         if let Some(Ok(())) = receiver.receive().await {
-            let mut data = buffer_slice.get_mapped_range_mut();
+            let data = buffer_slice.get_mapped_range_mut();
 
             return data;
         }

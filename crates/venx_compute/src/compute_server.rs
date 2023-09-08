@@ -1,8 +1,6 @@
 use std::{sync::Arc, thread::JoinHandle};
 
-use wgpu::{hal::empty::Encoder, util::DeviceExt, *};
-
-use crate::buffer_ext::BufferRW;
+use wgpu::{util::DeviceExt, *};
 
 pub struct ComputeServer {
     pub instance: Instance,
@@ -39,7 +37,7 @@ impl ComputeServer {
 
         let device = Arc::new(device);
 
-        let info = adapter.get_info();
+        let _info = adapter.get_info();
         // skip this on LavaPipe temporarily
 
         let new_device = device.clone();

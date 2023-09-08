@@ -1,11 +1,11 @@
-use pollster::FutureExt;
+#[allow(unused_imports)]
+use crate::{buffer_ext::BufferRW, compute_server::ComputeServer, pipeline::PipelineBuilder};
+#[allow(unused_imports)]
 use wgpu::{
-    hal::CommandEncoder, include_wgsl, BindGroup, BindGroupDescriptor, BindGroupEntry,
-    BindGroupLayout, BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingResource, BindingType,
+    include_wgsl, BindGroup, BindGroupDescriptor, BindGroupEntry, BindGroupLayout,
+    BindGroupLayoutDescriptor, BindGroupLayoutEntry, BindingResource, BindingType,
     BufferBindingType, ComputePass, ShaderStages,
 };
-
-use crate::{buffer_ext::BufferRW, compute_server::ComputeServer, pipeline::PipelineBuilder};
 
 pub struct BindGroupVenx {
     pub bindgroup: BindGroup,
@@ -117,7 +117,7 @@ fn buffer_resize() {
 
         let output_buffer = cs.new_staging_buffer(4 * 5, false);
 
-        let bg = BindGroupBuilder::new()
+        let _bg = BindGroupBuilder::new()
             .insert(0, false, list_buffer.as_entire_binding())
             .build(&cs);
 

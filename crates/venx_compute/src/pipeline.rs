@@ -1,4 +1,4 @@
-use wgpu::{BindGroupLayout, ComputePipeline, PushConstantRange, ShaderModule};
+use wgpu::{BindGroupLayout, ComputePipeline, ShaderModule};
 
 use crate::{bindgroup::BindGroupVenx, compute_server::ComputeServer};
 
@@ -7,7 +7,6 @@ pub struct PipelineBuilder<'a> {
     module: &'a ShaderModule,
     label: Option<&'a str>,
     bind_group_layouts: Vec<&'a BindGroupLayout>,
-    push_constant_ranges: Vec<&'a PushConstantRange>,
 }
 
 impl<'a> PipelineBuilder<'a> {
@@ -17,7 +16,6 @@ impl<'a> PipelineBuilder<'a> {
             module,
             label: None,
             bind_group_layouts: vec![],
-            push_constant_ranges: vec![],
         }
     }
 
