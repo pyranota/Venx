@@ -1,5 +1,6 @@
 use std::{sync::Arc, thread::JoinHandle};
 
+use naga_oil::compose::Composer;
 use wgpu::{util::DeviceExt, *};
 
 pub struct ComputeServer {
@@ -8,6 +9,7 @@ pub struct ComputeServer {
     pub device: Arc<Device>,
     pub queue: Queue,
     pub join_handle: JoinHandle<()>,
+    pub composer: Composer,
 }
 
 impl ComputeServer {
@@ -46,12 +48,15 @@ impl ComputeServer {
             new_device.poll(wgpu::Maintain::Poll);
         });
 
+        let composer = Composer::default();
+
         ComputeServer {
             instance,
             adapter,
             device,
             queue,
             join_handle: handle,
+            composer,
         }
     }
 
@@ -92,14 +97,6 @@ impl ComputeServer {
             usage: map_flag,
             mapped_at_creation: false,
         })
-    }
-
-    pub fn new_module(&self, smd: ShaderModuleDescriptor) -> ShaderModule {
-        self.device
-            .create_shader_module(wgpu::ShaderModuleDescriptor {
-                label: None,
-                source: smd.source,
-            })
     }
 
     pub async fn eval<'a, R, F>(&self, mut closure: F)
