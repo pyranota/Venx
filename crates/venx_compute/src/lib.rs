@@ -10,3 +10,4 @@ pub use bindgroup::{BindGroupBuilder, BindGroupVenx};
 pub use builders::BufferBuilder;
 pub use compute_server::ComputeServer;
 pub use pipeline::PipelineBuilder;
+pub use wgpu::*;
