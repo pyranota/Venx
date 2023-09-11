@@ -1,8 +1,7 @@
 use anyhow::bail;
 
-use naga_oil::compose::{
-    ComposableModuleDescriptor, NagaModuleDescriptor, ShaderDefValue, ShaderLanguage,
-};
+use naga::Module;
+use naga_oil::compose::{ComposableModuleDescriptor, NagaModuleDescriptor, ShaderLanguage};
 use wgpu::{ShaderModule, ShaderSource};
 
 use crate::ComputeServer;
