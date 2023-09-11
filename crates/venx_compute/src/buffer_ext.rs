@@ -4,18 +4,38 @@ use wgpu::{Buffer, BufferViewMut};
 
 #[async_trait]
 pub trait BufferRW {
-    async fn read<T: Pod + Zeroable>(&self) -> Vec<T>;
+    /// Needs unmap manually
+    async fn read_manual<T: Pod + Zeroable>(&self) -> Vec<T>;
 
-    async fn write(&self) -> BufferViewMut<'async_trait>;
+    /// Safe way to write buffer
+    async fn write<T: Pod + Zeroable, F: FnOnce(&mut [T]) + Send + Sync>(&self, f: F);
 
-    // async fn read_range() -> BufferView<'async_trait>;
+    /// Safe way to write buffer
+    async fn read<T: Pod + Zeroable, F: FnOnce(Vec<T>) + Send + Sync>(&self, f: F);
 
-    // async fn write_range() -> BufferViewMut<'async_trait>;
+    /// Needs unmap manually
+    async fn write_manual(&self) -> BufferViewMut<'async_trait>;
 }
 
 #[async_trait]
 impl BufferRW for Buffer {
-    async fn read<T: Pod + Zeroable>(&self) -> Vec<T> {
+    async fn write<T: Pod + Zeroable, F: FnOnce(&mut [T]) + Send + Sync>(&self, f: F) {
+        let mut data = self.write_manual().await;
+
+        let a: &mut [T] = bytemuck::cast_slice_mut(data.as_mut());
+
+        f(a);
+
+        self.unmap();
+    }
+
+    async fn read<T: Pod + Zeroable, F: FnOnce(Vec<T>) + Send + Sync>(&self, f: F) {
+        let data: Vec<T> = self.read_manual().await;
+        f(data);
+        self.unmap();
+    }
+
+    async fn read_manual<T: Pod + Zeroable>(&self) -> Vec<T> {
         // Note that we're not calling `.await` here.
         let buffer_slice = self.slice(..);
 
@@ -34,7 +54,7 @@ impl BufferRW for Buffer {
         todo!()
     }
 
-    async fn write(&self) -> BufferViewMut<'async_trait> {
+    async fn write_manual(&self) -> BufferViewMut<'async_trait> {
         // Note that we're not calling `.await` here.
         let buffer_slice: wgpu::BufferSlice<'_> = self.slice(..);
 
