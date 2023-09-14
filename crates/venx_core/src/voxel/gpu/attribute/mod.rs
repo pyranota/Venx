@@ -1,3 +1,2 @@
 mod loader;
-
-pub struct GpuTeTreeStorage {}
+pub(crate) mod storage;
