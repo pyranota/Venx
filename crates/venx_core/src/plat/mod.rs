@@ -1,4 +1,4 @@
-use crate::{chunks::storage::ChunksStorage, controller::Controller};
+use crate::{chunk::storage::ChunksStorage, controller::Controller};
 
 pub struct Plat {
     controller: Controller,
