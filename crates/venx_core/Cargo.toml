@@ -16,7 +16,7 @@ bytemuck = "1.14.0"
 bytemuck_derive = "1.5.0"
 async-trait = "0.1.73"
 bytes-cast = "0.3.0"
-bevy = "0.11.2"
+bevy = { version = "0.11.2", features = ["dynamic_linking"] }
 
 [features]
 default = ["gpu"]
