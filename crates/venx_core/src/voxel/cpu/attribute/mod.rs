@@ -1,2 +1,2 @@
-mod logic;
-mod tetree;
+pub mod logic;
+pub mod tetree;
