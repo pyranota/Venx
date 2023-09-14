@@ -3,11 +3,20 @@ name = "venx_core"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "temp_bevy"
+path = "bin/temp_bevy.rs"
+
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
 venx_compute = { path = "../venx_compute"}
 glam = "*"
+bytemuck = "1.14.0"
+bytemuck_derive = "1.5.0"
+async-trait = "0.1.73"
+bytes-cast = "0.3.0"
+bevy = "0.11.2"
 
 [features]
 default = ["gpu"]
