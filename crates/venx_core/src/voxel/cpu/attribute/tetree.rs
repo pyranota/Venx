@@ -1,13 +1,24 @@
+use bytemuck::Pod;
+use bytemuck_derive::{Pod, Zeroable};
+use bytes_cast::{unaligned, BytesCast};
 use std::mem::ManuallyDrop;
 
+#[repr(C)]
+#[derive(Clone)]
 pub struct TeTree {
     nodes: Vec<TNode>,
 }
+
+// impl BytesCast for TeTree {}
+#[repr(C)]
+#[derive(Clone, Copy)]
 union TNode {
     leaf: ManuallyDrop<TLeaf>,
     branch: ManuallyDrop<TBranch>,
 }
-#[derive(Debug)]
+unsafe impl BytesCast for TNode {}
+
+#[derive(Debug, Clone, Copy)]
 struct TLeaf {
     count: u32,
     indicator: i32,
@@ -15,54 +26,86 @@ struct TLeaf {
     state: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 struct TBranch {
     count: u32,
     children: [i32; 3],
 }
 
 impl TNode {
-    pub(crate) fn new_leaf() -> Self {
-        todo!()
+    pub(crate) fn new_leaf(count: u32, block_id: i32, block_state: i32) -> Self {
+        TNode {
+            leaf: ManuallyDrop::new(TLeaf {
+                count,
+                indicator: -1,
+                block_id,
+                state: block_state,
+            }),
+        }
     }
     pub(crate) fn is_leaf(&self) -> bool {
-        todo!()
+        if unsafe { self.leaf.indicator == -1 } {
+            return true;
+        }
+        false
     }
     pub(crate) fn get_leaf(&self) -> Option<&TLeaf> {
-        todo!()
+        return if self.is_leaf() {
+            let leaf = unsafe { &*self.leaf };
+            Some(leaf)
+        } else {
+            None
+        };
     }
     pub(crate) fn get_leaf_mut(&mut self) -> Option<&mut TLeaf> {
-        todo!()
+        return if self.is_leaf() {
+            let leaf = unsafe { &mut *self.leaf };
+            Some(leaf)
+        } else {
+            None
+        };
     }
-    pub(crate) fn new_branch() -> Self {
-        todo!()
+    pub(crate) fn new_branch(count: u32) -> Self {
+        TNode {
+            branch: ManuallyDrop::new(TBranch {
+                count,
+                children: [0; 3],
+            }),
+        }
+    }
+    pub(crate) fn set_child(&mut self, inner_idx: usize, child_idx: u32) {
+        if let Some(branch) = self.get_branch_mut() {
+            branch.children[inner_idx] = child_idx as i32;
+        }
     }
     pub(crate) fn is_branch(&self) -> bool {
-        todo!()
+        !self.is_leaf()
     }
     pub(crate) fn get_branch(&self) -> Option<&TBranch> {
-        todo!()
+        return if self.is_branch() {
+            let branch = unsafe { &*self.branch };
+            Some(branch)
+        } else {
+            None
+        };
     }
     pub(crate) fn get_branch_mut(&mut self) -> Option<&mut TBranch> {
-        todo!()
+        return if self.is_branch() {
+            let branch = unsafe { &mut *self.branch };
+            Some(branch)
+        } else {
+            None
+        };
     }
 }
 
 #[test]
 fn test_tree() {
-    let node = TNode {
-        leaf: ManuallyDrop::new(TLeaf {
-            count: 45,
-            indicator: -1,
-            block_id: 11,
-            state: 32,
-        }),
-    };
-
-    unsafe {
-        dbg!(&node.branch);
-        dbg!(&node.leaf);
-    }
-
-    if let Some(leaf) = node.get_leaf() {}
+    // Testing branch
+    let mut branch = TNode::new_branch(144);
+    assert_eq!(branch.is_branch(), true);
+    assert_eq!(branch.is_leaf(), false);
+    dbg!(branch.get_branch());
+    branch.set_child(1, 44);
+    dbg!(branch.get_branch());
 }
