@@ -1,2 +1,2 @@
-mod graph;
-mod logic;
+pub mod graph;
+pub mod logic;
