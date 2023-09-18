@@ -1,6 +1,6 @@
 // mod topology;
-mod chunk;
-mod controller;
-mod plat;
+pub mod chunk;
+pub mod controller;
+pub mod plat;
 pub mod shared;
-mod voxel;
+pub mod voxel;
