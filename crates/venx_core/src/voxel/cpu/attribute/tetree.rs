@@ -1,25 +1,24 @@
 use bytemuck::Pod;
-use bytemuck_derive::{Pod, Zeroable};
 use bytes_cast::{unaligned, BytesCast};
 use std::mem::ManuallyDrop;
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct TeTree {
-    nodes: Vec<TNode>,
+pub(crate) struct TeTree {
+    pub(crate) nodes: Vec<TNode>,
 }
 
 // impl BytesCast for TeTree {}
 #[repr(C)]
 #[derive(Clone, Copy)]
-union TNode {
+pub(crate) union TNode {
     leaf: ManuallyDrop<TLeaf>,
     branch: ManuallyDrop<TBranch>,
 }
 unsafe impl BytesCast for TNode {}
 
 #[derive(Debug, Clone, Copy)]
-struct TLeaf {
+pub(crate) struct TLeaf {
     count: u32,
     indicator: i32,
     block_id: i32,
@@ -27,7 +26,7 @@ struct TLeaf {
 }
 
 #[derive(Debug, Clone, Copy)]
-struct TBranch {
+pub(crate) struct TBranch {
     count: u32,
     children: [i32; 3],
 }
