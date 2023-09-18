@@ -4,8 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [[bin]]
-name = "temp_bevy"
-path = "bin/temp_bevy.rs"
+name = "bevy"
+path = "bin/temp_bevy_integration/example.rs"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -17,7 +17,9 @@ bytemuck_derive = "1.5.0"
 async-trait = "0.1.73"
 bytes-cast = "0.3.0"
 bevy = { version = "0.11.2", features = ["dynamic_linking"] }
+bevy_panorbit_camera = "0.8.0"
 
 [features]
 default = ["gpu"]
 gpu = []
+bevy_ecs = []
