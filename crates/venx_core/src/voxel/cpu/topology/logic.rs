@@ -1,6 +1,18 @@
-use super::graph::Graph;
+use super::graph::{GBranch, GNode, Graph};
 
 impl Graph {
+    pub fn new(depth: u8) -> Self {
+        Graph {
+            head_holder_idx: 0,
+            segment_level: 5,
+            compression_level: 11,
+            depth: depth as i32,
+            nodes: vec![
+                GNode::new_branch_from(GBranch::new(depth)), // Root
+                GNode::new_branch_from(GBranch::new(0)),     // Leaf
+            ],
+        }
+    }
     // pub async fn load_chunks_cpu<'a>(level: u8, positions: &'a [UVec3]) -> Vec<(Chunk, MeshSize)> {
     //     todo!()
     // }
@@ -14,4 +26,18 @@ impl Graph {
     // pub async fn complete_segment_cpu(&mut self, segment: Vec<Vec<Vec<u32>>>, position: UVec3) {
     //     todo!()
     // }
+
+    // In future should use unused nodes
+    pub fn add_branch(&mut self, branch: GBranch) -> usize {
+        let node = GNode::new_branch_from(branch);
+        self.nodes.push(node);
+        self.nodes.len() - 1
+    }
+    pub fn depth(&self) -> u8 {
+        self.depth as u8
+    }
+
+    pub fn size(&self) -> u32 {
+        1 << (self.depth())
+    }
 }
