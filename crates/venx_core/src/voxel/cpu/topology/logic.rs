@@ -6,7 +6,7 @@ impl Graph {
             head_holder_idx: 0,
             segment_level: 5,
             compression_level: 11,
-            depth: depth as i32,
+            depth: depth as u32,
             nodes: vec![
                 GNode::new_branch_from(GBranch::new(depth)), // Root
                 GNode::new_branch_from(GBranch::new(0)),     // Leaf
