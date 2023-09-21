@@ -6,7 +6,7 @@ pub struct Graph {
     pub(crate) head_holder_idx: usize,
     pub(crate) segment_level: u32,
     pub(crate) compression_level: u32,
-    pub(crate) depth: i32,
+    pub(crate) depth: u32,
     pub(crate) nodes: Vec<GNode>,
 }
 
