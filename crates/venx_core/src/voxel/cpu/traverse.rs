@@ -5,6 +5,7 @@ use crate::voxel::cpu::topology::graph::Graph;
 use super::{topology::graph::GBranch, voxel::Voxel};
 
 impl Voxel {
+    // todo: Move to graph class
     /// Traversing each node and calling given closure with args: Node, Index, Position
     pub fn traverse<F>(&self, mut f: F)
     where
@@ -64,7 +65,7 @@ impl Voxel {
 
 #[test]
 fn test_traverse() {
-    let mut voxel = Voxel::new(3);
+    let mut voxel = Voxel::new(3, 0, 0);
 
     voxel.topology.set(uvec3(0, 0, 0), true);
     voxel.topology.set(uvec3(0, 2, 0), true);
