@@ -3,38 +3,30 @@ use glam::{uvec3, UVec3};
 use super::graph::{GBranch, GNode, Graph};
 
 impl Graph {
-    fn get(&mut self, mut pos: UVec3, on_level: u8) -> Option<bool> {
-        todo!()
-    }
-    pub fn at(&self, level: u8, mut position: UVec3) -> Option<usize> {
-        let node = self.nodes[0].get_branch().unwrap();
-
-        let mut lvl = node.level();
-
+    pub fn get(&self, level: u8, mut position: UVec3) -> Option<usize> {
+        //let child_pos = GBranch::get_child_position(i as u32) * (size) + node_position;
+        let mut current_level = self.depth as u8;
         let mut size = self.size();
+        let mut found_idx = None;
+        let mut idx = 0;
 
-        let mut child_index;
-
-        let mut idx = None;
-
-        while lvl > level {
-            child_index = GBranch::get_child_index(position, lvl - 1);
-
-            if child_index != 0 {
-                let child_idx = node.children[child_index];
-                idx = Some(child_idx as usize);
+        while current_level > level {
+            let child_index = GBranch::get_child_index(position, current_level - 1);
+            let child_id = self.nodes[idx].get_branch().unwrap().children[child_index];
+            if child_id != 0 {
+                idx = child_id as usize;
+                found_idx = Some(child_id as usize);
             } else {
                 return None;
             }
-
             {
                 size /= 2;
                 position %= size;
-                lvl -= 1;
+                current_level -= 1;
             }
         }
 
-        idx
+        found_idx
     }
 }
 
@@ -46,10 +38,11 @@ fn test_getters() {
     graph.set(uvec3(1, 1, 0), true);
     graph.set(uvec3(0, 0, 0), true);
 
-    graph.at(1, uvec3(0, 0, 0)).unwrap();
+    // graph.get(0, uvec3(0, 0, 0)).unwrap();
+    dbg!(graph.get(0, uvec3(0, 0, 0)));
+    dbg!(graph.get(1, uvec3(0, 5, 0)));
     // assert_eq!(graph.at(0, uvec3(0, 5, 0)), true);
     // assert_eq!(graph.at(0, uvec3(1, 1, 0)), true);
     // assert_eq!(graph.at(0, uvec3(2, 0, 6)), true);
     // assert_eq!(graph.at(0, uvec3(1, 4, 9)), true);
-    assert!(false);
 }
