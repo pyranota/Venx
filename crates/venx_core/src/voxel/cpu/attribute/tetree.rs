@@ -2,14 +2,13 @@ use bytemuck::Pod;
 use bytes_cast::{unaligned, BytesCast};
 use std::mem::ManuallyDrop;
 
-#[repr(C)]
 #[derive(Clone)]
 pub(crate) struct TeTree {
     pub(crate) nodes: Vec<TNode>,
 }
 
 // impl BytesCast for TeTree {}
-#[repr(C)]
+
 #[derive(Clone, Copy)]
 pub(crate) union TNode {
     leaf: ManuallyDrop<TLeaf>,
@@ -19,16 +18,28 @@ unsafe impl BytesCast for TNode {}
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct TLeaf {
-    count: u32,
-    indicator: i32,
-    block_id: i32,
-    state: i32,
+    pub count: u32,
+    pub indicator: i32,
+    pub block_id: i32,
+    pub state: i32,
 }
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) struct TBranch {
-    count: u32,
-    children: [i32; 3],
+    pub count: u32,
+    pub children: [i32; 3],
+}
+
+impl TeTree {
+    pub fn new() -> Self {
+        TeTree {
+            nodes: vec![TNode::new_leaf(0, 0, 0)],
+        }
+    }
+    pub fn add_node(&mut self, node: TNode) -> usize {
+        self.nodes.push(node);
+        self.nodes.len() - 1
+    }
 }
 
 impl TNode {
