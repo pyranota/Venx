@@ -5,7 +5,7 @@ use crate::chunk::chunk::Chunk;
 use super::segment::{Segment, SegmentStatic};
 
 pub trait VoxelTrait {
-    fn insert_segment<const SIZE: usize>(&mut self, segment: SegmentStatic<SIZE>, position: UVec3);
+    fn insert_segment(&mut self, segment: Segment, position: UVec3);
     fn load_chunk(&self, position: UVec3, level: u8) -> Chunk;
     fn load_chunks(&self, position: UVec3, level: u8) -> Chunk;
     fn load_chunk_n_mesh();
