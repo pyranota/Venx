@@ -5,7 +5,7 @@ use main::{plat::VenxPlat, Venx};
 use venx_core::plat::Plat;
 use venx_core::voxel::cpu::topology::graph::Graph;
 use venx_core::voxel::cpu::voxel::Voxel;
-use venx_core::voxel::segment::SegmentStatic;
+use venx_core::voxel::segment::{Segment, SegmentStatic};
 use venx_core::voxel::vx_trait::*;
 
 mod main;
@@ -24,24 +24,44 @@ fn setup(
 ) {
     let mut mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
-    let mut vx = Voxel::new(10, 4, 7);
+    // let mut vx = Voxel::new(10, 4, 7);
 
-    vx.topology.set(uvec3(0, 1, 0), true);
-    vx.topology.set(uvec3(0, 2, 0), true);
-    vx.topology.set(uvec3(1, 3, 0), true);
-    // second chunk
-    vx.topology.set(uvec3(0, 8, 0), true);
+    // vx.topology.set(uvec3(0, 1, 0), true);
+    // vx.topology.set(uvec3(0, 2, 0), true);
+    // vx.topology.set(uvec3(1, 3, 0), true);
+    // // second chunk
+    // vx.topology.set(uvec3(0, 8, 0), true);
+    let plat = Plat::load_mca("../../saves/mca/region/").unwrap();
+    // let mut plat = Plat::new(10, 4, 5);
 
-    let chunk = vx.load_chunk(UVec3::ZERO, 0);
-    let vx_mesh = vx.to_mesh(&chunk);
+    // let mut segment = Segment::new(5);
+    // segment.set((1, 0, 1), 1);
+    // segment.set((1, 1, 1), 1);
 
-    let mut bevy_mesh = vec![];
-    let mut bevy_color = vec![];
+    // plat.insert_segment(segment, (0, 0, 0).into());
 
-    for (pos, color) in vx_mesh {
-        bevy_mesh.push(pos);
-        bevy_color.push(color);
+    let mut bevy_mesh: Vec<Vec3> = vec![];
+    let mut bevy_color: Vec<Vec4> = vec![];
+
+    // let mut final_chunk = None;
+
+    let mut exit = false;
+    for x in 0..20 {
+        for z in 0..20 {
+            for y in (0..32).rev() {
+                if let Some(chunk) = plat.load_chunk(uvec3(x, y, z), 0) {
+                    let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
+
+                    for (pos, color) in vx_mesh {
+                        bevy_mesh.push(pos);
+                        bevy_color.push(color);
+                    }
+                    // continue;
+                }
+            }
+        }
     }
+
     let len = bevy_mesh.len();
 
     // Positions of the vertices
