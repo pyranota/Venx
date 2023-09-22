@@ -3,7 +3,11 @@ mod mca_converter;
 
 use bevy::prelude::Component;
 
-use crate::{chunk::storage::ChunksStorage, controller::Controller, voxel::vx_trait::VoxelTrait};
+use crate::{
+    chunk::{chunk::Chunk, storage::ChunksStorage},
+    controller::Controller,
+    voxel::{cpu::mesh::Mesh, segment::Segment, vx_trait::VoxelTrait},
+};
 
 pub struct Plat {
     controller: Controller,
@@ -16,36 +20,57 @@ impl Component for Plat {
 }
 
 impl Plat {
-    pub fn load() {}
-    pub fn save() {}
+    /// Depth, chunk_level, segment_level
+    pub fn new(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
+        Plat {
+            controller: Controller::new(depth, chunk_level, segment_level),
+            chunks: ChunksStorage {},
+        }
+    }
+    pub fn load() {
+        todo!()
+    }
+    pub fn save() {
+        todo!()
+    }
+    pub fn new_segment(&self) -> Segment {
+        // Segment::new(self.se)
+        todo!()
+    }
 }
 
-// impl VoxelTrait for Plat {
-//     fn insert_segment<const SIZE: usize>(
-//         &mut self,
-//         segment: crate::voxel::segment::SegmentStatic<SIZE>,
-//         position: glam::UVec3,
-//     ) {
-//         todo!()
-//     }
+impl VoxelTrait for Plat {
+    fn insert_segment(&mut self, segment: crate::voxel::segment::Segment, position: glam::UVec3) {
+        self.controller
+            .get_voxel_mut()
+            .insert_segment(segment, position);
+    }
 
-//     fn load_chunk(&self, position: glam::UVec3, level: u8) -> crate::chunk::chunk::Chunk {
-//         todo!()
-//     }
+    fn load_chunk(
+        &self,
+        position: glam::UVec3,
+        level: u8,
+    ) -> std::option::Option<crate::chunk::chunk::Chunk> {
+        self.controller.get_voxel().load_chunk(position, level)
+    }
 
-//     fn load_chunks(&self, position: glam::UVec3, level: u8) -> crate::chunk::chunk::Chunk {
-//         todo!()
-//     }
+    fn load_chunks(&self, position: glam::UVec3, level: u8) -> crate::chunk::chunk::Chunk {
+        self.controller.get_voxel().load_chunks(position, level)
+    }
 
-//     fn load_chunk_n_mesh() {
-//         todo!()
-//     }
+    fn load_chunk_n_mesh(&self) {
+        self.controller.get_voxel().load_chunk_n_mesh()
+    }
 
-//     fn load_chunks_n_meshes() {
-//         todo!()
-//     }
+    fn load_chunks_n_meshes(&self) {
+        self.controller.get_voxel().load_chunks_n_meshes()
+    }
 
-//     fn compute_mesh_from_chunk() {
-//         todo!()
-//     }
-// }
+    fn compute_mesh_from_chunk(&self, chunk: &Chunk) -> Mesh {
+        self.controller.get_voxel().compute_mesh_from_chunk(chunk)
+    }
+
+    fn get(&self, level: u8, position: glam::UVec3) -> Option<usize> {
+        self.controller.get_voxel().get(level, position)
+    }
+}
