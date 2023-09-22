@@ -7,6 +7,110 @@ use super::voxel::Voxel;
 pub type Mesh = Vec<(Vec3, Vec4)>; // Position, Color
 
 impl Voxel {
+    /// No side culling
+    pub fn to_mesh_no_culling(&self, chunk: &Chunk) -> Mesh {
+        let mut mesh = vec![];
+
+        chunk.iter(|pos, block| {
+            if block {
+                let cube = cube::FULL;
+                for vertex in cube {
+                    mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+                }
+            }
+        });
+        mesh
+    }
+    /// Fast way to do it, with side culling
+    pub fn to_mesh_naive(&self, chunk: &Chunk) -> Mesh {
+        let mut mesh = vec![];
+
+        chunk.iter(|pos, block| {
+            if block {
+                if self
+                    .get_neighbor(
+                        chunk,
+                        (pos - chunk.position * chunk.size()).as_ivec3(),
+                        (0, 1, 0),
+                    )
+                    .is_none()
+                {
+                    let cube = cube::TOP;
+                    for vertex in cube {
+                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+                    }
+                } else {
+                }
+                if self
+                    .get_neighbor(
+                        chunk,
+                        (pos - chunk.position * chunk.size()).as_ivec3(),
+                        (0, -1, 0),
+                    )
+                    .is_none()
+                {
+                    let cube = cube::BOTTOM;
+                    for vertex in cube {
+                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+                    }
+                }
+                if self
+                    .get_neighbor(
+                        chunk,
+                        (pos - chunk.position * chunk.size()).as_ivec3(),
+                        (1, 0, 0),
+                    )
+                    .is_none()
+                {
+                    let cube = cube::RIGHT;
+                    for vertex in cube {
+                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+                    }
+                }
+                if self
+                    .get_neighbor(
+                        chunk,
+                        (pos - chunk.position * chunk.size()).as_ivec3(),
+                        (-1, 0, 0),
+                    )
+                    .is_none()
+                {
+                    let cube = cube::LEFT;
+                    for vertex in cube {
+                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+                    }
+                }
+                if self
+                    .get_neighbor(
+                        chunk,
+                        (pos - chunk.position * chunk.size()).as_ivec3(),
+                        (0, 0, 1),
+                    )
+                    .is_none()
+                {
+                    let cube = cube::FRONT;
+                    for vertex in cube {
+                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+                    }
+                }
+                if self
+                    .get_neighbor(
+                        chunk,
+                        (pos - chunk.position * chunk.size()).as_ivec3(),
+                        (0, 0, -1),
+                    )
+                    .is_none()
+                {
+                    let cube = cube::BACK;
+                    for vertex in cube {
+                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+                    }
+                }
+            }
+        });
+        mesh
+    }
+    /// Side culling and Greedy meshing
     pub fn to_mesh(&self, chunk: &Chunk) -> Mesh {
         let mut mesh = vec![];
 
@@ -32,11 +136,11 @@ fn test_mesh_creation() {
     // second chunk
     vx.topology.set(uvec3(0, 8, 0), true);
 
-    let chunk = vx.load_chunk(UVec3::ZERO, 0);
+    let chunk = vx.load_chunk(UVec3::ZERO, 0).unwrap();
     let mesh = vx.to_mesh(&chunk);
     assert_eq!(mesh.len(), 36 * 3);
 
-    let chunk = vx.load_chunk(uvec3(0, 1, 0), 0);
+    let chunk = vx.load_chunk(uvec3(0, 1, 0), 0).unwrap();
     let mesh = vx.to_mesh(&chunk);
     assert_eq!(mesh.len(), 36);
 }
