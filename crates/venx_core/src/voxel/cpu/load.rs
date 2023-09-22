@@ -5,7 +5,7 @@ use crate::{chunk::chunk::Chunk, voxel::cpu::utils};
 use super::voxel::Voxel;
 
 impl Voxel {
-    pub fn load_chunk(&self, position: UVec3, lod_level: u8) -> Chunk {
+    pub fn load_chunk(&self, position: UVec3, lod_level: u8) -> Option<Chunk> {
         let chunk_level = self.chunk_level;
         let mtx_size = 1 << (chunk_level - lod_level);
         let mut chunk = Chunk {
@@ -25,9 +25,10 @@ impl Voxel {
                     return false;
                 }
                 true
-            })
+            });
+            return Some(chunk);
         }
-        chunk
+        None
     }
 }
 
@@ -42,7 +43,7 @@ fn load_chunk_test() {
     // second chunk
     vx.topology.set(uvec3(0, 8, 0), true);
 
-    let chunk = vx.load_chunk(UVec3::ZERO, 0);
+    let chunk = vx.load_chunk(UVec3::ZERO, 0).unwrap();
     assert!(chunk.mtx[0][0][0]);
     assert!(chunk.mtx[0][5][0]);
     assert!(chunk.mtx[1][1][0]);
