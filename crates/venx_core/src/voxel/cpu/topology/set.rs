@@ -27,7 +27,7 @@ impl Graph {
                     idx = self.nodes[idx].get_branch().unwrap().children[child_index] as usize;
                 }
             } else {
-                dbg!("It should not be here");
+                panic!("It should not be here");
             }
             {
                 size /= 2;
