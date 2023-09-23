@@ -31,7 +31,7 @@ fn setup(
     // vx.topology.set(uvec3(1, 3, 0), true);
     // // second chunk
     // vx.topology.set(uvec3(0, 8, 0), true);
-    let plat = Plat::load_mca("../../saves/mca/region/").unwrap();
+    let plat = Plat::load_mca("../../saves/mca/region/", (-1..1, 0..1)).unwrap();
     // let mut plat = Plat::new(10, 4, 5);
 
     // let mut segment = Segment::new(5);
@@ -45,9 +45,11 @@ fn setup(
 
     // let mut final_chunk = None;
 
+    log::info!("Loading chunks and computing mesh");
+
     let mut exit = false;
-    for x in 0..20 {
-        for z in 0..20 {
+    for x in 0..96 {
+        for z in 0..96 {
             for y in (0..32).rev() {
                 if let Some(chunk) = plat.load_chunk(uvec3(x, y, z), 0) {
                     let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
@@ -61,6 +63,8 @@ fn setup(
             }
         }
     }
+
+    log::info!("finish loading and computing mesh");
 
     let len = bevy_mesh.len();
 
@@ -94,7 +98,11 @@ fn setup(
 
     cmd.spawn(PbrBundle {
         mesh: meshes.add(mesh),
-        material: materials.add(Color::rgb(1.0, 1.0, 1.0).into()),
+        material: materials.add(StandardMaterial {
+            base_color: Color::rgb(1., 1., 1.),
+            // alpha_mode: AlphaMode::Blend,
+            ..default()
+        }),
         ..default()
     });
 }

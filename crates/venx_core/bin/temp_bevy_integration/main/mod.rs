@@ -35,11 +35,11 @@ fn setup(
         ..default()
     });
 
-    // // ambient light
-    // commands.insert_resource(AmbientLight {
-    //     color: Color::ORANGE_RED,
-    //     brightness: 0.03,
-    // });
+    // ambient light
+    commands.insert_resource(AmbientLight {
+        color: Color::WHITE,
+        brightness: 0.03,
+    });
     // light
     // commands.spawn(PointLightBundle {
     //     point_light: PointLight {
@@ -55,12 +55,12 @@ fn setup(
     // directional 'sun' light
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            shadows_enabled: false,
+            shadows_enabled: true,
             ..default()
         },
         transform: Transform {
             translation: Vec3::new(-10.0, 300.0, -10.0),
-            rotation: Quat::from_rotation_x(-PI / 4.),
+            rotation: Quat::from_rotation_x(-PI / 3.87),
             ..default()
         },
         // The default cascade config is designed to handle large scenes.
