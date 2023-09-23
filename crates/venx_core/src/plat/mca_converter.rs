@@ -2,19 +2,26 @@ use anyhow::{bail, Result};
 use bevy::utils::HashMap;
 use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
-use std::{fs, path::PathBuf};
+use std::{fs, ops::Range, path::PathBuf};
 
 use crate::voxel::{segment::Segment, vx_trait::VoxelTrait};
 
 use super::Plat;
 
+pub type RegionX = i32;
+pub type RegionZ = RegionX;
+
 impl Plat {
-    pub fn load_mca<'a>(dir_path: &'a str) -> Result<Self> {
-        let rgs = from_dir(PathBuf::from(dir_path))?;
+    pub fn load_mca<'a>(
+        dir_path: &'a str,
+        region_range: (Range<RegionX>, Range<RegionZ>),
+    ) -> Result<Self> {
+        let rgs = from_dir(PathBuf::from(dir_path), region_range)?;
 
         let mut plat = Plat::new(10, 4, 9);
 
         for (rg_pos, mut region) in rgs {
+            dbg!(rg_pos);
             let mut segment = Segment::new(9);
             for ch_x in 0..32 {
                 for ch_z in 0..32 {
@@ -40,10 +47,9 @@ impl Plat {
                 }
             }
             dbg!("Inserting");
-            plat.insert_segment(segment, uvec3(0, 0, 0));
-            return Ok(plat);
+            plat.insert_segment(segment, uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32));
         }
-        todo!()
+        Ok(plat)
     }
 }
 
@@ -63,7 +69,13 @@ fn pos_from_name(name: &str) -> Option<[f32; 2]> {
         None
     }
 }
-fn from_dir(dir: PathBuf) -> anyhow::Result<Vec<([f32; 2], Region<std::fs::File>)>> {
+fn from_dir(
+    dir: PathBuf,
+    region_range: (Range<RegionX>, Range<RegionZ>),
+) -> anyhow::Result<Vec<([i32; 2], Region<std::fs::File>)>> {
+    let start = (region_range.0.start, region_range.1.start);
+    let end = (region_range.0.end, region_range.1.end);
+
     let dir = fs::read_dir(dir)?;
     let mut out = Vec::new();
     for path in dir {
@@ -72,10 +84,15 @@ fn from_dir(dir: PathBuf) -> anyhow::Result<Vec<([f32; 2], Region<std::fs::File>
         if let Some(name) = name {
             let coords = pos_from_name(name.to_str().unwrap());
             if let Some(coords) = coords {
-                let file = std::fs::File::open(path).unwrap();
+                let x = coords[0] as i32;
+                let z = coords[1] as i32;
+                if (x, z) >= start && (x, z) < end {
+                    let file = std::fs::File::open(path).unwrap();
 
-                let region = Region::from_stream(file).unwrap();
-                out.push((coords, region));
+                    let region = Region::from_stream(file).unwrap();
+                    out.push(([x - start.0, z - start.1], region));
+                }
+
                 continue;
             }
         }
