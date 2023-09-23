@@ -37,7 +37,7 @@ impl Voxel {
                 {
                     let cube = cube::TOP;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 0.5)))
                     }
                 } else {
                 }
@@ -51,7 +51,7 @@ impl Voxel {
                 {
                     let cube = cube::BOTTOM;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 0.5)))
                     }
                 }
                 if self
@@ -64,7 +64,7 @@ impl Voxel {
                 {
                     let cube = cube::RIGHT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.3, 0.3, 0.3, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.3, 0.3, 0.3, 0.5)))
                     }
                 }
                 if self
@@ -77,7 +77,7 @@ impl Voxel {
                 {
                     let cube = cube::LEFT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.3, 0.3, 0.3, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.3, 0.3, 0.3, 0.5)))
                     }
                 }
                 if self
@@ -90,7 +90,7 @@ impl Voxel {
                 {
                     let cube = cube::FRONT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 0.5)))
                     }
                 }
                 if self
@@ -103,7 +103,7 @@ impl Voxel {
                 {
                     let cube = cube::BACK;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 0.5)))
                     }
                 }
             }
