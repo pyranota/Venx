@@ -1,6 +1,6 @@
 use glam::{IVec3, UVec3, Vec3};
 
-use crate::voxel::cpu::voxel::Voxel;
+use crate::voxel::{cpu::voxel::Voxel, vx_trait::VoxelTrait};
 
 use super::chunk::Chunk;
 
@@ -17,8 +17,26 @@ impl Voxel {
         let sum = pos + dir;
 
         if sum.min_element() < 0 {
+            if self
+                .get(
+                    chunk.lod_level,
+                    ((chunk.position * chunk_size).as_ivec3() + sum).as_uvec3(),
+                )
+                .is_some()
+            {
+                return Some(true);
+            }
             return None;
         } else if sum.max_element() >= chunk_size as i32 {
+            if self
+                .get(
+                    chunk.lod_level,
+                    ((chunk.position * chunk_size).as_ivec3() + sum).as_uvec3(),
+                )
+                .is_some()
+            {
+                return Some(true);
+            }
             return None;
         } else {
             return chunk.get(sum.as_uvec3());
