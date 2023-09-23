@@ -64,7 +64,7 @@ impl Voxel {
                 {
                     let cube = cube::RIGHT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.7, 0.7, 0.7, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.3, 0.3, 0.3, 1.)))
                     }
                 }
                 if self
@@ -77,7 +77,7 @@ impl Voxel {
                 {
                     let cube = cube::LEFT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.7, 0.7, 0.7, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.3, 0.3, 0.3, 1.)))
                     }
                 }
                 if self
@@ -90,7 +90,7 @@ impl Voxel {
                 {
                     let cube = cube::FRONT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.85, 0.85, 0.85, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 1.)))
                     }
                 }
                 if self
@@ -103,7 +103,7 @@ impl Voxel {
                 {
                     let cube = cube::BACK;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.85, 0.85, 0.85, 1.)))
+                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 1.)))
                     }
                 }
             }
