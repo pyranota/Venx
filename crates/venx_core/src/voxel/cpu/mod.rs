@@ -1,4 +1,5 @@
 pub mod attribute;
+pub mod facade;
 mod insert;
 mod load;
 pub mod mesh;
