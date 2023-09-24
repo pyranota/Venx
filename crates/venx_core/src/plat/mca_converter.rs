@@ -21,7 +21,6 @@ impl Plat {
         let mut plat = Plat::new(10, 4, 9);
 
         for (rg_pos, mut region) in rgs {
-            dbg!(rg_pos);
             let mut segment = Segment::new(9);
             for ch_x in 0..32 {
                 for ch_z in 0..32 {
@@ -33,10 +32,19 @@ impl Plat {
                                 for z in 0..16 {
                                     if let Some(block) = complete_chunk.block(x, y - 60, z) {
                                         if block.name() != "minecraft:air" {
+                                            // dbg!(block.name());
+                                            let block_id = match block.name() {
+                                                "minecraft:dirt" => 1,
+                                                "minecraft:grass_block" => 2,
+                                                "minecraft:stone" => 3,
+                                                "minecraft:water" => 8,
+                                                _ => 404,
+                                            };
+
                                             segment.set(
                                                 uvec3(x as u32, y as u32, z as u32)
                                                     + uvec3(ch_x as u32 * 16, 0, ch_z as u32 * 16),
-                                                1,
+                                                block_id,
                                             );
                                         }
                                     }
@@ -46,7 +54,6 @@ impl Plat {
                     }
                 }
             }
-            dbg!("Inserting");
             plat.insert_segment(segment, uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32));
         }
         Ok(plat)
