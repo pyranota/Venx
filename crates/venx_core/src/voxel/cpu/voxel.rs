@@ -9,6 +9,7 @@ use crate::{
 use super::{attribute::tetree::TeTree, topology::graph::Graph};
 
 // #[derive(bitcode::Encode, bitcode::Decode)]
+#[derive(Debug)]
 pub struct Voxel {
     pub(crate) attribute: TeTree,
     pub topology: Graph,
@@ -19,7 +20,7 @@ pub struct Voxel {
 impl Voxel {
     pub fn new(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
         Voxel {
-            attribute: TeTree { nodes: vec![] },
+            attribute: TeTree::new(),
             topology: Graph::new(depth),
             chunk_level,
             segment_level,
@@ -29,14 +30,20 @@ impl Voxel {
 
 impl VoxelTrait for Voxel {
     fn insert_segment(&mut self, segment: crate::voxel::segment::Segment, position: glam::UVec3) {
+        log::info!("Inserting segment");
         let offset = segment.size() * position;
         segment.iter(|pos, block| {
             // Redo
 
             if block != 0 {
-                self.topology.set(offset + pos, true);
+                let attribute_position = self.topology.set(offset + pos, true);
+                dbg!(block, attribute_position);
+                self.attribute
+                    .insert(attribute_position, 1, (block as i32, 0));
             }
         });
+        self.attribute.optimize();
+        log::info!("Segment is inserted");
     }
 
     fn load_chunk(
