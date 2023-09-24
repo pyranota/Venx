@@ -10,8 +10,17 @@ use crate::{
 };
 
 pub struct Plat {
-    controller: Controller,
+    pub controller: Controller,
     chunks: ChunksStorage,
+}
+
+impl std::fmt::Debug for Plat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("Plat")
+            // .field("controller", &self.controller)
+            // .field("chunks", &self.chunks)
+            .finish()
+    }
 }
 
 #[cfg(feature = "bevy_ecs")]
