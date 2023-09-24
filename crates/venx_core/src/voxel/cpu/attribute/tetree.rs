@@ -2,6 +2,8 @@ use bytemuck::Pod;
 use bytes_cast::{unaligned, BytesCast};
 use std::mem::ManuallyDrop;
 
+use crate::voxel::cpu::facade::NewNodeIndex;
+
 #[derive(Clone)]
 pub(crate) struct TeTree {
     pub(crate) nodes: Vec<TNode>,
@@ -36,13 +38,18 @@ impl TeTree {
             nodes: vec![TNode::new_leaf(0, 0, 0)],
         }
     }
-    pub fn add_node(&mut self, node: TNode) -> usize {
+    /// Returns new node index in list
+    pub fn add_node(&mut self, node: TNode) -> NewNodeIndex {
         self.nodes.push(node);
         self.nodes.len() - 1
     }
 }
 
 impl TNode {
+    pub(crate) fn count(&self) -> u32 {
+        let leaf = unsafe { &*self.leaf };
+        leaf.count
+    }
     pub(crate) fn new_leaf(count: u32, block_id: i32, block_state: i32) -> Self {
         TNode {
             leaf: ManuallyDrop::new(TLeaf {
@@ -75,6 +82,12 @@ impl TNode {
             None
         };
     }
+    pub(crate) fn get_leaf_unchecked(&self) -> &TLeaf {
+        unsafe { &*self.leaf }
+    }
+    pub(crate) fn get_leaf_mut_unchecked(&mut self) -> &mut TLeaf {
+        unsafe { &mut *self.leaf }
+    }
     pub(crate) fn new_branch(count: u32) -> Self {
         TNode {
             branch: ManuallyDrop::new(TBranch {
@@ -106,6 +119,12 @@ impl TNode {
         } else {
             None
         };
+    }
+    pub(crate) fn get_branch_unchecked(&self) -> &TBranch {
+        unsafe { &*self.branch }
+    }
+    pub(crate) fn get_branch_mut_unchecked(&mut self) -> &mut TBranch {
+        unsafe { &mut *self.branch }
     }
 }
 
