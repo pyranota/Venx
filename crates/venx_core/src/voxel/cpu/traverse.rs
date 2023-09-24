@@ -36,6 +36,39 @@ impl Voxel {
     /// Traversing each node and calling given closure with args: Node, Index, Position
     pub fn traverse_from<F>(&self, idx: usize, node_position: UVec3, mut f: F)
     where
+        F: FnMut(&GBranch, usize, UVec3, i32) -> bool,
+    {
+        visit_node(self, idx, node_position, &mut f);
+
+        fn visit_node<F>(vx: &Voxel, idx: usize, node_position: UVec3, f: &mut F)
+        where
+            F: FnMut(&GBranch, usize, UVec3, i32) -> bool,
+        {
+            let node = vx.topology.nodes[idx].get_branch().unwrap();
+
+            if !f(
+                node,
+                idx,
+                node_position,
+                vx.attribute.get(node.attr_count).unwrap().0,
+            ) {
+                return;
+            }
+            // ?
+            let size = node.size() / 2;
+
+            for (i, child_idx) in (node.children).into_iter().enumerate() {
+                if child_idx != 0 {
+                    let child_pos = GBranch::get_child_position(i as u32) * (size) + node_position;
+
+                    visit_node(vx, child_idx as usize, child_pos, f);
+                }
+            }
+        }
+    }
+    /// Traversing each node and calling given closure with args: Node, Index, Position
+    pub fn traverse_untyped_from<F>(&self, idx: usize, node_position: UVec3, mut f: F)
+    where
         F: FnMut(&GBranch, usize, UVec3) -> bool,
     {
         visit_node(self, idx, node_position, &mut f);
@@ -71,7 +104,7 @@ fn test_traverse() {
     voxel.topology.set(uvec3(0, 2, 0), true);
     voxel.topology.set(uvec3(1, 2, 4), true);
 
-    voxel.traverse_from(0, uvec3(0, 0, 0), |branch, idx, pos| {
+    voxel.traverse_untyped_from(0, uvec3(0, 0, 0), |branch, idx, pos| {
         dbg!(branch, pos, idx);
         true
     });
