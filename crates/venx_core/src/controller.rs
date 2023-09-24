@@ -10,7 +10,7 @@ use crate::{
     },
 };
 
-pub(crate) struct Controller {
+pub struct Controller {
     data: VXdata,
     cs: ComputeServer,
 }
@@ -21,7 +21,7 @@ impl Controller {
             cs: pollster::block_on(ComputeServer::new()),
         }
     }
-    pub(crate) fn get_voxel(&self) -> Box<&dyn VoxelTrait> {
+    pub fn get_voxel(&self) -> Box<&dyn VoxelTrait> {
         Box::new(match &self.data {
             VXdata::Cpu(vx) => vx,
             VXdata::Gpu(vx) => vx,
