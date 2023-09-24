@@ -12,7 +12,7 @@ impl Voxel {
         let mut mesh = vec![];
 
         chunk.iter(|pos, block| {
-            if block {
+            if block != 0 {
                 let cube = cube::FULL;
                 for vertex in cube {
                     mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
@@ -26,7 +26,13 @@ impl Voxel {
         let mut mesh = vec![];
 
         chunk.iter(|pos, block| {
-            if block {
+            if block != 0 {
+                let block_color = match block {
+                    1 => vec4(1., 1., 1., 0.5),
+                    2 => vec4(0., 1., 1., 0.5),
+                    _ => vec4(0., 0., 0., 0.5),
+                };
+
                 if self
                     .get_neighbor(
                         chunk,
@@ -37,7 +43,7 @@ impl Voxel {
                 {
                     let cube = cube::TOP;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 0.5)))
+                        mesh.push(((vertex + pos.as_vec3()), block_color))
                     }
                 } else {
                 }
@@ -51,7 +57,7 @@ impl Voxel {
                 {
                     let cube = cube::BOTTOM;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 0.5)))
+                        mesh.push(((vertex + pos.as_vec3()), block_color))
                     }
                 }
                 if self
@@ -64,7 +70,7 @@ impl Voxel {
                 {
                     let cube = cube::RIGHT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.3, 0.3, 0.3, 0.5)))
+                        mesh.push(((vertex + pos.as_vec3()), block_color))
                     }
                 }
                 if self
@@ -77,7 +83,7 @@ impl Voxel {
                 {
                     let cube = cube::LEFT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.3, 0.3, 0.3, 0.5)))
+                        mesh.push(((vertex + pos.as_vec3()), block_color))
                     }
                 }
                 if self
@@ -90,7 +96,7 @@ impl Voxel {
                 {
                     let cube = cube::FRONT;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 0.5)))
+                        mesh.push(((vertex + pos.as_vec3()), block_color))
                     }
                 }
                 if self
@@ -103,7 +109,7 @@ impl Voxel {
                 {
                     let cube = cube::BACK;
                     for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), vec4(0.5, 0.5, 0.5, 0.5)))
+                        mesh.push(((vertex + pos.as_vec3()), block_color))
                     }
                 }
             }
@@ -115,7 +121,7 @@ impl Voxel {
         let mut mesh = vec![];
 
         chunk.iter(|pos, block| {
-            if block {
+            if block != 0 {
                 let cube = cube::FULL;
                 for vertex in cube {
                     mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
