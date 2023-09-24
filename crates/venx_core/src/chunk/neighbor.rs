@@ -10,7 +10,7 @@ impl Voxel {
         chunk: &Chunk,
         local_block_position: impl Into<IVec3>,
         neighbor_direction: impl Into<IVec3>,
-    ) -> Option<bool> {
+    ) -> Option<i32> {
         let chunk_size = chunk.size();
         let dir: IVec3 = neighbor_direction.into();
         let pos: IVec3 = local_block_position.into();
@@ -24,7 +24,7 @@ impl Voxel {
                 )
                 .is_some()
             {
-                return Some(true);
+                return Some(1);
             }
             return None;
         } else if sum.max_element() >= chunk_size as i32 {
@@ -35,7 +35,7 @@ impl Voxel {
                 )
                 .is_some()
             {
-                return Some(true);
+                return Some(1);
             }
             return None;
         } else {
