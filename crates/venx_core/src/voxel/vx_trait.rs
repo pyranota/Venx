@@ -1,3 +1,5 @@
+use std::fmt::Debug;
+
 use glam::UVec3;
 
 use crate::chunk::chunk::Chunk;
@@ -7,7 +9,7 @@ use super::{
     segment::{Segment, SegmentStatic},
 };
 
-pub trait VoxelTrait {
+pub trait VoxelTrait: Debug {
     fn insert_segment(&mut self, segment: Segment, position: UVec3);
     fn load_chunk(&self, position: UVec3, level: u8) -> Option<Chunk>;
     fn load_chunks(&self, position: UVec3, level: u8) -> Chunk;
