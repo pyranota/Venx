@@ -1,5 +1,6 @@
 use super::{cpu::voxel::Voxel, gpu::voxel::VoxelGpu};
 
+#[derive(Debug)]
 pub(crate) enum VXdata {
     Cpu(Voxel),
     #[cfg(feature = "gpu")]

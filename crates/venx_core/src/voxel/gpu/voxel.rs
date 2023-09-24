@@ -11,6 +11,7 @@ use self::super::state::{CpuOnlyState, OnewaySyncedState, SyncedState};
 
 use super::{attribute::storage::GpuTeTreeStorage, topology::storage::GpuGraphStorage};
 
+#[derive(Debug)]
 pub struct VoxelGpu {
     pub attribute: GpuTeTreeStorage,
     pub topology: GpuGraphStorage,
