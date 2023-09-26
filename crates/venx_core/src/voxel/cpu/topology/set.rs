@@ -49,6 +49,7 @@ impl Graph {
             0
         };
     }
+    /// Returns attr position
     pub fn set(&mut self, mut pos: UVec3, data: bool) -> u32 {
         let mut size = self.size();
         let mut idx = 0;

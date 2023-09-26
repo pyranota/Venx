@@ -1,3 +1,5 @@
+use crate::voxel::cpu::topology::graph::Graph;
+
 use super::tetree::{TNode, TeTree};
 
 impl TeTree {
@@ -138,4 +140,21 @@ fn test_tetree_insert2() {
     tree.insert(0, 1, (1, 0));
     tree.insert(1, 1, (2, 0));
     dbg!(tree);
+}
+#[test]
+fn test_tetree_insert3() {
+    let mut tree = TeTree::new();
+    tree.insert(0, 1, (111, 111));
+    dbg!(&tree);
+    tree.insert(1, 1, (222, 222));
+    dbg!(&tree);
+
+    let mut graph = Graph::new(2);
+    let pos1 = graph.set((0, 0, 0).into(), true);
+    let pos2 = graph.set((0, 1, 0).into(), true);
+    dbg!(pos1, pos2);
+    let fpos1 = graph.get_attr_position(0, (0, 0, 0).into());
+    let fpos2 = graph.get_attr_position(0, (0, 1, 0).into());
+    dbg!(fpos1, fpos2);
+    dbg!(&graph);
 }

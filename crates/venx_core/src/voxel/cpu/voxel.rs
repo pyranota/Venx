@@ -32,17 +32,23 @@ impl VoxelTrait for Voxel {
     fn insert_segment(&mut self, segment: crate::voxel::segment::Segment, position: glam::UVec3) {
         log::info!("Inserting segment");
         let offset = segment.size() * position;
+        let mut x = 0;
         segment.iter(|pos, block| {
+            if pos.x > x {
+                x = pos.x;
+                log::info!("{x}");
+            }
             // Redo
+            // log::info!("{}", &pos);
 
             if block != 0 {
                 let attribute_position = self.topology.set(offset + pos, true);
-                dbg!(block, attribute_position);
+
                 self.attribute
                     .insert(attribute_position, 1, (block as i32, 0));
             }
         });
-        self.attribute.optimize();
+        //self.attribute.optimize();
         log::info!("Segment is inserted");
     }
 
@@ -71,7 +77,13 @@ impl VoxelTrait for Voxel {
     }
 
     fn get(&self, level: u8, position: glam::UVec3) -> Option<usize> {
-        self.topology.get(level, position)
+        if let Some(attr_position) = self.topology.get_attr_position(level, position) {
+            if let Some((block, ..)) = self.attribute.get(attr_position as u32) {
+                return Some(block as usize);
+            }
+            return None;
+        }
+        return None;
     }
 }
 

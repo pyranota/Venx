@@ -28,8 +28,10 @@ impl Voxel {
         chunk.iter(|pos, block| {
             if block != 0 {
                 let block_color = match block {
-                    1 => vec4(1., 1., 1., 0.5),
-                    2 => vec4(0., 1., 1., 0.5),
+                    1 => vec4(1., 1., 1., 0.5), // White
+                    2 => vec4(0., 1., 0., 0.5), // Green
+                    3 => vec4(1., 0., 0., 0.5), // Red
+                    4 => vec4(0., 0., 1., 0.5), // Blue
                     _ => vec4(0., 0., 0., 0.5),
                 };
 

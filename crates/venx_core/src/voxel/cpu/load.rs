@@ -16,19 +16,24 @@ impl Voxel {
         };
 
         let chunk_size = utils::lvl_to_size::lvl_to_size(chunk_level);
-        if let Some(chunk_idx) = self.topology.get(chunk_level, position * chunk_size) {
-            self.traverse_from(chunk_idx, uvec3(0, 0, 0), |branch, idx, pos, block| {
-                if branch.level() > lod_level {
-                } else if branch.level() == lod_level {
-                    if block != 0 {
-                        dbg!(block);
+        if let Some((chunk_idx, attr_position)) =
+            self.topology.get_node(chunk_level, position * chunk_size)
+        {
+            self.traverse_from(
+                chunk_idx as usize,
+                uvec3(0, 0, 0),
+                attr_position,
+                |branch, idx, pos, block| {
+                    if branch.level() > lod_level {
+                    } else if branch.level() == lod_level {
+                        if block != 0 {}
+                        chunk.set(pos, block);
+                    } else {
+                        return false;
                     }
-                    chunk.set(pos, block);
-                } else {
-                    return false;
-                }
-                true
-            });
+                    true
+                },
+            );
             return Some(chunk);
         }
         None

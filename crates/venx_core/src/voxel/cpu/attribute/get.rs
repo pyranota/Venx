@@ -1,8 +1,9 @@
 use super::tetree::TeTree;
 
 impl TeTree {
-    pub fn get(&self, position: u32) -> Option<(i32, i32)> {
+    pub fn get(&self, mut position: u32) -> Option<(i32, i32)> {
         let mut global_counter = 0;
+        position += 1;
 
         return visit_node(self, 0, &mut global_counter, position);
 
@@ -48,8 +49,9 @@ impl TeTree {
 #[test]
 fn test_attr_get() {
     let mut tree = TeTree::new();
-    tree.insert(0, 6, (1, 1));
-    tree.insert(4, 3, (2, 2));
+    tree.insert(0, 1, (1, 1));
+    tree.insert(1, 1, (2, 2));
+    tree.insert(2, 1, (3, 3));
 
-    dbg!(tree.get(6));
+    dbg!(tree.get(0), tree.get(1), tree.get(2), tree.get(3));
 }

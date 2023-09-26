@@ -1,3 +1,4 @@
+pub mod count;
 pub mod debug;
 pub mod get;
 pub mod graph;
