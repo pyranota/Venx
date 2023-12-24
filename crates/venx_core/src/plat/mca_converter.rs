@@ -4,7 +4,7 @@ use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
 use std::{fs, ops::Range, path::PathBuf};
 
-use crate::voxel::{segment::Segment, vx_trait::VoxelTrait};
+use crate::voxel::segment::Segment;
 
 use super::Plat;
 
