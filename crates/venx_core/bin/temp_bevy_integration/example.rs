@@ -6,7 +6,6 @@ use venx_core::plat::Plat;
 use venx_core::voxel::cpu::topology::graph::Graph;
 use venx_core::voxel::cpu::voxel::Voxel;
 use venx_core::voxel::segment::{Segment, SegmentStatic};
-use venx_core::voxel::vx_trait::*;
 
 mod main;
 
@@ -31,35 +30,46 @@ fn setup(
     // vx.topology.set(uvec3(1, 3, 0), true);
     // // second chunk
     // vx.topology.set(uvec3(0, 8, 0), true);
-    let plat = Plat::load_mca("../../saves/mca/region/", (-1..1, 0..1)).unwrap();
-    // let mut plat = Plat::new(10, 4, 5);
+    let plat = Plat::load_mca("../../saves/mca/4region/", (-1..0, 0..1)).unwrap();
+    // let mut plat = Plat::new(3, 2, 2);
 
     // let mut segment = Segment::new(5);
-    // segment.set((1, 0, 1), 1);
-    // segment.set((1, 1, 1), 1);
+    // let red = 3;
+    // let white = 1;
+    // let green = 2;
+    // let blue = 4;
+
+    // segment.set((1, 0, 1), blue);
+    // segment.set((1, 2, 1), white);
+    // segment.set((1, 1, 1), red);
+    // segment.set((0, 1, 0), green);
+    // segment.set((0, 3, 0), blue);
+    // segment.set((0, 0, 0), blue);
+    // segment.set((0, 0, 1), blue);
+    // segment.set((0, 0, 2), green);
 
     // plat.insert_segment(segment, (0, 0, 0).into());
+
+    // dbg!(&plat.controller.get_voxel());
 
     let mut bevy_mesh: Vec<Vec3> = vec![];
     let mut bevy_color: Vec<Vec4> = vec![];
 
     // let mut final_chunk = None;
-
     log::info!("Loading chunks and computing mesh");
 
-    let mut exit = false;
     for x in 0..96 {
         for z in 0..96 {
             for y in (0..32).rev() {
-                if let Some(chunk) = plat.load_chunk(uvec3(x, y, z), 0) {
-                    let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
+                // if let Some(chunk) = plat.load_chunk(uvec3(x, y, z), 0) {
+                //     let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
 
-                    for (pos, color) in vx_mesh {
-                        bevy_mesh.push(pos);
-                        bevy_color.push(color);
-                    }
-                    // continue;
-                }
+                //     for (pos, color) in vx_mesh {
+                //         bevy_mesh.push(pos);
+                //         bevy_color.push(color);
+                //     }
+                //     // continue;
+                // }
             }
         }
     }

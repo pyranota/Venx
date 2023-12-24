@@ -6,7 +6,7 @@ use crate::{
         cpu::{self, voxel::Voxel},
         data::VXdata,
         gpu::voxel::VoxelGpu,
-        vx_trait::VoxelTrait,
+        interfaces::voxel::VoxelInterface,
     },
 };
 
@@ -21,13 +21,13 @@ impl Controller {
             cs: pollster::block_on(ComputeServer::new()),
         }
     }
-    pub fn get_voxel(&self) -> Box<&dyn VoxelTrait> {
+    pub fn get_voxel(&self) -> Box<&dyn VoxelInterface> {
         Box::new(match &self.data {
             VXdata::Cpu(vx) => vx,
             VXdata::Gpu(vx) => vx,
         })
     }
-    pub(crate) fn get_voxel_mut(&mut self) -> Box<&mut dyn VoxelTrait> {
+    pub(crate) fn get_voxel_mut(&mut self) -> Box<&mut dyn VoxelInterface> {
         Box::new(match &mut self.data {
             VXdata::Cpu(vx) => vx,
             VXdata::Gpu(vx) => vx,
@@ -42,14 +42,14 @@ impl Controller {
             attribute: todo!(),
             topology: todo!(),
         };
+        todo!();
+        // if let (VXdata::Cpu(cpu_data), cs) = (self.data, self.cs) {
+        //     let (attribute, topology) = (cpu_data.attribute, cpu_data.topology);
 
-        if let (VXdata::Cpu(cpu_data), cs) = (self.data, self.cs) {
-            let (attribute, topology) = (cpu_data.attribute, cpu_data.topology);
-
-            let attr_buffer = cs.new_buffer(unsafe { any_as_u8_slice(&attribute) });
-        } else {
-            return self;
-        }
+        //     let attr_buffer = cs.new_buffer(unsafe { any_as_u8_slice(&attribute) });
+        // } else {
+        //     return self;
+        // }
         todo!()
     }
     pub(crate) async fn transfer_to_cpu(self) -> Self {

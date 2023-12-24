@@ -11,16 +11,13 @@ impl Graph {
         let node = &self.nodes[idx];
         let mut counter = 0;
 
-        let children = &node.get_branch().unwrap().children;
+        let children = &node.children;
 
-        for i in 0..upto {
-            if children[i] != 0 {
-                counter += &self.nodes[children[i] as usize]
-                    .get_branch()
-                    .unwrap()
-                    .attr_count;
-            }
-        }
+        // for i in 0..upto {
+        //     if children[i] != 0 {
+        //         counter += &self.nodes[children[i] as usize].attr_count;
+        //     }
+        // }
 
         counter
     }

@@ -1,0 +1,11 @@
+
+ 2. Type the lowercase letter `o`{normal} to [open](o) up a line BELOW the
+    cursor and place you in Insert mode.
+
+ 3. Now type some text and press `<Esc>`{normal} to exit Insert mode.
+
+After typing `o`{normal} the cursor is placed on the open line in Insert mode.
+
+ 4. To open up a line ABOVE the cursor, simply type a [capital O](O), rather
+    than a lowercase `o`{normal}. Try this on the line below.
+

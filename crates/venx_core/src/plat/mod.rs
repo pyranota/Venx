@@ -6,7 +6,11 @@ use bevy::prelude::Component;
 use crate::{
     chunk::{chunk::Chunk, storage::ChunksStorage},
     controller::Controller,
-    voxel::{cpu::mesh::Mesh, segment::Segment, vx_trait::VoxelTrait},
+    voxel::{
+        cpu::mesh::Mesh,
+        interfaces::{layer::LayerInterface, voxel::VoxelInterface},
+        segment::Segment,
+    },
 };
 
 pub struct Plat {
@@ -48,13 +52,38 @@ impl Plat {
     }
 }
 
-impl VoxelTrait for Plat {
-    fn insert_segment(&mut self, segment: crate::voxel::segment::Segment, position: glam::UVec3) {
-        self.controller
-            .get_voxel_mut()
-            .insert_segment(segment, position);
+impl LayerInterface for Plat {
+    fn new_canvas(&mut self, name: &str) -> usize {
+        self.controller.get_voxel_mut().new_canvas(name)
     }
 
+    fn new_image(&mut self, name: &str) -> usize {
+        todo!()
+    }
+
+    fn get_image(&self, handle: usize) -> &crate::voxel::cpu::layer::image::Image {
+        todo!()
+    }
+
+    fn get_image_mut(&mut self, handle: usize) -> &mut crate::voxel::cpu::layer::image::Image {
+        todo!()
+    }
+
+    fn get_canvas(&self, handle: usize) -> &crate::voxel::cpu::layer::canvas::Canvas {
+        todo!()
+    }
+
+    fn get_canvas_mut(&mut self, handle: usize) -> &mut crate::voxel::cpu::layer::canvas::Canvas {
+        self.controller.get_voxel_mut().get_canvas_mut(handle)
+    }
+}
+// fn insert_segment(&mut self, segment: crate::voxel::segment::Segment, position: glam::UVec3) {
+//     self.controller
+//         .get_voxel_mut()
+//         .insert_segment(segment, position);
+// }
+
+impl VoxelInterface for Plat {
     fn load_chunk(
         &self,
         position: glam::UVec3,

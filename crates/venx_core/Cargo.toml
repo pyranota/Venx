@@ -23,7 +23,9 @@ fastanvil = {version = "0.29.0", optional = true}
 bitcode = { version = "0.4.0", features = ["derive"] }
 pollster = "0.3.0"
 log = "0.4.20"
+flate2 = "1.0.27"
 rand = "0.8.5"
+bmp = "0.5.0"
 
 [features]
 default = ["gpu", "mca_converter"]

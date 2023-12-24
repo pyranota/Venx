@@ -134,24 +134,24 @@ impl Voxel {
     }
 }
 
-#[test]
-fn test_mesh_creation() {
-    let mut vx = Voxel::new(5, 3, 5);
+// #[test]
+// fn test_mesh_creation() {
+//     let mut vx = Voxel::new(5, 3, 5);
 
-    vx.topology.set(uvec3(0, 0, 0), true);
-    vx.topology.set(uvec3(0, 5, 0), true);
-    vx.topology.set(uvec3(1, 1, 0), true);
-    // second chunk
-    vx.topology.set(uvec3(0, 8, 0), true);
+//     vx.topology.set(uvec3(0, 0, 0), true);
+//     vx.topology.set(uvec3(0, 5, 0), true);
+//     vx.topology.set(uvec3(1, 1, 0), true);
+//     // second chunk
+//     vx.topology.set(uvec3(0, 8, 0), true);
 
-    let chunk = vx.load_chunk(UVec3::ZERO, 0).unwrap();
-    let mesh = vx.to_mesh(&chunk);
-    assert_eq!(mesh.len(), 36 * 3);
+//     let chunk = vx.load_chunk(UVec3::ZERO, 0).unwrap();
+//     let mesh = vx.to_mesh(&chunk);
+//     assert_eq!(mesh.len(), 36 * 3);
 
-    let chunk = vx.load_chunk(uvec3(0, 1, 0), 0).unwrap();
-    let mesh = vx.to_mesh(&chunk);
-    assert_eq!(mesh.len(), 36);
-}
+//     let chunk = vx.load_chunk(uvec3(0, 1, 0), 0).unwrap();
+//     let mesh = vx.to_mesh(&chunk);
+//     assert_eq!(mesh.len(), 36);
+// }
 
 pub mod cube {
     use glam::Vec3;

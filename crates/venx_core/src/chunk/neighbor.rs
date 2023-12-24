@@ -1,6 +1,6 @@
 use glam::{IVec3, UVec3, Vec3};
 
-use crate::voxel::{cpu::voxel::Voxel, vx_trait::VoxelTrait};
+use crate::voxel::{cpu::voxel::Voxel, interfaces::voxel::VoxelInterface};
 
 use super::chunk::Chunk;
 
