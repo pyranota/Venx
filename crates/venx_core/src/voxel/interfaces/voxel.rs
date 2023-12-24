@@ -2,17 +2,13 @@ use std::fmt::Debug;
 
 use glam::UVec3;
 
-use crate::chunk::chunk::Chunk;
+use crate::{chunk::chunk::Chunk, voxel::cpu::mesh::Mesh};
 
-use super::{
-    cpu::mesh::Mesh,
-    segment::{Segment, SegmentStatic},
-};
-
-pub trait VoxelTrait: Debug + LayerTrait {
+use super::layer::LayerInterface;
+pub trait VoxelInterface: Debug + LayerInterface {
     // fn insert_segment(&mut self, segment: Segment, position: UVec3);
-    fn load_chunk(&self, position: UVec3, level: u8, filter: todo!()) -> Option<Chunk>;
-    fn load_chunks(&self, positions: UVec3, level: u8, filter: todo!()) -> Chunk;
+    fn load_chunk(&self, position: UVec3, level: u8) -> Option<Chunk>;
+    fn load_chunks(&self, positions: UVec3, level: u8) -> Chunk;
     fn load_chunk_n_mesh(&self);
 
     fn load_chunks_n_meshes(&self);
