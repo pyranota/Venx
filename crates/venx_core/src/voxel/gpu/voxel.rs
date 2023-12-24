@@ -6,7 +6,7 @@ use crate::{
     chunk::chunk::Chunk,
     voxel::{
         cpu::{mesh::Mesh, voxel::Voxel},
-        interfaces::{layer::LayerInterface, voxel::VoxelInterface},
+        interfaces::{layer::LayerInterface, load::LoadInterface, voxel::VoxelInterface},
     },
 };
 
@@ -21,61 +21,63 @@ pub struct VoxelGpu {
 }
 
 impl LayerInterface for VoxelGpu {
-    fn new_image(&mut self, name: &str) -> usize {
+    fn set_segment(
+        &mut self,
+        layer: usize,
+        segment: crate::voxel::segment::Segment,
+        position: bevy::prelude::UVec3,
+    ) {
         todo!()
     }
 
-    fn new_canvas(&mut self, name: &str) -> usize {
+    fn set_voxel(&mut self, layer: usize, position: bevy::prelude::UVec3, ty: usize) {
         todo!()
     }
 
-    fn get_image(&self, handle: usize) -> &crate::voxel::cpu::layer::image::Image {
-        todo!()
-    }
-
-    fn get_image_mut(&mut self, handle: usize) -> &mut crate::voxel::cpu::layer::image::Image {
-        todo!()
-    }
-
-    fn get_canvas(&self, handle: usize) -> &crate::voxel::cpu::layer::canvas::Canvas {
-        todo!()
-    }
-
-    fn get_canvas_mut(&mut self, handle: usize) -> &mut crate::voxel::cpu::layer::canvas::Canvas {
+    fn compress(&mut self, layer: usize) {
         todo!()
     }
 }
 
-impl VoxelInterface for VoxelGpu {
-    // fn insert_segment(&mut self, segment: crate::voxel::segment::Segment, position: glam::UVec3) {
-    //     todo!()
-    // }
-
-    fn load_chunk(
-        &self,
-        position: glam::UVec3,
-        level: u8,
-    ) -> std::option::Option<crate::chunk::chunk::Chunk> {
+impl LoadInterface for VoxelGpu {
+    fn load_chunk(&self, position: bevy::prelude::UVec3) -> Chunk {
         todo!()
     }
 
-    fn load_chunks(&self, position: glam::UVec3, level: u8) -> crate::chunk::chunk::Chunk {
+    fn load_chunks(&self) {
         todo!()
     }
 
-    fn load_chunk_n_mesh(&self) {
+    fn overlay_chunk(&self) {
         todo!()
     }
 
-    fn load_chunks_n_meshes(&self) {
+    fn overlay_chunks(&self) {
         todo!()
     }
 
     fn compute_mesh_from_chunk(&self, chunk: &Chunk) -> Mesh {
         todo!()
     }
+    // fn load_chunk(&self, position: bevy::prelude::UVec3, level: u8) -> Option<Chunk> {
+    //     todo!()
+    // }
 
-    fn get(&self, level: u8, position: glam::UVec3) -> Option<usize> {
-        todo!()
-    }
+    // fn load_chunks() {
+    //     todo!()
+    // }
+
+    // fn overlay_chunk() {
+    //     todo!()
+    // }
+
+    // fn overlay_chunks() {
+    //     todo!()
+    // }
+}
+
+impl VoxelInterface for VoxelGpu {
+    // fn insert_segment(&mut self, segment: crate::voxel::segment::Segment, position: glam::UVec3) {
+    //     todo!()
+    // }
 }

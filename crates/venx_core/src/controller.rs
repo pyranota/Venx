@@ -27,7 +27,7 @@ impl Controller {
             VXdata::Gpu(vx) => vx,
         })
     }
-    pub(crate) fn get_voxel_mut(&mut self) -> Box<&mut dyn VoxelInterface> {
+    pub fn get_voxel_mut(&mut self) -> Box<&mut dyn VoxelInterface> {
         Box::new(match &mut self.data {
             VXdata::Cpu(vx) => vx,
             VXdata::Gpu(vx) => vx,

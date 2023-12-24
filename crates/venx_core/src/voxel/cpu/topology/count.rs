@@ -1,8 +1,6 @@
 use std::ops::Range;
 
-use crate::voxel::cpu::facade::Idx;
-
-use super::graph::Graph;
+use super::graph::{Graph, Idx};
 
 impl Graph {
     /// Counts attribute index until given level

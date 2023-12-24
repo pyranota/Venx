@@ -1,7 +1,5 @@
 use glam::{uvec3, UVec3};
 
-use crate::voxel::cpu::facade::Idx;
-
 use super::graph::{Branch, GBranch, Graph};
 
 impl Graph {
@@ -68,14 +66,17 @@ impl Graph {
     //         panic!("It should not be here");
     //     }
     // }
+    pub fn set_segment() {
+        todo!()
+    }
     /// Returns attr position
-    pub fn set(&mut self, mut pos: UVec3, data: u32) -> u32 {
+    pub fn set(&mut self, mut pos: UVec3, solid: bool) {
         let mut size = self.size();
         let mut idx = 0;
         let mut level = self.depth();
 
         if pos.y >= size || pos.x >= size || pos.z >= size {
-            return 0;
+            return;
         }
 
         let mut global_counter = 0;
@@ -109,7 +110,12 @@ impl Graph {
         }
         let child_index = GBranch::get_child_index(pos, 0);
         let branch = &mut self.nodes[idx];
-        branch.children[child_index] = data;
+        if solid {
+            branch.children[child_index] = 1;
+        } else {
+            todo!()
+        }
+
         // //  branch.attr_count += 1;
         // for i in 0..child_index {
         //     let idx = branch.children[i];
@@ -117,7 +123,6 @@ impl Graph {
         //         global_counter += 1;
         //     }
         // }
-        global_counter
     }
 }
 

@@ -28,7 +28,7 @@ impl Segment {
         let position = position.into();
         self.mtx[position.x as usize][position.y as usize][position.z as usize] = block;
     }
-    /// Warning! In chunk you have global position, in segment local
+    /// Iterate over local coordinates and its block types
     pub fn iter<F>(&self, mut callback: F)
     where
         F: FnMut(UVec3, u32),

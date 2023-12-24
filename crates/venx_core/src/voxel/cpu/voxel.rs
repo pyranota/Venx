@@ -9,16 +9,12 @@ use crate::{
     },
 };
 
-use super::{
-    attribute::tetree::TeTree,
-    layer::{canvas::Canvas, Layer},
-    topology::graph::Graph,
-};
+use super::{layer::VXLayer, topology::graph::Graph};
 
 // #[derive(bitcode::Encode, bitcode::Decode)]
 #[derive(Debug)]
 pub struct Voxel {
-    pub layers: Vec<Layer>,
+    pub layers: Vec<VXLayer>,
     pub chunk_level: u8,
     pub segment_level: u8,
     pub depth: u8,
@@ -30,83 +26,12 @@ impl Voxel {
             chunk_level,
             segment_level,
             depth,
-            layers: vec![],
+            layers: vec![VXLayer::new(depth)],
         }
     }
 }
 
-impl LayerInterface for Voxel {
-    fn new_canvas(&mut self, name: &str) -> usize {
-        self.layers.push(Layer::Canvas(Canvas {
-            graph: Graph::new(self.depth),
-        }));
-        self.layers.len() - 1
-    }
-
-    fn new_image(&mut self, name: &str) -> usize {
-        todo!()
-    }
-
-    fn get_image(&self, handle: usize) -> &super::layer::image::Image {
-        todo!()
-    }
-
-    fn get_image_mut(&mut self, handle: usize) -> &mut super::layer::image::Image {
-        todo!()
-    }
-
-    fn get_canvas(&self, handle: usize) -> &Canvas {
-        todo!()
-    }
-
-    fn get_canvas_mut(&mut self, handle: usize) -> &mut Canvas {
-        if let Layer::Canvas(canvas) = &mut self.layers[handle] {
-            return canvas;
-        } else {
-            panic!();
-        }
-    }
-}
-
-impl VoxelInterface for Voxel {
-    fn load_chunk(
-        &self,
-        position: glam::UVec3,
-        level: u8,
-    ) -> std::option::Option<crate::chunk::chunk::Chunk> {
-        self.load_chunk(position, level)
-    }
-
-    fn load_chunks(&self, position: glam::UVec3, level: u8) -> crate::chunk::chunk::Chunk {
-        todo!()
-    }
-
-    fn load_chunk_n_mesh(&self) {
-        todo!()
-    }
-
-    fn load_chunks_n_meshes(&self) {
-        todo!()
-    }
-
-    fn compute_mesh_from_chunk(&self, chunk: &Chunk) -> super::mesh::Mesh {
-        self.to_mesh_naive(chunk)
-    }
-
-    fn get(&self, level: u8, position: bevy::prelude::UVec3) -> Option<usize> {
-        todo!()
-    }
-
-    // fn get(&self, level: u8, position: glam::UVec3) -> Option<usize> {
-    //     if let Some(attr_position) = self.topology.get_attr_position(level, position) {
-    //         if let Some((block, ..)) = self.attribute.get(attr_position as u32) {
-    //             return Some(block as usize);
-    //         }
-    //         return None;
-    //     }
-    //     return None;
-    // }
-}
+impl VoxelInterface for Voxel {}
 
 // #[test]
 // fn test_insert_segment() {

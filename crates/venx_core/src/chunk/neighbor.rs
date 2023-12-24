@@ -15,28 +15,27 @@ impl Voxel {
         let dir: IVec3 = neighbor_direction.into();
         let pos: IVec3 = local_block_position.into();
         let sum = pos + dir;
-
         if sum.min_element() < 0 {
-            if self
-                .get(
-                    chunk.lod_level,
-                    ((chunk.position * chunk_size).as_ivec3() + sum).as_uvec3(),
-                )
-                .is_some()
-            {
-                return Some(1);
-            }
+            // if self
+            //     .get(
+            //         chunk.lod_level,
+            //         ((chunk.position * chunk_size).as_ivec3() + sum).as_uvec3(),
+            //     )
+            //     .is_some()
+            // {
+            //     return Some(1);
+            // }
             return None;
         } else if sum.max_element() >= chunk_size as i32 {
-            if self
-                .get(
-                    chunk.lod_level,
-                    ((chunk.position * chunk_size).as_ivec3() + sum).as_uvec3(),
-                )
-                .is_some()
-            {
-                return Some(1);
-            }
+            // if self
+            //     .get(
+            //         chunk.lod_level,
+            //         ((chunk.position * chunk_size).as_ivec3() + sum).as_uvec3(),
+            //     )
+            //     .is_some()
+            // {
+            //     return Some(1);
+            // }
             return None;
         } else {
             return chunk.get(sum.as_uvec3());

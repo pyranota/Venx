@@ -31,7 +31,23 @@ fn setup(
     // // second chunk
     // vx.topology.set(uvec3(0, 8, 0), true);
     let plat = Plat::load_mca("../../saves/mca/4region/", (-1..0, 0..1)).unwrap();
-    // let mut plat = Plat::new(3, 2, 2);
+    // let mut plat = Plat::new(6, 4, 5);
+    // // let mut plat = Plat::new(3, 2, 2);
+    // plat.controller
+    //     .get_voxel_mut()
+    //     .set_voxel(0, (1, 1, 1).into(), 1);
+
+    // plat.controller
+    //     .get_voxel_mut()
+    //     .set_voxel(0, (1, 2, 1).into(), 2);
+
+    // let chunk = plat.controller.get_voxel().load_chunk((0, 0, 0).into());
+
+    // let
+
+    // dbg!(chunk.get((1, 1, 1)));
+
+    // panic!();
 
     // let mut segment = Segment::new(5);
     // let red = 3;
@@ -58,18 +74,23 @@ fn setup(
     // let mut final_chunk = None;
     log::info!("Loading chunks and computing mesh");
 
-    for x in 0..96 {
-        for z in 0..96 {
-            for y in (0..32).rev() {
-                // if let Some(chunk) = plat.load_chunk(uvec3(x, y, z), 0) {
-                //     let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
-
-                //     for (pos, color) in vx_mesh {
-                //         bevy_mesh.push(pos);
-                //         bevy_color.push(color);
+    for x in 0..18 {
+        for z in 0..18 {
+            for y in (0..10).rev() {
+                let chunk = plat.controller.get_voxel().load_chunk(uvec3(x, y, z));
+                let vx_mesh = plat.controller.get_voxel().compute_mesh_from_chunk(&chunk);
+                // dbg!("Check");
+                // chunk.iter(|p, t| {
+                //     if t != 0 {
+                //         dbg!(p, t);
                 //     }
-                //     // continue;
-                // }
+                // });
+                // panic!();
+                for (pos, color) in vx_mesh {
+                    bevy_mesh.push(pos);
+                    bevy_color.push(color);
+                }
+                // continue;
             }
         }
     }

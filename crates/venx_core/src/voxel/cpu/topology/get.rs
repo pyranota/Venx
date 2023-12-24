@@ -1,14 +1,8 @@
 use glam::{uvec3, UVec3};
 
-use crate::voxel::{
-    cpu::{
-        facade::{AttrPosition, Idx},
-        voxel::Voxel,
-    },
-    segment::Segment,
-};
+use crate::voxel::{cpu::voxel::Voxel, segment::Segment};
 
-use super::graph::{GBranch, Graph};
+use super::graph::{GBranch, Graph, Idx};
 
 impl Graph {
     // pub fn is_at(&self, level: u8, mut position: UVec3) -> bool {
@@ -63,40 +57,37 @@ impl Graph {
 
     //     Some(attr_position)
     // }
-    // pub fn get_node(&self, level: u8, mut position: UVec3) -> Option<(Idx, AttrPosition)> {
-    //     //let child_pos = GBranch::get_child_position(i as u32) * (size) + node_position;
-    //     let mut current_level = self.depth as u8;
-    //     let mut size = self.size();
-    //     let mut found_idx = None;
-    //     let mut attr_position = 0;
+    pub fn get_node(&self, level: u8, mut position: UVec3) -> Option<Idx> {
+        //let child_pos = GBranch::get_child_position(i as u32) * (size) + node_position;
+        let mut current_level = self.depth as u8;
+        let mut size = self.size();
+        let mut found_idx = None;
 
-    //     let mut idx = 0;
-    //     let mut count = 0;
+        let mut idx = 0;
+        let mut count = 0;
 
-    //     while current_level > level {
-    //         let child_index = GBranch::get_child_index(position, current_level - 1);
-    //         attr_position += self.count_children(idx, child_index);
+        while current_level > level {
+            let child_index = GBranch::get_child_index(position, current_level - 1);
 
-    //         let child_id = self.nodes[idx].get_branch().unwrap().children[child_index];
-    //         if child_id != 0 {
-    //             idx = child_id as usize;
-    //             found_idx = Some(child_id as usize);
-    //         } else {
-    //             return None;
-    //         }
-    //         {
-    //             size /= 2;
-    //             position %= size;
-    //             current_level -= 1;
-    //         }
-    //     }
-    //     let child_index = GBranch::get_child_index(position, current_level);
-    //     attr_position += self.count_children(idx, child_index);
-    //     if let Some(idx) = found_idx {
-    //         return Some((idx, attr_position));
-    //     }
-    //     None
-    // }
+            let child_id = self.nodes[idx].children[child_index];
+            if child_id != 0 {
+                idx = child_id as usize;
+                found_idx = Some(child_id as usize);
+            } else {
+                return None;
+            }
+            {
+                size /= 2;
+                position %= size;
+                current_level -= 1;
+            }
+        }
+        let child_index = GBranch::get_child_index(position, current_level);
+        if let Some(idx) = found_idx {
+            return Some(idx);
+        }
+        None
+    }
     // pub fn get_node_untyped(&self, level: u8, mut position: UVec3) -> Option<AttrPosition> {
     //     //let child_pos = GBranch::get_child_position(i as u32) * (size) + node_position;
     //     let mut current_level = self.depth as u8;

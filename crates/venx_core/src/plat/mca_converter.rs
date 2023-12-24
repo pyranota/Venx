@@ -37,7 +37,7 @@ impl Plat {
                                                 "minecraft:dirt" => 1,
                                                 "minecraft:grass_block" => 2,
                                                 "minecraft:stone" => 3,
-                                                "minecraft:water" => 8,
+                                                "minecraft:water" | "minecraft:flowing_water" => 8,
                                                 _ => 404,
                                             };
 
@@ -54,7 +54,13 @@ impl Plat {
                     }
                 }
             }
-            plat.insert_segment(segment, uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32));
+            dbg!("Set Segment");
+            plat.controller.get_voxel_mut().set_segment(
+                0,
+                segment,
+                uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
+            );
+            dbg!("Segment is inserted");
         }
         Ok(plat)
     }

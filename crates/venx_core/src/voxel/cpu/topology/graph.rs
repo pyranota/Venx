@@ -2,6 +2,8 @@ use std::mem::ManuallyDrop;
 
 use glam::UVec3;
 
+pub type Idx = usize;
+
 pub struct Graph {
     pub(crate) depth: u32,
     pub(crate) nodes: Vec<Branch>,

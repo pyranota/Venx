@@ -1,5 +1,5 @@
-pub mod canvas;
-pub mod chunk_loader;
-pub mod image;
+// pub mod canvas;
+pub mod load;
+// pub mod image;
 pub mod layer;
 pub mod voxel;
