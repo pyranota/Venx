@@ -1,4 +1,7 @@
-use super::graph::{Branch, GBranch, Graph};
+use super::{
+    graph::{Branch, GBranch, Graph},
+    level::GLevel,
+};
 
 impl Graph {
     // pub fn new(depth: u8) -> Self {
@@ -16,9 +19,21 @@ impl Graph {
     //     }
     // }
     pub fn new(depth: u8) -> Self {
+        let mut levels = vec![
+            GLevel {
+                nodes: vec![
+                //Branch::default()
+                ]
+            };
+            depth as usize + 1
+        ];
+
+        levels[depth as usize].nodes.push(Branch::default());
+        levels[0].nodes.push(Branch::default());
+
         Graph {
             depth: depth as u32,
-            nodes: vec![Branch::default()],
+            levels,
         }
     }
     // pub async fn load_chunks_cpu<'a>(level: u8, positions: &'a [UVec3]) -> Vec<(Chunk, MeshSize)> {
@@ -36,9 +51,9 @@ impl Graph {
     // }
 
     // In future should use unused nodes
-    pub fn add_branch(&mut self, branch: Branch) -> usize {
-        self.nodes.push(branch);
-        self.nodes.len() - 1
+    pub fn add_branch(&mut self, level: u8, branch: Branch) -> usize {
+        self.levels[level as usize].nodes.push(branch);
+        self.levels[level as usize].nodes.len() // - 1
     }
     pub fn depth(&self) -> u8 {
         self.depth as u8

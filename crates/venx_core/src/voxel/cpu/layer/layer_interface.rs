@@ -35,4 +35,12 @@ impl LayerInterface for Voxel {
         //self.compress(layer);
         //todo!()
     }
+
+    fn get_voxel(
+        &self,
+        position: UVec3,
+    ) -> Option<(usize, crate::voxel::cpu::topology::graph::Idx)> {
+        self.layers[0].get_voxel_cached(position)
+        //self.layers[0].get_voxel(position)
+    }
 }

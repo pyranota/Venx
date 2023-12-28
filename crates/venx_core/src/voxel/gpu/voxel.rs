@@ -37,6 +37,13 @@ impl LayerInterface for VoxelGpu {
     fn compress(&mut self, layer: usize) {
         todo!()
     }
+
+    fn get_voxel(
+        &self,
+        position: bevy::prelude::UVec3,
+    ) -> Option<(usize, crate::voxel::cpu::topology::graph::Idx)> {
+        todo!()
+    }
 }
 
 impl LoadInterface for VoxelGpu {

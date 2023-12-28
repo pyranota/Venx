@@ -1,5 +1,6 @@
 #[cfg(feature = "mca_converter")]
 mod mca_converter;
+mod minecraft_blocks;
 
 use bevy::prelude::Component;
 

@@ -1,4 +1,4 @@
-use glam::{uvec3, vec4, UVec3, Vec3, Vec4};
+use glam::{ivec3, ivec4, uvec3, vec4, UVec3, Vec3, Vec4};
 
 use crate::chunk::chunk::Chunk;
 
@@ -28,12 +28,29 @@ impl Voxel {
         chunk.iter(|pos, block| {
             if block != 0 {
                 let block_color = match block {
-                    1 => vec4(1., 1., 1., 0.5), // White
-                    2 => vec4(0., 1., 0., 0.5), // Green
-                    3 => vec4(1., 0., 0., 0.5), // Red
-                    4 => vec4(0., 0., 1., 0.5), // Blue
-                    _ => vec4(0., 0., 0., 0.5),
+                    1 => ivec3(111, 54, 55),           // Dirt
+                    2 | 17 => ivec3(93, 189, 101),     // Grass
+                    3 | 5 | 6 => ivec3(213, 213, 213), // Stone + Diorite + Andesite
+                    4 => ivec3(255, 155, 155),         // Granite
+                    7 => ivec3(0, 0, 0),               // Bedrock
+                    8 => ivec3(131, 162, 255),         // Water
+                    9 => ivec3(186, 186, 186),         // Gravel
+                    10 => ivec3(255, 214, 9),          // Gold ore
+                    11 => ivec3(226, 226, 226),        // Iron ore
+                    12 => ivec3(47, 47, 47),           // Coal ore
+                    13 => ivec3(156, 81, 0),           // Oak log
+                    14 => ivec3(0, 163, 33),           // Oak leaves
+                    15 => ivec3(27, 96, 243),          // Lapis ore
+                    16 => ivec3(245, 241, 169),        // Sand
+                    18 => ivec3(116, 243, 255),        // Diamond ore
+                    19 => ivec3(196, 151, 80),         // Birch log
+                    20 => ivec3(60, 223, 83),          // Birch leaves
+                    21 => ivec3(126, 51, 0),           // Dark Oak log
+                    22 => ivec3(0, 143, 13),           // Dark Oak leaves
+                    _ => ivec3(0, 0, 0),               // Else
                 };
+
+                let block_color = block_color.as_vec3().extend(1.) / vec4(256., 256., 256., 1.0);
 
                 if self
                     .get_neighbor(

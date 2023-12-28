@@ -2,15 +2,18 @@ use std::mem::ManuallyDrop;
 
 use glam::UVec3;
 
+use super::level::GLevel;
+
 pub type Idx = usize;
 
+#[derive(Debug)]
 pub struct Graph {
     pub(crate) depth: u32,
-    pub(crate) nodes: Vec<Branch>,
+    pub(crate) levels: Vec<GLevel>,
 }
 
-#[derive(Debug, Default)]
-pub(crate) struct Branch {
+#[derive(Debug, Default, Clone)]
+pub struct Branch {
     // If branch is on 1 level, than all children are identified as blocks
     // u32 == u24 // Each layer can be maximum 500mb
     pub children: [u32; 8],

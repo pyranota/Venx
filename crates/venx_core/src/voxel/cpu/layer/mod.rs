@@ -2,6 +2,7 @@ use std::collections::HashMap;
 
 use self::slice::Slice;
 
+mod get;
 mod layer_interface;
 mod slice;
 

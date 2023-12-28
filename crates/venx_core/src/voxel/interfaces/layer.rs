@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use glam::UVec3;
 
-use crate::voxel::segment::Segment;
+use crate::voxel::{cpu::topology::graph::Idx, segment::Segment};
 
 pub trait LayerInterface {
     // fn new_image(&mut self, name: &str) -> usize;
@@ -12,6 +12,8 @@ pub trait LayerInterface {
     fn set_segment(&mut self, layer: usize, segment: Segment, position: UVec3);
     fn set_voxel(&mut self, layer: usize, position: UVec3, ty: usize);
     fn compress(&mut self, layer: usize);
+
+    fn get_voxel(&self, position: UVec3) -> Option<(usize, Idx)>;
     // fn get_image(&self, handle: usize) -> &Image;
     // fn get_image_mut(&mut self, handle: usize) -> &mut Image;
 

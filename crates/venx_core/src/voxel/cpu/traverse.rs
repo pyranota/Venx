@@ -47,7 +47,8 @@ impl Graph {
         where
             F: FnMut(&Branch, usize, UVec3, u8) -> bool,
         {
-            let node = &graph.nodes[idx];
+            // dbg!(idx);
+            let node = &graph.levels[level as usize][idx];
 
             //   let block = vx.attribute.get(attr_position).unwrap();
 

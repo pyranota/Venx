@@ -1,3 +1,5 @@
+use std::time::{Duration, Instant};
+
 use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
 use glam::{uvec3, vec4};
@@ -5,6 +7,8 @@ use main::{plat::VenxPlat, Venx};
 use venx_core::plat::Plat;
 use venx_core::voxel::cpu::topology::graph::Graph;
 use venx_core::voxel::cpu::voxel::Voxel;
+use venx_core::voxel::interfaces::layer::LayerInterface;
+use venx_core::voxel::interfaces::voxel::VoxelInterface;
 use venx_core::voxel::segment::{Segment, SegmentStatic};
 
 mod main;
@@ -29,10 +33,25 @@ fn setup(
     // vx.topology.set(uvec3(0, 2, 0), true);
     // vx.topology.set(uvec3(1, 3, 0), true);
     // // second chunk
+    info!("Starting the program");
     // vx.topology.set(uvec3(0, 8, 0), true);
-    let plat = Plat::load_mca("../../saves/mca/4region/", (-1..0, 0..1)).unwrap();
-    // let mut plat = Plat::new(6, 4, 5);
+    info!("Converting minecraft mca map into plat");
+    let mut plat = Plat::load_mca("../../saves/mca/4region/", (-1..0, 0..1)).unwrap();
+
+    //let mut plat = Plat::new(4, 3, 3);
     // // let mut plat = Plat::new(3, 2, 2);
+
+    // for _ in 0..100 {
+    //     let start = Instant::now();
+    //     for x in 0..200 {
+    //         for z in 0..200 {
+    //             v.get_voxel((x, 33, z).into());
+    //         }
+    //     }
+    //     dbg!(start.elapsed());
+    // }
+
+    // panic!();
     // plat.controller
     //     .get_voxel_mut()
     //     .set_voxel(0, (1, 1, 1).into(), 1);
@@ -44,6 +63,29 @@ fn setup(
     // let chunk = plat.controller.get_voxel().load_chunk((0, 0, 0).into());
 
     // let
+
+    let voxel = plat.controller.get_voxel_mut();
+    use downcast_rs::Downcast;
+    let v: &mut Voxel = voxel.downcast_mut().unwrap();
+
+    // v.set_voxel(0, (1, 2, 1).into(), 4);
+
+    // v.set_voxel(0, (1, 3, 1).into(), 3);
+    // v.set_voxel(0, (1, 4, 1).into(), 2);
+    // v.set_voxel(0, (2, 4, 1).into(), 5);
+    // v.set_voxel(0, (3, 4, 1).into(), 6);
+    // v.set_voxel(0, (0, 4, 1).into(), 6);
+
+    v.set_voxel(0, (0, 6, 1).into(), 6);
+    v.set_voxel(0, (0, 7, 2).into(), 6);
+
+    v.set_voxel(0, (2, 6, 1).into(), 6);
+    v.set_voxel(0, (2, 7, 2).into(), 6);
+
+    // v.set_voxel(0, (1, 1, 1).into(), 1);
+
+    // dbg!(v);
+    // panic!();
 
     // dbg!(chunk.get((1, 1, 1)));
 
@@ -74,17 +116,17 @@ fn setup(
     // let mut final_chunk = None;
     log::info!("Loading chunks and computing mesh");
 
-    for x in 0..18 {
-        for z in 0..18 {
-            for y in (0..10).rev() {
+    for x in 0..12 {
+        for z in 0..12 {
+            for y in (0..17).rev() {
                 let chunk = plat.controller.get_voxel().load_chunk(uvec3(x, y, z));
                 let vx_mesh = plat.controller.get_voxel().compute_mesh_from_chunk(&chunk);
                 // dbg!("Check");
-                // chunk.iter(|p, t| {
-                //     if t != 0 {
-                //         dbg!(p, t);
-                //     }
-                // });
+                chunk.iter(|p, t| {
+                    if t != 0 {
+                        // dbg!(p, t);
+                    }
+                });
                 // panic!();
                 for (pos, color) in vx_mesh {
                     bevy_mesh.push(pos);

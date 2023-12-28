@@ -1,10 +1,10 @@
 use anyhow::{bail, Result};
-use bevy::utils::HashMap;
+use bevy::{log::info, utils::HashMap};
 use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
 use std::{fs, ops::Range, path::PathBuf};
 
-use crate::voxel::segment::Segment;
+use crate::{plat::minecraft_blocks::match_block, voxel::segment::Segment};
 
 use super::Plat;
 
@@ -33,13 +33,34 @@ impl Plat {
                                     if let Some(block) = complete_chunk.block(x, y - 60, z) {
                                         if block.name() != "minecraft:air" {
                                             // dbg!(block.name());
+                                            //let block_id = match_block(block.name());
                                             let block_id = match block.name() {
                                                 "minecraft:dirt" => 1,
                                                 "minecraft:grass_block" => 2,
                                                 "minecraft:stone" => 3,
+                                                "minecraft:granite" => 4,
+                                                "minecraft:diorite" => 5,
+                                                "minecraft:andesite" => 6,
+                                                "minecraft:bedrock" => 7,
                                                 "minecraft:water" | "minecraft:flowing_water" => 8,
+                                                "minecraft:gravel" => 9,
+                                                "minecraft:gold_ore" => 10,
+                                                "minecraft:iron_ore" => 11,
+                                                "minecraft:coal_ore" => 12,
+                                                "minecraft:oak_log" => 13,
+                                                "minecraft:oak_leaves" => 14,
+                                                "minecraft:lapis_ore" => 15,
+                                                "minecraft:sand" => 16,
+                                                "minecraft:grass" => 17,
+                                                "minecraft:diamond_ore" => 18,
+                                                "minecraft:birch_log" => 19,
+                                                "minecraft:birch_leaves" => 20,
+                                                "minecraft:dark_oak_log" => 21,
+                                                "minecraft:dark_oak_leaves" => 22,
                                                 _ => 404,
                                             };
+
+                                            // let block_id = 1;
 
                                             segment.set(
                                                 uvec3(x as u32, y as u32, z as u32)
@@ -54,13 +75,13 @@ impl Plat {
                     }
                 }
             }
-            dbg!("Set Segment");
+            info!("Set Segment");
             plat.controller.get_voxel_mut().set_segment(
                 0,
                 segment,
                 uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
             );
-            dbg!("Segment is inserted");
+            info!("Segment is inserted");
         }
         Ok(plat)
     }

@@ -25,7 +25,7 @@ impl Voxel {
             // {
             //     return Some(1);
             // }
-            return None;
+            return Some(1);
         } else if sum.max_element() >= chunk_size as i32 {
             // if self
             //     .get(
@@ -36,7 +36,7 @@ impl Voxel {
             // {
             //     return Some(1);
             // }
-            return None;
+            return Some(1);
         } else {
             return chunk.get(sum.as_uvec3());
         }
