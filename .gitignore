@@ -4,4 +4,10 @@ target
 .vscode
 Cargo.lock
 easy_compute/Cargo.lock
-venx/expr/*
+.venx/expr/*
+
+# Added by cargo
+#
+# already existing elements were commented out
+
+#/target

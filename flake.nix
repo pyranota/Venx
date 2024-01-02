@@ -1,28 +1,38 @@
-{ pkgs ? import <nixpkgs> { } }:
-with pkgs;
-mkShell rec {
-  stdenv = pkgs.clangStdenv;
-  buildInputs = with pkgs; [
-    libGL
-    alsa-lib
-    openssl
-    clang
-    freetype
-    cmake
-    udev
-    vulkan-loader
-    vulkan-headers
-    xorg.libX11
-    libxkbcommon
-    fontconfig
-    wayland
-    xorg.libXcursor
-    xorg.libXrandr
-    xorg.libXi
-    xorg.libxcb
-  ];
-  nativeBuildInputs = with pkgs; [ pkg-config ];
-  LD_LIBRARY_PATH = lib.makeLibraryPath buildInputs;
-  WINIT_UNIX_BACKEND = "x11";
+{
+  description = "A flake for Venx voxel engine";
+
+  inputs.flake-utils.url = "github:numtide/flake-utils";
+
+  outputs = {  self, nixpkgs, flake-utils }: 
+
+    flake-utils.lib.eachDefaultSystem
+      (system:
+        let pkgs = nixpkgs.legacyPackages.${system}; in
+        {
+          devShells.default = import ./shell.nix { inherit pkgs; };
+
+          apps.demo = {
+            type = "app";
+            program = "<store-path>";
+          };
+        }
+      );
+
+    # packages.x86_64-linux.hello = nixpkgs.legacyPackages.x86_64-linux.hello;
+
+    # packages.x86_64-linux.default = self.packages.x86_64-linux.hello;
+
+    # # Executed by `nix run .#<name>`
+    # apps.x86_64-linux.demo = {
+    #   type = "app";
+    #   program = "<store-path>";
+    # };
+
+    # devShells."<system>"."<name>" = derivation;
+    # # Used by `nix develop`
+    # devShells."<system>".default = derivation;
+    # # Hydra build jobs
+    # hydraJobs."<attr>"."<system>" = derivation;
+
+  
 }
-# NIXPKGS_ALLOW_UNFREE=1 nix run --override-input nixpkgs nixpkgs/nixos-23.05 --impure github:guibou/nixGL#nixVulkanNvidia -- cargo r --bin bevy
