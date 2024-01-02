@@ -1,4 +1,4 @@
-use venx_compute::ComputeServer;
+use easy_compute::ComputeServer;
 
 use crate::{
     shared::byte_casting::any_as_u8_slice,
@@ -9,7 +9,7 @@ use crate::{
         interfaces::voxel::VoxelInterface,
     },
 };
-/// Abstraction level. 
+/// Abstraction level.
 /// Handles all operations of manipulating voxels
 /// Its independant from executor (cpu/gpu)
 /// Might be removed

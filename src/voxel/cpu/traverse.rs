@@ -5,8 +5,6 @@ use crate::voxel::cpu::{
     utils::lvl_to_size::lvl_to_size,
 };
 
-use super::{topology::graph::GBranch, voxel::Voxel};
-
 impl Graph {
     //     // todo: Move to graph class
     //     /// Traversing each node and calling given closure with args: Node, Index, Position
@@ -62,7 +60,7 @@ impl Graph {
 
             for (i, child_idx) in (node.children).into_iter().enumerate() {
                 if child_idx != 0 {
-                    let child_pos = GBranch::get_child_position(i as u32) * (size) + node_position;
+                    let child_pos = Branch::get_child_position(i as u32) * (size) + node_position;
 
                     visit_node(graph, child_idx as usize, child_pos, level - 1, f);
                 }

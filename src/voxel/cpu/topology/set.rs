@@ -1,6 +1,6 @@
 use glam::{uvec3, UVec3};
 
-use super::graph::{Branch, GBranch, Graph};
+use super::graph::{Branch, Graph};
 
 impl Graph {
     // pub fn set_untyped(&mut self, mut pos: UVec3, data: bool) {
@@ -80,7 +80,7 @@ impl Graph {
         }
 
         while level > 1 {
-            let child_index = GBranch::get_child_index(pos, level - 1);
+            let child_index = Branch::get_child_index(pos, level - 1);
             // dbg!(idx);
             let branch = &self.levels[level as usize][idx];
 
@@ -102,7 +102,7 @@ impl Graph {
                 pos.z %= size;
             }
         }
-        let child_index = GBranch::get_child_index(pos, 0);
+        let child_index = Branch::get_child_index(pos, 0);
         let branch = &mut self.levels[1][idx];
         if solid {
             branch.children[child_index] = 1;
