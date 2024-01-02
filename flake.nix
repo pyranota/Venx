@@ -11,9 +11,42 @@
         {
           devShells.default = import ./shell.nix { inherit pkgs; };
 
+
+          # apps.bevy =
+          #   let
+          #     version = "1.5.2";
+          #     inherit (pkgs) stdenv lib;
+          #   in
+          #   stdenv.mkDerivation
+          #     {
+          #       name = "bevy";
+          #       src = self;
+          #       buildInputs = [ pkgs.stdenv.cc.cc.lib ];
+          #       nativeBuildInputs = [ pkgs.stdenv.cc.cc.lib ];
+          #       phases = [ "installPhase" ];
+          #       # unpackPhase = ''
+          #       #   mkdir -p $out/bin
+          #       #   tar -xzf $src -C $out/bin
+          #       # '';
+
+          #       # this phase is not necessary, but it's here to show how to install
+          #       installPhase = ''
+          #       '';
+
+          #       # meta = with nixpkgs.lib; {
+          #       #   homepage = "https://github.com/GoogleCloudPlatform/cloud-spanner-emulator";
+          #       #   description =
+          #       #     "Cloud Spanner Emulator is a local emulator for the Google Cloud Spanner database service.";
+          #       #   platforms = platforms.linux;
+          #       # };
+          #     };
+          
+
           apps.demo = {
             type = "app";
-            program = "<store-path>";
+            buildPhase = "cargo build";
+            program = 
+              
           };
         }
       );
