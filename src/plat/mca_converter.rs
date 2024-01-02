@@ -17,7 +17,7 @@ impl Plat {
     ) -> Result<Self> {
         let rgs = from_dir(PathBuf::from(dir_path), region_range)?;
 
-        let mut plat = Plat::new(10, 4, 9);
+        let mut plat = Plat::new(12, 4, 9);
 
         for (rg_pos, mut region) in rgs {
             let mut segment = Segment::new(9);
@@ -74,13 +74,13 @@ impl Plat {
                     }
                 }
             }
-            //  info!("Set Segment");
+            dbg!("Set Segment");
             plat.controller.get_voxel_mut().set_segment(
                 0,
                 segment,
                 uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
             );
-            //  info!("Segment is inserted");
+            dbg!("Segment is inserted");
         }
         Ok(plat)
     }

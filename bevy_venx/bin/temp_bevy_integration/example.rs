@@ -36,9 +36,9 @@ fn setup(
     info!("Starting the program");
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
-    //let mut plat = Plat::load_mca("../../assets/mca/4region/", (-1..0, 0..1)).unwrap();
+    let mut plat = Plat::load_mca("./assets/mca/9/", (0..3, 0..2)).unwrap();
 
-    let mut plat = Plat::new(4, 3, 3);
+    //let mut plat = Plat::new(4, 3, 3);
     // // let mut plat = Plat::new(3, 2, 2);
 
     // for _ in 0..100 {
@@ -116,9 +116,9 @@ fn setup(
     // let mut final_chunk = None;
     log::info!("Loading chunks and computing mesh");
 
-    for x in 0..12 {
-        for z in 0..12 {
-            for y in (0..17).rev() {
+    for x in 0..(32 * 3) {
+        for z in 0..(32 * 2) {
+            for y in (7..17).rev() {
                 let chunk = plat.controller.get_voxel().load_chunk(uvec3(x, y, z));
                 let vx_mesh = plat.controller.get_voxel().compute_mesh_from_chunk(&chunk);
                 // dbg!("Check");
@@ -129,8 +129,12 @@ fn setup(
                 });
                 // panic!();
                 for (pos, color) in vx_mesh {
-                    bevy_mesh.push(pos);
-                    bevy_color.push(color);
+                    let new_pos: bevy::prelude::Vec3 =
+                        bevy::prelude::Vec3::from_array(pos.to_array());
+                    let new_color: bevy::prelude::Vec4 =
+                        bevy::prelude::Vec4::from_array(color.to_array());
+                    bevy_mesh.push(new_pos);
+                    bevy_color.push(new_color);
                 }
                 // continue;
             }
