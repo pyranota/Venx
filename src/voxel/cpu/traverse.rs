@@ -36,7 +36,8 @@ impl Graph {
     //         }
     //     }
 
-    /// Traversing each node and calling given closure with args: Node, Index, Position
+    /// Traversing each node and calling given closure with args: Node, Index, Position, level
+    /// Return false in closure to drop traversing of subtree
     pub fn traverse_from<F>(&self, idx: usize, node_position: UVec3, level: u8, mut f: F)
     where
         F: FnMut(&Branch, usize, UVec3, u8) -> bool,
@@ -47,10 +48,7 @@ impl Graph {
         where
             F: FnMut(&Branch, usize, UVec3, u8) -> bool,
         {
-            // dbg!(idx);
             let node = &graph.levels[level as usize][idx];
-
-            //   let block = vx.attribute.get(attr_position).unwrap();
 
             if !f(node, idx, node_position, level) {
                 return;

@@ -9,7 +9,10 @@ use crate::{
         interfaces::voxel::VoxelInterface,
     },
 };
-
+/// Abstraction level. 
+/// Handles all operations of manipulating voxels
+/// Its independant from executor (cpu/gpu)
+/// Might be removed
 pub struct Controller {
     data: VXdata,
     cs: ComputeServer,
