@@ -12,8 +12,10 @@ pub struct Graph {
     pub(crate) levels: Vec<GLevel>,
 }
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct Branch {
+    // 0 - normal branch, 1 - link to shared, -1 - empty node
+    pub ident: i32,
     // If branch is on 1 level, than all children are identified as blocks
     // u32 == u24 // Each layer can be maximum 500mb
     pub children: [u32; 8],

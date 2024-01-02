@@ -1,10 +1,12 @@
-use super::graph::Branch;
+use std::collections::HashMap;
 
-pub struct SharedLevel {
-    level: u8,
-    nodes: Branch,
-}
+use super::{graph::Branch, level::GLevel};
 
 pub struct Shared {
-    levels: Vec<SharedLevel>,
+    pub levels: Vec<GLevel>,
+    pub level_caches: Vec<LevelCache>,
+}
+
+pub struct LevelCache {
+    pub map: HashMap<Branch, u32>,
 }
