@@ -1,13 +1,10 @@
 use easy_compute::ComputeServer;
 
-use crate::{
-    shared::byte_casting::any_as_u8_slice,
-    voxel::{
-        cpu::{self, voxel::Voxel},
-        data::VXdata,
-        gpu::voxel::VoxelGpu,
-        interfaces::voxel::VoxelInterface,
-    },
+use crate::voxel::{
+    cpu::{self, voxel::Voxel},
+    data::VXdata,
+    gpu::voxel::VoxelGpu,
+    interfaces::voxel::VoxelInterface,
 };
 /// Abstraction level.
 /// Handles all operations of manipulating voxels

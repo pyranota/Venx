@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use venx_compute::{Buffer, ComputePipeline};
+use easy_compute::{Buffer, ComputePipeline};
 
 use crate::{
     chunk::chunk::Chunk,
@@ -25,12 +25,12 @@ impl LayerInterface for VoxelGpu {
         &mut self,
         layer: usize,
         segment: crate::voxel::segment::Segment,
-        position: bevy::prelude::UVec3,
+        position: glam::UVec3,
     ) {
         todo!()
     }
 
-    fn set_voxel(&mut self, layer: usize, position: bevy::prelude::UVec3, ty: usize) {
+    fn set_voxel(&mut self, layer: usize, position: glam::UVec3, ty: usize) {
         todo!()
     }
 
@@ -40,14 +40,14 @@ impl LayerInterface for VoxelGpu {
 
     fn get_voxel(
         &self,
-        position: bevy::prelude::UVec3,
+        position: glam::UVec3,
     ) -> Option<(usize, crate::voxel::cpu::topology::graph::Idx)> {
         todo!()
     }
 }
 
 impl LoadInterface for VoxelGpu {
-    fn load_chunk(&self, position: bevy::prelude::UVec3) -> Chunk {
+    fn load_chunk(&self, position: glam::UVec3) -> Chunk {
         todo!()
     }
 

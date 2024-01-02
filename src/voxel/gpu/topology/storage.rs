@@ -1,4 +1,4 @@
-use venx_compute::Buffer;
+use easy_compute::Buffer;
 
 #[derive(Debug)]
 pub struct GpuGraphStorage {

@@ -39,12 +39,10 @@ impl Branch {
         let z = if pos[2] < child_size { 0 } else { 1 };
         (x + y * 2 + z * 4) as usize
     }
-    pub fn new(level: u8) -> Self {
+    pub fn new(level: u8, ident: i32) -> Self {
         Self {
-            ref_count: 1,
-            attr_count: Default::default(),
+            ident,
             children: Default::default(),
-            level: level as u32,
         }
     }
 }

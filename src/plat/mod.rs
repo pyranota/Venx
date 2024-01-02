@@ -2,8 +2,6 @@
 mod mca_converter;
 mod minecraft_blocks;
 
-use bevy::prelude::Component;
-
 use crate::{
     chunk::{chunk::Chunk, storage::ChunksStorage},
     controller::Controller,

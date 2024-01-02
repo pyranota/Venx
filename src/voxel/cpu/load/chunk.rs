@@ -11,7 +11,7 @@ use crate::{
 /// File corresponding for loading chunks
 impl LoadInterface for Voxel {
     /// General way to load chunk, will encounter all layers and slices
-    fn load_chunk(&self, position: bevy::prelude::UVec3) -> crate::chunk::chunk::Chunk {
+    fn load_chunk(&self, position: glam::UVec3) -> crate::chunk::chunk::Chunk {
         let chunk_level = self.chunk_level;
         let mut chunk = Chunk::new(position, 0, self.chunk_level);
 

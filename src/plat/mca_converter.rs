@@ -1,5 +1,4 @@
 use anyhow::{bail, Result};
-use bevy::{log::info, utils::HashMap};
 use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
 use std::{fs, ops::Range, path::PathBuf};
@@ -75,13 +74,13 @@ impl Plat {
                     }
                 }
             }
-            info!("Set Segment");
+            //  info!("Set Segment");
             plat.controller.get_voxel_mut().set_segment(
                 0,
                 segment,
                 uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
             );
-            info!("Segment is inserted");
+            //  info!("Segment is inserted");
         }
         Ok(plat)
     }

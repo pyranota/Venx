@@ -2,7 +2,7 @@ use glam::{uvec3, UVec3};
 
 use crate::voxel::{cpu::voxel::Voxel, segment::Segment};
 
-use super::graph::{GBranch, Graph, Idx};
+use super::graph::{Branch, Graph, Idx};
 
 impl Graph {
     // pub fn is_at(&self, level: u8, mut position: UVec3) -> bool {
@@ -96,7 +96,7 @@ impl Graph {
         let mut idx = 1; // 1;
                          // dbg!("Enter");
         while current_level > level {
-            let child_index = GBranch::get_child_index(position, current_level - 1);
+            let child_index = Branch::get_child_index(position, current_level - 1);
             // dbg!(child_index);
             // panic!();
             let child_id = self.levels[current_level as usize][idx].children[child_index];
@@ -114,7 +114,7 @@ impl Graph {
                 current_level -= 1;
             }
         }
-        let child_index = GBranch::get_child_index(position, current_level);
+        let child_index = Branch::get_child_index(position, current_level);
         if let Some(idx) = found_idx {
             return Some(idx);
         }

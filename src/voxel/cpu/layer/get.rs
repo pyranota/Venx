@@ -2,7 +2,7 @@ use glam::UVec3;
 
 use crate::voxel::{
     cpu::{
-        topology::graph::{GBranch, Idx},
+        topology::graph::{Branch, Idx},
         utils::lvl_to_size::lvl_to_size,
         voxel::Voxel,
     },
@@ -29,7 +29,7 @@ impl VXLayer {
         let mut size = lvl_to_size(self.depth);
 
         while current_level > 0 {
-            let child_index = GBranch::get_child_index(position, current_level - 1);
+            let child_index = Branch::get_child_index(position, current_level - 1);
 
             path[current_level as usize] = child_index;
 

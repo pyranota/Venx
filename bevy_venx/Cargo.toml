@@ -5,4 +5,13 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
+[[bin]]
+name = "bevy"
+path = "bin/temp_bevy_integration/example.rs"
+
 [dependencies]
+bevy = { version = "0.11.2", features = ["dynamic_linking"] }
+bevy_panorbit_camera = "0.8.0"
+venx = { path = "../" }
+glam = "*"
+downcast-rs = "1.2.0"

@@ -1,15 +1,15 @@
 use std::time::{Duration, Instant};
 
-use bevy::prelude::*;
 use bevy::render::render_resource::PrimitiveTopology;
+use bevy::{log, prelude::*};
 use glam::{uvec3, vec4};
 use main::{plat::VenxPlat, Venx};
-use venx_core::plat::Plat;
-use venx_core::voxel::cpu::topology::graph::Graph;
-use venx_core::voxel::cpu::voxel::Voxel;
-use venx_core::voxel::interfaces::layer::LayerInterface;
-use venx_core::voxel::interfaces::voxel::VoxelInterface;
-use venx_core::voxel::segment::{Segment, SegmentStatic};
+use venx::plat::Plat;
+use venx::voxel::cpu::topology::graph::Graph;
+use venx::voxel::cpu::voxel::Voxel;
+use venx::voxel::interfaces::layer::LayerInterface;
+use venx::voxel::interfaces::voxel::VoxelInterface;
+use venx::voxel::segment::{Segment, SegmentStatic};
 
 mod main;
 
@@ -36,9 +36,9 @@ fn setup(
     info!("Starting the program");
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
-    let mut plat = Plat::load_mca("../../saves/mca/4region/", (-1..0, 0..1)).unwrap();
+    //let mut plat = Plat::load_mca("../../assets/mca/4region/", (-1..0, 0..1)).unwrap();
 
-    //let mut plat = Plat::new(4, 3, 3);
+    let mut plat = Plat::new(4, 3, 3);
     // // let mut plat = Plat::new(3, 2, 2);
 
     // for _ in 0..100 {
@@ -66,7 +66,7 @@ fn setup(
 
     let voxel = plat.controller.get_voxel_mut();
     use downcast_rs::Downcast;
-    let v: &mut Voxel = voxel.downcast_mut().unwrap();
+    // let v: &mut Voxel = voxel.downcast_mut().unwrap();
 
     // v.set_voxel(0, (1, 2, 1).into(), 4);
 
@@ -76,11 +76,11 @@ fn setup(
     // v.set_voxel(0, (3, 4, 1).into(), 6);
     // v.set_voxel(0, (0, 4, 1).into(), 6);
 
-    v.set_voxel(0, (0, 6, 1).into(), 6);
-    v.set_voxel(0, (0, 7, 2).into(), 6);
+    // v.set_voxel(0, (0, 6, 1).into(), 6);
+    // v.set_voxel(0, (0, 7, 2).into(), 6);
 
-    v.set_voxel(0, (2, 6, 1).into(), 6);
-    v.set_voxel(0, (2, 7, 2).into(), 6);
+    // v.set_voxel(0, (2, 6, 1).into(), 6);
+    // v.set_voxel(0, (2, 7, 2).into(), 6);
 
     // v.set_voxel(0, (1, 1, 1).into(), 1);
 

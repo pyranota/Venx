@@ -1,5 +1,5 @@
 use super::{
-    graph::{Branch, GBranch, Graph},
+    graph::{Branch, Graph},
     level::GLevel,
 };
 
@@ -34,6 +34,8 @@ impl Graph {
         Graph {
             depth: depth as u32,
             levels,
+            empty_head: 0, // Todo handle this shit
+            root: 0,
         }
     }
     // pub async fn load_chunks_cpu<'a>(level: u8, positions: &'a [UVec3]) -> Vec<(Chunk, MeshSize)> {

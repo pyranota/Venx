@@ -22,6 +22,9 @@ Venx is feature rich highly performant voxel engine focused on large worlds and 
 - [ ] AI path finder
 ## Getting started
 ### Cargo
-### Nix
+### Nix/NixOS
+Currently you can only run mca converter example 
+`NIXPKGS_ALLOW_UNFREE=1 nix run --override-input nixpkgs nixpkgs/nixos-23.05 --impure github:guibou/nixGL#nixVulkanNvidia -- cargo r --release --package bevy_venx --bin bevy`
+
 ### Docker
 `todo`

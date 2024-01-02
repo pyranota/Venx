@@ -1,14 +1,12 @@
 use std::{any::Any, fmt::Debug};
 
-use downcast_rs::{impl_downcast, Downcast};
 use glam::UVec3;
 
 use crate::{chunk::chunk::Chunk, voxel::cpu::mesh::Mesh};
 
 use super::{layer::LayerInterface, load::LoadInterface};
 
-impl_downcast!(VoxelInterface);
-pub trait VoxelInterface: Debug + LayerInterface + LoadInterface + Downcast {
+pub trait VoxelInterface: Debug + LayerInterface + LoadInterface {
     // fn insert_segment(&mut self, segment: Segment, position: UVec3);
     // fn load_chunk(&self, position: UVec3, level: u8) -> Option<Chunk>;
     // fn load_chunks(&self, positions: UVec3, level: u8) -> Chunk;
