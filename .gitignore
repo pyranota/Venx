@@ -3,6 +3,5 @@ target
 /Cargo.lock
 .vscode
 Cargo.lock
-crates/venx_compute/Cargo.lock
-saves
-crates/venx_core/expr/*
+easy_compute/Cargo.lock
+venx/expr/*
