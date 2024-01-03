@@ -36,8 +36,9 @@ fn setup(
     info!("Starting the program");
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
-    let mut plat = Plat::load_mca("./assets/mca/9/", (0..3, 0..2)).unwrap();
-
+    let start = Instant::now();
+    let mut plat = Plat::load_mca("./assets/mca/4region/", (0..2, 0..2)).unwrap();
+    dbg!(start.elapsed());
     //let mut plat = Plat::new(4, 3, 3);
     // // let mut plat = Plat::new(3, 2, 2);
 
@@ -50,6 +51,8 @@ fn setup(
     //     }
     //     dbg!(start.elapsed());
     // }
+
+    // plat.controller.get_voxel().
 
     // panic!();
     // plat.controller
@@ -66,8 +69,15 @@ fn setup(
 
     let voxel = plat.controller.get_voxel_mut();
     use downcast_rs::Downcast;
-    // let v: &mut Voxel = voxel.downcast_mut().unwrap();
 
+    let v: &mut Voxel = voxel.downcast_mut().unwrap();
+    for layer in &v.layers {
+        for (key, slice) in &layer.slices {
+            for level in &slice.graph.levels {
+                dbg!(level.nodes.len());
+            }
+        }
+    }
     // v.set_voxel(0, (1, 2, 1).into(), 4);
 
     // v.set_voxel(0, (1, 3, 1).into(), 3);

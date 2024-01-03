@@ -21,7 +21,7 @@ impl Graph {
     pub fn new(depth: u8) -> Self {
         let mut levels = vec![
             GLevel {
-                nodes: Vec::with_capacity(2_000_000),
+                nodes: Vec::with_capacity(9_000_000),
             };
             depth as usize + 1
         ];

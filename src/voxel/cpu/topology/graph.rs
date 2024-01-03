@@ -9,7 +9,7 @@ pub type Idx = usize;
 #[derive(Debug)]
 pub struct Graph {
     pub(crate) depth: u32,
-    pub(crate) levels: Vec<GLevel>,
+    pub levels: Vec<GLevel>,
     pub empty_head: Idx,
     pub root: Idx,
 }
