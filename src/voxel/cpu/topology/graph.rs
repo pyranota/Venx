@@ -10,19 +10,28 @@ pub type Idx = usize;
 pub struct Graph {
     pub(crate) depth: u32,
     pub levels: Vec<GLevel>,
-    pub empty_head: Idx,
+
     pub root: Idx,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
 pub struct Branch {
-    /// 0 - normal branch, 1 - link to shared, -1 - empty node
+    /// `0` - normal branch,
+    /// `1` - link to shared,
+    /// `-1` - empty node,
+    /// `2` - tmp link to node on same level.
     /// if its `-1`, first child will be interpreted as link to the next empty node
     /// And second child as previous node. If there is no nodes it will be `0`
     pub ident: i32,
     /// If branch is on 1 level, than all children are identified as blocks
     /// u32 == u24 // Each layer can be maximum 500mb
     pub children: [u32; 8],
+    // After reading this, you might be wondering,
+    // Why not to use enums or any other data type
+    // Thats why the same alghorithm should be implemented on cpu and gpu.
+    // Howewer on gpu there is no enums and that fancy data structs
+    // And for making things uniform and similar it uses that simple types.
+    // Plus its makes much easier to convert and send to gpu.
 }
 
 impl Branch {
@@ -30,7 +39,6 @@ impl Branch {
     pub fn get_child_position(i: u32) -> UVec3 {
         UVec3::new(i & 1, (i >> 1) & 1, (i >> 2) & 1)
     }
-
     /// Convert position of node in 3d space coordinate to internal child branch index
     pub fn get_child_index(pos: UVec3, level: u8) -> usize {
         let child_size = 1 << level;

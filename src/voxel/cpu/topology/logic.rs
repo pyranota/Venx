@@ -22,6 +22,7 @@ impl Graph {
         let mut levels = vec![
             GLevel {
                 nodes: Vec::with_capacity(9_000_000),
+                empty_head: 0,
             };
             depth as usize + 1
         ];
@@ -32,7 +33,6 @@ impl Graph {
         Graph {
             depth: depth as u32,
             levels,
-            empty_head: 0, // Todo handle this shit
             root: 0,
         }
     }

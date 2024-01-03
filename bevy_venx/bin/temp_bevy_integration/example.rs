@@ -8,6 +8,7 @@ use venx::plat::Plat;
 use venx::voxel::cpu::topology::graph::Graph;
 use venx::voxel::cpu::voxel::Voxel;
 use venx::voxel::interfaces::layer::LayerInterface;
+use venx::voxel::interfaces::load::LoadInterface;
 use venx::voxel::interfaces::voxel::VoxelInterface;
 use venx::voxel::segment::{Segment, SegmentStatic};
 
@@ -37,9 +38,9 @@ fn setup(
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
     let start = Instant::now();
-    let mut plat = Plat::load_mca("./assets/mca/4region/", (0..2, 0..2)).unwrap();
+    //  let mut plat = Plat::load_mca("./assets/mca/4region/", (0..1, 0..1)).unwrap();
     dbg!(start.elapsed());
-    //let mut plat = Plat::new(4, 3, 3);
+    let mut plat = Plat::new(6, 3, 3);
     // // let mut plat = Plat::new(3, 2, 2);
 
     // for _ in 0..100 {
@@ -71,30 +72,32 @@ fn setup(
     use downcast_rs::Downcast;
 
     let v: &mut Voxel = voxel.downcast_mut().unwrap();
-    for layer in &v.layers {
-        for (key, slice) in &layer.slices {
-            for level in &slice.graph.levels {
-                dbg!(level.nodes.len());
-            }
-        }
-    }
-    // v.set_voxel(0, (1, 2, 1).into(), 4);
+    // for layer in &v.layers {
+    //     for (key, slice) in &layer.slices {
+    //         for level in &slice.graph.levels {
+    //             dbg!(level.nodes.len());
+    //         }
+    //     }
+    // }
+    v.set_voxel(0, (1, 2, 1).into(), 4);
 
-    // v.set_voxel(0, (1, 3, 1).into(), 3);
-    // v.set_voxel(0, (1, 4, 1).into(), 2);
-    // v.set_voxel(0, (2, 4, 1).into(), 5);
-    // v.set_voxel(0, (3, 4, 1).into(), 6);
-    // v.set_voxel(0, (0, 4, 1).into(), 6);
+    v.set_voxel(0, (1, 3, 1).into(), 3);
+    v.set_voxel(0, (1, 4, 1).into(), 2);
+    v.set_voxel(0, (2, 4, 1).into(), 5);
+    v.set_voxel(0, (3, 4, 1).into(), 6);
+    v.set_voxel(0, (0, 4, 1).into(), 6);
 
-    // v.set_voxel(0, (0, 6, 1).into(), 6);
-    // v.set_voxel(0, (0, 7, 2).into(), 6);
+    v.set_voxel(0, (0, 6, 1).into(), 6);
+    v.set_voxel(0, (0, 7, 2).into(), 6);
 
-    // v.set_voxel(0, (2, 6, 1).into(), 6);
-    // v.set_voxel(0, (2, 7, 2).into(), 6);
+    v.set_voxel(0, (2, 6, 1).into(), 6);
+    v.set_voxel(0, (2, 7, 2).into(), 6);
 
-    // v.set_voxel(0, (1, 1, 1).into(), 1);
+    v.set_voxel(0, (1, 1, 1).into(), 1);
 
-    // dbg!(v);
+    v.layers[0].merge();
+    // dbg!(&v);
+
     // panic!();
 
     // dbg!(chunk.get((1, 1, 1)));
@@ -126,11 +129,11 @@ fn setup(
     // let mut final_chunk = None;
     log::info!("Loading chunks and computing mesh");
 
-    for x in 0..(32 * 3) {
-        for z in 0..(32 * 2) {
-            for y in (7..17).rev() {
-                let chunk = plat.controller.get_voxel().load_chunk(uvec3(x, y, z));
-                let vx_mesh = plat.controller.get_voxel().compute_mesh_from_chunk(&chunk);
+    for x in 0..(2 * 3) {
+        for z in 0..(2 * 2) {
+            for y in (0..7).rev() {
+                let chunk = v.load_chunk(uvec3(x, y, z));
+                let vx_mesh = v.compute_mesh_from_chunk(&chunk);
                 // dbg!("Check");
                 chunk.iter(|p, t| {
                     if t != 0 {
