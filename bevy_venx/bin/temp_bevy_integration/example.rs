@@ -38,9 +38,9 @@ fn setup(
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
     let start = Instant::now();
-    //  let mut plat = Plat::load_mca("./assets/mca/4region/", (0..1, 0..1)).unwrap();
+    let mut plat = Plat::load_mca("./assets/mca/4region/", (0..2, 0..2)).unwrap();
     dbg!(start.elapsed());
-    let mut plat = Plat::new(6, 3, 3);
+    //let mut plat = Plat::new(6, 3, 3);
     // // let mut plat = Plat::new(3, 2, 2);
 
     // for _ in 0..100 {
@@ -95,7 +95,7 @@ fn setup(
 
     v.set_voxel(0, (1, 1, 1).into(), 1);
 
-    v.layers[0].merge();
+    // v.layers[0].merge();
     // dbg!(&v);
 
     // panic!();
@@ -129,9 +129,9 @@ fn setup(
     // let mut final_chunk = None;
     log::info!("Loading chunks and computing mesh");
 
-    for x in 0..(2 * 3) {
-        for z in 0..(2 * 2) {
-            for y in (0..7).rev() {
+    for x in 0..(32 * 3) {
+        for z in 0..(32 * 2) {
+            for y in (5..15).rev() {
                 let chunk = v.load_chunk(uvec3(x, y, z));
                 let vx_mesh = v.compute_mesh_from_chunk(&chunk);
                 // dbg!("Check");

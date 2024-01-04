@@ -1,17 +1,25 @@
-use std::mem::ManuallyDrop;
+use std::{collections::HashMap, mem::ManuallyDrop};
 
 use glam::UVec3;
 
-use super::level::GLevel;
+use super::{level::GLevel, shared::Shared};
 
 pub type Idx = usize;
 
 #[derive(Debug)]
 pub struct Graph {
-    pub(crate) depth: u32,
+    /// Maximal depth of graph, can be extended and/or shrinked
+    /// 2^depth represents maximum world size
+    pub depth: u32,
+    /// Nodes are organized in levels. That helps to instantly get all nodes at same level
+    /// Each level contains only nodes that are referenced only one time
+    /// You can safely edit this graph aslong it does not contain link to shared storage
     pub levels: Vec<GLevel>,
-
-    pub root: Idx,
+    /// Shared nodes are organized similarly as normal nodes, but with key difference
+    /// They are linked or were referenced from 2 more nodes
+    /// During merging if there were found 2 same nodes in regular nodes, they would be deleted from normal tree
+    /// And added to shared storage
+    pub shared: Shared,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
@@ -20,6 +28,8 @@ pub struct Branch {
     /// `1` - link to shared,
     /// `-1` - empty node,
     /// `2` - tmp link to node on same level.
+    /// `3` - leaf node (single node at 0 level with idx 1)
+    /// `9` - not usable reserved node.
     /// if its `-1`, first child will be interpreted as link to the next empty node
     /// And second child as previous node. If there is no nodes it will be `0`
     pub ident: i32,

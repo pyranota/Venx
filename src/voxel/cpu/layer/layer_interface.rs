@@ -7,9 +7,7 @@ use crate::voxel::{
 
 impl LayerInterface for Voxel {
     fn set_voxel(&mut self, layer: usize, position: UVec3, ty: usize) {
-        let slice = self.layers[layer].get_slice_mut_or_create(ty);
-
-        slice.graph.set(position, true);
+        self.layers[layer].graph.set(position, ty as u32);
     }
 
     fn compress(&mut self, layer: usize) {

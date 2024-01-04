@@ -17,19 +17,21 @@ impl LoadInterface for Voxel {
 
         let chunk_size = lvl_to_size::lvl_to_size(chunk_level);
 
-        // let slice = self.layers[0].slices.get(&1).unwrap();
-
-        for (ty, slice) in &self.layers[0].slices {
-            if let Some(chunk_idx) = slice.graph.get_node(chunk_level, position * chunk_size) {
-                //  dbg!("ok");
-                slice.graph.traverse_from(
+        // iterate over all entries in graph
+        for entry in 1..self.layers[0].graph.entries() {
+            if let Some(chunk_idx) =
+                self.layers[0]
+                    .graph
+                    .get_node(chunk_level, position * chunk_size, entry)
+            {
+                self.layers[0].graph.traverse_from(
                     chunk_idx,
                     uvec3(0, 0, 0),
                     chunk_level,
                     |branch, idx, pos, lvl| {
                         //  dbg!(lvl);
                         if lvl == 0 {
-                            chunk.set(pos, *ty as i32);
+                            chunk.set(pos, entry as i32);
                         }
                         true
                     },

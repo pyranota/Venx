@@ -14,11 +14,12 @@ use super::VXLayer;
 impl VXLayer {
     /// Returns block type and its id in slice (if found)
     pub fn get_voxel(&self, position: UVec3) -> Option<(usize, Idx)> {
-        for (ty, slice) in &self.slices {
-            if let Some(idx) = slice.graph.get_node(0, position) {
-                return Some((*ty, idx));
-            }
-        }
+        todo!();
+        // for (ty, slice) in &self.slices {
+        //     if let Some(idx) = slice.graph.get_node(0, position) {
+        //         return Some((*ty, idx));
+        //     }
+        // }
         return None;
     }
 
@@ -40,12 +41,13 @@ impl VXLayer {
             }
         }
 
-        for (ty, slice) in &self.slices {
-            if let Some(idx) = slice.graph.get_node_cached(0, &path) {
-                return Some((*ty, idx));
-            }
-        }
-        return None;
+        // for (ty, slice) in &self.slices {
+        //     if let Some(idx) = slice.graph.get_node_cached(0, &path) {
+        //         return Some((*ty, idx));
+        //     }
+        // }
+        // return None;
+        todo!()
     }
 }
 

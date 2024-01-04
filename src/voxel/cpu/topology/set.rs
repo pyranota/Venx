@@ -70,18 +70,30 @@ impl Graph {
         todo!()
     }
 
-    pub fn set(&mut self, mut pos: UVec3, solid: bool) {
+    /// ty 0 is reserved for air and will remove voxel if there is any
+    /// you can add any ty if there is no already created entry for it
+    /// It will create one
+    pub fn set(&mut self, mut pos: UVec3, entry: u32) {
+        if entry == 0 {
+            return;
+        }
+
+        // Identify starting point according to given entry
+        let mut idx = self.entry(entry as usize);
+        // dbg!(idx, entry);
+
         let mut size = self.size();
-        let mut idx = 1; // 1;
+
         let mut level = self.depth();
 
+        // If given position is out of bound
         if pos.y >= size || pos.x >= size || pos.z >= size {
             return;
         }
 
         while level > 1 {
             let child_index = Branch::get_child_index(pos, level - 1);
-            // dbg!(idx);
+
             let branch = &self.levels[level as usize][idx];
 
             let child_id = branch.children[child_index];
@@ -104,7 +116,7 @@ impl Graph {
         }
         let child_index = Branch::get_child_index(pos, 0);
         let branch = &mut self.levels[1][idx];
-        if solid {
+        if entry != 0 {
             branch.children[child_index] = 1;
         } else {
             todo!()
@@ -171,10 +183,12 @@ impl Graph {
     // }
 }
 
-// #[test]
-// fn set_voxel() {
-//     let mut graph = Graph::new(1);
-//     graph.set(uvec3(0, 0, 0), true);
-//     graph.set(uvec3(3, 3, 0), true);
-//     dbg!(graph);
-// }
+#[test]
+fn set_voxel() {
+    let mut graph = Graph::new(1);
+    graph.set(uvec3(0, 1, 0), 1);
+    graph.set(uvec3(1, 1, 0), 1);
+    graph.set(uvec3(1, 1, 0), 3);
+    graph.set(uvec3(0, 0, 0), 2);
+    dbg!(graph);
+}

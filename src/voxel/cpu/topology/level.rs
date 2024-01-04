@@ -7,6 +7,17 @@ use super::graph::{Branch, Idx};
 
 #[derive(Default, Clone, Debug)]
 pub struct GLevel {
+    /// Every node on level(depth) is entry node
+    /// Each entry represents root of graph
+    /// That means, that in single `Graph` struc, you can have multiple graphs
+    /// That is used to have voxel types in graph
+    /// All graphs are merged
+    /// By creating new entry you create new graph
+
+    /// Keep in mind that anything on 0 is reserved and not usable
+    /// You can identify this types of nodes with 9 in every field of it
+    /// This is in that way because if there would be node at 0 index,
+    /// that would conflict with 0 as "no child" interpretation
     pub nodes: Vec<Branch>,
     /// Link to first node which is empty (flag == -1)
     /// If there is no empty nodes its 0
@@ -67,12 +78,20 @@ impl Index<usize> for GLevel {
     type Output = Branch;
 
     fn index(&self, index: usize) -> &Self::Output {
-        &self.nodes[index - 1] // -1
+        // Cant index 0
+        if index == 0 {
+            panic!("You cant index 0!");
+        }
+        &self.nodes[index] // -1
     }
 }
 
 impl IndexMut<usize> for GLevel {
     fn index_mut(&mut self, index: usize) -> &mut Self::Output {
-        &mut self.nodes[index - 1] // -1
+        // Cant index 0
+        if index == 0 {
+            panic!("You cant index 0!");
+        }
+        &mut self.nodes[index] // -1
     }
 }

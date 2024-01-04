@@ -2,7 +2,7 @@ use std::collections::HashMap;
 
 use super::{graph::Branch, level::GLevel};
 
-#[derive(Debug)]
+#[derive(Debug, Default)]
 pub struct Shared {
     pub levels: Vec<GLevel>,
     pub level_caches: Vec<LevelCache>,
