@@ -1,7 +1,7 @@
 use anyhow::{bail, Result};
 use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
-use std::{fs, ops::Range, path::PathBuf};
+use std::{collections::HashMap, fs, ops::Range, path::PathBuf};
 
 use crate::{plat::minecraft_blocks::match_block, voxel::segment::Segment};
 
@@ -19,6 +19,8 @@ impl Plat {
 
         let mut plat = Plat::new(12, 4, 9);
 
+        let mut hashmap: HashMap<String, u32> = HashMap::new();
+
         for (rg_pos, mut region) in rgs {
             let mut segment = Segment::new(9);
             for ch_x in 0..32 {
@@ -30,6 +32,12 @@ impl Plat {
                             for y in 0..380 {
                                 for z in 0..16 {
                                     if let Some(block) = complete_chunk.block(x, y - 60, z) {
+                                        if let Some(amount) = hashmap.get_mut(block.name()) {
+                                            *amount += 1u32;
+                                        } else {
+                                            hashmap.insert(block.name().to_owned(), 1);
+                                        }
+
                                         if block.name() != "minecraft:air" {
                                             // dbg!(block.name());
                                             //let block_id = match_block(block.name());
@@ -82,6 +90,10 @@ impl Plat {
             );
             dbg!("Segment is inserted");
         }
+
+        println!("{:?}", hashmap);
+        panic!();
+
         Ok(plat)
     }
 }
