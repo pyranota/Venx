@@ -2,7 +2,7 @@ use std::{collections::HashMap, mem::ManuallyDrop};
 
 use glam::UVec3;
 
-use super::{level::GLevel, shared::Shared};
+use super::{level::GLevel, lookup_level::LookupLevel, shared::Shared};
 
 pub type Idx = usize;
 
@@ -15,11 +15,11 @@ pub struct Graph {
     /// Each level contains only nodes that are referenced only one time
     /// You can safely edit this graph aslong it does not contain link to shared storage
     pub levels: Vec<GLevel>,
-    /// Shared nodes are organized similarly as normal nodes, but with key difference
-    /// They are linked or were referenced from 2 more nodes
-    /// During merging if there were found 2 same nodes in regular nodes, they would be deleted from normal tree
-    /// And added to shared storage
-    pub shared: Shared,
+    /// Used for quick merging
+    /// Basically its doubling the size in ram
+    /// But its not getting serialize
+    /// Does not exist for finished layers
+    pub lookup_levels: Vec<LookupLevel>,
 }
 
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]

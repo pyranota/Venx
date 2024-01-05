@@ -99,7 +99,7 @@ impl Graph {
             let child_id = branch.children[child_index];
 
             if child_id == 0 {
-                let new_child_id = self.add_branch(level - 1, Branch::default());
+                let new_child_id = self.add_branch(level - 1);
                 self.levels[level as usize][idx].children[child_index] = new_child_id as u32;
                 idx = new_child_id;
             } else {

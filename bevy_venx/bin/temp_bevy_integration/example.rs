@@ -6,6 +6,7 @@ use glam::{uvec3, vec4};
 use main::{plat::VenxPlat, Venx};
 use venx::plat::Plat;
 use venx::voxel::cpu::topology::graph::Graph;
+use venx::voxel::cpu::traverse::TrProps;
 use venx::voxel::cpu::voxel::Voxel;
 use venx::voxel::interfaces::layer::LayerInterface;
 use venx::voxel::interfaces::load::LoadInterface;
@@ -37,9 +38,9 @@ fn setup(
     info!("Starting the program");
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
-    let start = Instant::now();
-    let mut plat = Plat::load_mca("./assets/mca/4region/", (0..2, 0..2)).unwrap();
-    dbg!(start.elapsed());
+
+    let mut plat = Plat::load_mca("./assets/mca/9/", (0..3, 0..3)).unwrap();
+
     //let mut plat = Plat::new(6, 3, 3);
     // // let mut plat = Plat::new(3, 2, 2);
 
@@ -78,22 +79,92 @@ fn setup(
     //             dbg!(level.nodes.len());
     //         }
     //     }
+
     // }
-    v.set_voxel(0, (1, 2, 1).into(), 4);
 
-    v.set_voxel(0, (1, 3, 1).into(), 3);
-    v.set_voxel(0, (1, 4, 1).into(), 2);
-    v.set_voxel(0, (2, 4, 1).into(), 5);
-    v.set_voxel(0, (3, 4, 1).into(), 6);
-    v.set_voxel(0, (0, 4, 1).into(), 6);
+    // v.set_voxel(0, (9, 2, 1).into(), 4);
+    // v.set_voxel(0, (9, 3, 1).into(), 3);
+    // v.set_voxel(0, (9, 4, 1).into(), 2);
+    // v.set_voxel(0, (10, 4, 1).into(), 5);
+    // v.set_voxel(0, (11, 4, 1).into(), 6);
+    // v.set_voxel(0, (8, 4, 1).into(), 6);
 
-    v.set_voxel(0, (0, 6, 1).into(), 6);
-    v.set_voxel(0, (0, 7, 2).into(), 6);
+    // // ^^^ Same 1 ^^^
 
-    v.set_voxel(0, (2, 6, 1).into(), 6);
-    v.set_voxel(0, (2, 7, 2).into(), 6);
+    // v.set_voxel(0, (1, 2, 1).into(), 4);
+    // v.set_voxel(0, (1, 3, 1).into(), 3);
+    // v.set_voxel(0, (1, 4, 1).into(), 2);
+    // v.set_voxel(0, (2, 4, 1).into(), 5);
+    // v.set_voxel(0, (3, 4, 1).into(), 6);
+    // v.set_voxel(0, (0, 4, 1).into(), 6);
 
-    v.set_voxel(0, (1, 1, 1).into(), 1);
+    // // ^^^ Same 2 ^^^
+
+    // v.set_voxel(0, (0, 6, 1).into(), 6);
+    // v.set_voxel(0, (0, 7, 2).into(), 6);
+
+    // v.set_voxel(0, (2, 6, 1).into(), 6);
+    // v.set_voxel(0, (2, 7, 2).into(), 6);
+
+    // v.set_voxel(0, (1, 1, 1).into(), 1);
+
+    let mut counter = 0;
+
+    // Graph::traverse_from_unpositioned(&v.layers[0].graph.levels, )
+
+    let graph = &mut v.layers[0].graph;
+
+    // panic!();
+
+    // for entry in 1..(graph.entries()) {
+    //     Graph::traverse_from_unpositioned(&graph.levels, entry, graph.depth(), |p| {
+    //         if let TrProps::Branch {
+    //             children, level, ..
+    //         } = p
+    //         {
+    //             if level == 1 {
+    //                 dbg!("Hey", entry);
+    //                 return false;
+    //             } else {
+    //                 return true;
+    //             }
+    //         }
+    //         true
+    //     });
+    // }
+
+    let mut node_counter = 0;
+    let mut empty_counter = 0;
+
+    for node in &v.layers[0].graph.levels[2].nodes {
+        if node.ident == -1 {
+            empty_counter += 1;
+        } else {
+            node_counter += 1;
+        }
+    }
+    dbg!(node_counter, empty_counter);
+    //panic!();
+    let start = Instant::now();
+    // for node in &mut v.layers[0].graph.levels[1].nodes {
+    //     counter += node.children[0];
+    // }
+    // dbg!(start.elapsed());
+    // for node in &mut v.layers[0].graph.levels[1].nodes {
+    //     for child in &mut node.children {
+    //         if *child != 0 {
+    //             counter += 1;
+    //         }
+    //     }
+    // }
+    // dbg!(start.elapsed());
+
+    // dbg!(counter);
+
+    //
+    // let start = Instant::now();
+
+    // dbg!(start.elapsed());
 
     // v.layers[0].merge();
     // dbg!(&v);
@@ -129,17 +200,17 @@ fn setup(
     // let mut final_chunk = None;
     log::info!("Loading chunks and computing mesh");
 
-    for x in 0..(32 * 3) {
-        for z in 0..(32 * 2) {
-            for y in (5..15).rev() {
+    for x in 0..(32 * 9) {
+        for z in 0..(32 * 9) {
+            for y in (7..15).rev() {
                 let chunk = v.load_chunk(uvec3(x, y, z));
                 let vx_mesh = v.compute_mesh_from_chunk(&chunk);
                 // dbg!("Check");
-                chunk.iter(|p, t| {
-                    if t != 0 {
-                        // dbg!(p, t);
-                    }
-                });
+                // chunk.iter(|p, t| {
+                //     if t != 0 {
+                //         // dbg!(p, t);
+                //     }
+                // });
                 // panic!();
                 for (pos, color) in vx_mesh {
                     let new_pos: bevy::prelude::Vec3 =

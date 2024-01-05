@@ -3,7 +3,7 @@ use glam::uvec3;
 use crate::{
     chunk::chunk::Chunk,
     voxel::{
-        cpu::{utils::lvl_to_size, voxel::Voxel},
+        cpu::{traverse::TrProps, utils::lvl_to_size, voxel::Voxel},
         interfaces::load::LoadInterface,
     },
 };
@@ -28,11 +28,11 @@ impl LoadInterface for Voxel {
                     chunk_idx,
                     uvec3(0, 0, 0),
                     chunk_level,
-                    |branch, idx, pos, lvl| {
-                        //  dbg!(lvl);
-                        if lvl == 0 {
-                            chunk.set(pos, entry as i32);
+                    |props| {
+                        if let TrProps::Leaf { position, .. } = props {
+                            chunk.set(*position, entry as i32);
                         }
+
                         true
                     },
                 )

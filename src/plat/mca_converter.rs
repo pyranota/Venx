@@ -3,7 +3,10 @@ use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
 use std::{collections::HashMap, fs, ops::Range, path::PathBuf};
 
-use crate::{plat::minecraft_blocks::match_block, voxel::segment::Segment};
+use crate::{
+    plat::minecraft_blocks::match_block,
+    voxel::{cpu::voxel::Voxel, segment::Segment},
+};
 
 use super::Plat;
 
@@ -32,11 +35,11 @@ impl Plat {
                             for y in 0..380 {
                                 for z in 0..16 {
                                     if let Some(block) = complete_chunk.block(x, y - 60, z) {
-                                        if let Some(amount) = hashmap.get_mut(block.name()) {
-                                            *amount += 1u32;
-                                        } else {
-                                            hashmap.insert(block.name().to_owned(), 1);
-                                        }
+                                        // if let Some(amount) = hashmap.get_mut(block.name()) {
+                                        //     *amount += 1u32;
+                                        // } else {
+                                        //     hashmap.insert(block.name().to_owned(), 1);
+                                        // }
 
                                         if block.name() != "minecraft:air" {
                                             // dbg!(block.name());
@@ -82,6 +85,7 @@ impl Plat {
                     }
                 }
             }
+            let segment_level = segment.level;
             dbg!("Set Segment");
             plat.controller.get_voxel_mut().set_segment(
                 0,
@@ -89,10 +93,18 @@ impl Plat {
                 uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
             );
             dbg!("Segment is inserted");
+
+            dbg!("Merging", (rg_pos[0] as u32, 0, rg_pos[1] as u32));
+            let v: &mut Voxel = plat.controller.get_voxel_mut().downcast_mut().unwrap();
+            v.layers[0].graph.merge_segment(
+                (rg_pos[0] as u32, 0, rg_pos[1] as u32).into(),
+                segment_level,
+            );
+            dbg!("Merged");
         }
 
-        println!("{:?}", hashmap);
-        panic!();
+        //   println!("{:?}", hashmap);
+        //   panic!();
 
         Ok(plat)
     }

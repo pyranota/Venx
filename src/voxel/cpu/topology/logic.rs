@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use super::{
     graph::{Branch, Graph, Idx},
     level::GLevel,
+    lookup_level::LookupLevel,
     shared::Shared,
 };
 
@@ -31,7 +32,7 @@ impl Graph {
                     // Reserve with 999 nodes
                     Branch {
                         ident: 9,
-                        children: [9; 8]
+                        children: [999; 8]
                     }
                 ],
                 empty_head: 0,
@@ -49,7 +50,7 @@ impl Graph {
         Graph {
             depth: depth as u32,
             levels,
-            shared: Shared::default(),
+            lookup_levels: vec![LookupLevel::default(); depth as usize + 1],
         }
     }
 
@@ -90,10 +91,24 @@ impl Graph {
     //     todo!()
     // }
 
-    // In future should use unused nodes
-    pub fn add_branch(&mut self, level: u8, branch: Branch) -> usize {
-        self.levels[level as usize].nodes.push(branch);
-        self.levels[level as usize].nodes.len() - 1
+    /// Returns index to created branch, or to empty node
+    pub fn add_branch(&mut self, level: u8) -> usize {
+        // Cache
+        let level = &mut self.levels[level as usize];
+
+        if level.empty_head != 0 {
+            // Taking the head of the chain to use
+            let return_idx = level.empty_head;
+            // Changing head to next node in empty chain
+            level.empty_head = level[return_idx].children[0] as usize;
+            // Clear branch
+            level[return_idx] = Branch::default();
+            return_idx
+        } else {
+            // Just create a branch
+            level.nodes.push(Branch::default());
+            level.nodes.len() - 1
+        }
     }
     pub fn depth(&self) -> u8 {
         self.depth as u8
