@@ -2,19 +2,24 @@
 mod mca_converter;
 mod minecraft_blocks;
 
+use std::{
+    fs::File,
+    io::{BufReader, Read, Write},
+};
+
 use crate::{
     chunk::{chunk::Chunk, storage::ChunksStorage},
     controller::Controller,
     voxel::{
-        cpu::mesh::Mesh,
+        cpu::{mesh::Mesh, voxel::Voxel},
         interfaces::{layer::LayerInterface, voxel::VoxelInterface},
         segment::Segment,
     },
 };
-
+// #[derive(Clone)]
 pub struct Plat {
     pub controller: Controller,
-    chunks: ChunksStorage,
+    // chunks: ChunksStorage,
 }
 
 impl std::fmt::Debug for Plat {
@@ -36,14 +41,31 @@ impl Plat {
     pub fn new(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
         Plat {
             controller: Controller::new(depth, chunk_level, segment_level),
-            chunks: ChunksStorage {},
+            //chunks: ChunksStorage {},
         }
     }
-    pub fn load() {
-        todo!()
+    pub fn load(&mut self, path: &str) -> std::io::Result<()> {
+        let mut file = File::open(path)?;
+
+        let mut data = vec![];
+        file.read_to_end(&mut data)?;
+
+        let decoded: Voxel = bitcode::decode(&data).unwrap();
+        let prev: &mut Voxel = self.controller.get_voxel_mut().downcast_mut().unwrap();
+        *prev = decoded;
+
+        Ok(())
     }
-    pub fn save() {
-        todo!()
+    pub fn save(&mut self, path: &str) -> std::io::Result<()> {
+        let v: &mut Voxel = self.controller.get_voxel_mut().downcast_mut().unwrap();
+
+        // Remove lookup hashmaps in layers
+        v.layers[0].graph.lookup_levels.clear();
+
+        let encoded: Vec<u8> = bitcode::encode(&*v).unwrap();
+        let mut file = File::create(path)?;
+        file.write_all(&encoded)?;
+        Ok(())
     }
     pub fn new_segment(&self) -> Segment {
         // Segment::new(self.se)

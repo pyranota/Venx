@@ -13,7 +13,7 @@ mod layer_interface;
 mod merge;
 mod slice;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct VXLayer {
     pub graph: Graph,
     pub depth: u8,

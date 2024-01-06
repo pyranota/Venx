@@ -10,6 +10,7 @@ use crate::voxel::{
 /// Handles all operations of manipulating voxels
 /// Its independant from executor (cpu/gpu)
 /// Might be removed
+// #[derive(Debug)]
 pub struct Controller {
     data: VXdata,
     cs: ComputeServer,

@@ -39,160 +39,24 @@ fn setup(
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
 
-    let mut plat = Plat::load_mca("./assets/mca/9/", (0..3, 0..3)).unwrap();
-
-    //let mut plat = Plat::new(6, 3, 3);
-    // // let mut plat = Plat::new(3, 2, 2);
-
-    // for _ in 0..100 {
-    //     let start = Instant::now();
-    //     for x in 0..200 {
-    //         for z in 0..200 {
-    //             v.get_voxel((x, 33, z).into());
-    //         }
-    //     }
-    //     dbg!(start.elapsed());
-    // }
-
-    // plat.controller.get_voxel().
-
-    // panic!();
-    // plat.controller
-    //     .get_voxel_mut()
-    //     .set_voxel(0, (1, 1, 1).into(), 1);
-
-    // plat.controller
-    //     .get_voxel_mut()
-    //     .set_voxel(0, (1, 2, 1).into(), 2);
-
-    // let chunk = plat.controller.get_voxel().load_chunk((0, 0, 0).into());
-
-    // let
-
-    let voxel = plat.controller.get_voxel_mut();
-    use downcast_rs::Downcast;
-
-    let v: &mut Voxel = voxel.downcast_mut().unwrap();
-    // for layer in &v.layers {
-    //     for (key, slice) in &layer.slices {
-    //         for level in &slice.graph.levels {
-    //             dbg!(level.nodes.len());
-    //         }
-    //     }
-
-    // }
-
-    // v.set_voxel(0, (9, 2, 1).into(), 4);
-    // v.set_voxel(0, (9, 3, 1).into(), 3);
-    // v.set_voxel(0, (9, 4, 1).into(), 2);
-    // v.set_voxel(0, (10, 4, 1).into(), 5);
-    // v.set_voxel(0, (11, 4, 1).into(), 6);
-    // v.set_voxel(0, (8, 4, 1).into(), 6);
-
-    // // ^^^ Same 1 ^^^
-
-    // v.set_voxel(0, (1, 2, 1).into(), 4);
-    // v.set_voxel(0, (1, 3, 1).into(), 3);
-    // v.set_voxel(0, (1, 4, 1).into(), 2);
-    // v.set_voxel(0, (2, 4, 1).into(), 5);
-    // v.set_voxel(0, (3, 4, 1).into(), 6);
-    // v.set_voxel(0, (0, 4, 1).into(), 6);
-
-    // // ^^^ Same 2 ^^^
-
-    // v.set_voxel(0, (0, 6, 1).into(), 6);
-    // v.set_voxel(0, (0, 7, 2).into(), 6);
-
-    // v.set_voxel(0, (2, 6, 1).into(), 6);
-    // v.set_voxel(0, (2, 7, 2).into(), 6);
-
-    // v.set_voxel(0, (1, 1, 1).into(), 1);
-
-    let mut counter = 0;
-
-    // Graph::traverse_from_unpositioned(&v.layers[0].graph.levels, )
-
-    let graph = &mut v.layers[0].graph;
-
-    // panic!();
-
-    // for entry in 1..(graph.entries()) {
-    //     Graph::traverse_from_unpositioned(&graph.levels, entry, graph.depth(), |p| {
-    //         if let TrProps::Branch {
-    //             children, level, ..
-    //         } = p
-    //         {
-    //             if level == 1 {
-    //                 dbg!("Hey", entry);
-    //                 return false;
-    //             } else {
-    //                 return true;
-    //             }
-    //         }
-    //         true
-    //     });
-    // }
-
+    //let mut plat = Plat::load_mca("./assets/mca/9/", (0..3, 0..3)).unwrap();
+    let mut plat = Plat::new(12, 4, 9);
     let mut node_counter = 0;
     let mut empty_counter = 0;
 
-    for node in &v.layers[0].graph.levels[2].nodes {
-        if node.ident == -1 {
-            empty_counter += 1;
-        } else {
-            node_counter += 1;
-        }
-    }
-    dbg!(node_counter, empty_counter);
-    //panic!();
-    let start = Instant::now();
-    // for node in &mut v.layers[0].graph.levels[1].nodes {
-    //     counter += node.children[0];
-    // }
-    // dbg!(start.elapsed());
-    // for node in &mut v.layers[0].graph.levels[1].nodes {
-    //     for child in &mut node.children {
-    //         if *child != 0 {
-    //             counter += 1;
-    //         }
+    // for node in &v.layers[0].graph.levels[2].nodes {
+    //     if node.ident == -1 {
+    //         empty_counter += 1;
+    //     } else {
+    //         node_counter += 1;
     //     }
     // }
-    // dbg!(start.elapsed());
+    // dbg!(node_counter, empty_counter);
 
-    // dbg!(counter);
+    plat.load("saves/9_merged.plat");
 
-    //
-    // let start = Instant::now();
-
-    // dbg!(start.elapsed());
-
-    // v.layers[0].merge();
-    // dbg!(&v);
-
-    // panic!();
-
-    // dbg!(chunk.get((1, 1, 1)));
-
-    // panic!();
-
-    // let mut segment = Segment::new(5);
-    // let red = 3;
-    // let white = 1;
-    // let green = 2;
-    // let blue = 4;
-
-    // segment.set((1, 0, 1), blue);
-    // segment.set((1, 2, 1), white);
-    // segment.set((1, 1, 1), red);
-    // segment.set((0, 1, 0), green);
-    // segment.set((0, 3, 0), blue);
-    // segment.set((0, 0, 0), blue);
-    // segment.set((0, 0, 1), blue);
-    // segment.set((0, 0, 2), green);
-
-    // plat.insert_segment(segment, (0, 0, 0).into());
-
-    // dbg!(&plat.controller.get_voxel());
+    //panic!();
+    let start = Instant::now();
 
     let mut bevy_mesh: Vec<Vec3> = vec![];
     let mut bevy_color: Vec<Vec4> = vec![];
@@ -200,11 +64,11 @@ fn setup(
     // let mut final_chunk = None;
     log::info!("Loading chunks and computing mesh");
 
-    for x in 0..(32 * 9) {
-        for z in 0..(32 * 9) {
-            for y in (7..15).rev() {
-                let chunk = v.load_chunk(uvec3(x, y, z));
-                let vx_mesh = v.compute_mesh_from_chunk(&chunk);
+    for x in 0..(32 * 1) {
+        for z in 0..(32 * 1) {
+            for y in (7..13).rev() {
+                let chunk = plat.controller.get_voxel().load_chunk(uvec3(x, y, z));
+                let vx_mesh = plat.controller.get_voxel().compute_mesh_from_chunk(&chunk);
                 // dbg!("Check");
                 // chunk.iter(|p, t| {
                 //     if t != 0 {

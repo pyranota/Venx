@@ -5,7 +5,7 @@ use std::{
 
 use super::graph::{Branch, Idx};
 
-#[derive(Default, Clone, Debug)]
+#[derive(Default, Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct GLevel {
     /// Every node on level(depth) is entry node
     /// Each entry represents root of graph

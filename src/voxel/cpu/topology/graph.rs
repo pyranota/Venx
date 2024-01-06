@@ -1,15 +1,17 @@
 use std::{collections::HashMap, mem::ManuallyDrop};
 
+use bitcode::{Decode, Encode};
 use glam::UVec3;
 
 use super::{level::GLevel, lookup_level::LookupLevel, shared::Shared};
 
 pub type Idx = usize;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Graph {
     /// Maximal depth of graph, can be extended and/or shrinked
     /// 2^depth represents maximum world size
+    #[bitcode_hint(expected_range = "0..20")]
     pub depth: u32,
     /// Nodes are organized in levels. That helps to instantly get all nodes at same level
     /// Each level contains only nodes that are referenced only one time
@@ -22,7 +24,7 @@ pub struct Graph {
     pub lookup_levels: Vec<LookupLevel>,
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq, Hash, Encode, Decode)]
 pub struct Branch {
     /// `0` - normal branch,
     /// `1` - link to shared,
