@@ -5,6 +5,7 @@ target
 Cargo.lock
 easy_compute/Cargo.lock
 .venx/expr/*
+saves
 
 # Added by cargo
 #
