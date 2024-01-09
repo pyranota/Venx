@@ -34,6 +34,13 @@ pub struct TrPropsMut<'a> {
     pub level: u8,
 }
 
+pub struct Props<'a> {
+    pub position: &'a UVec3,
+    pub parent_idx: &'a Idx,
+    pub node: &'a Branch,
+    pub level: u8,
+}
+
 impl Graph {
     //     // todo: Move to graph class
     //     /// Traversing each node and calling given closure with args: Node, Index, Position
@@ -175,7 +182,7 @@ impl Graph {
     /// Return false in closure to drop traversing of subtree
     pub fn traverse_from<F>(&self, idx: usize, node_position: UVec3, level: u8, mut f: F)
     where
-        F: FnMut(TrProps) -> bool,
+        F: FnMut(Props) -> bool,
     {
         visit_node(self, idx, 0, node_position, level, &mut f);
 
@@ -187,28 +194,19 @@ impl Graph {
             level: u8,
             f: &mut F,
         ) where
-            F: FnMut(TrProps) -> bool,
+            F: FnMut(Props) -> bool,
         {
             //   dbg!(level);
             let node = &graph.levels[level as usize][idx];
 
             // Compose props
-            let props = if level == 0 {
-                TrProps::Leaf {
-                    parent,
-                    position: &node_position,
-                    node: idx,
-                }
-            } else {
-                TrProps::Branch {
-                    parent,
-                    children: &node.children,
-                    position: &node_position,
-                    level,
-                    node: idx,
-                }
-            };
 
+            let props = Props {
+                position: &node_position,
+                parent_idx: &parent,
+                node: node,
+                level: level,
+            };
             // Call back the user function.
             if !f(props) {
                 return;

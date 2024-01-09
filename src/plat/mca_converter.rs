@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
+use pollster::block_on;
 use std::{collections::HashMap, fs, ops::Range, path::PathBuf};
 
 use crate::{
@@ -20,7 +21,7 @@ impl Plat {
     ) -> Result<Self> {
         let rgs = from_dir(PathBuf::from(dir_path), region_range)?;
 
-        let mut plat = Plat::new(12, 4, 9);
+        let mut plat = Plat::new(13, 4, 9);
 
         let mut hashmap: HashMap<String, u32> = HashMap::new();
 
@@ -41,7 +42,10 @@ impl Plat {
                                         //     hashmap.insert(block.name().to_owned(), 1);
                                         // }
 
-                                        if block.name() != "minecraft:air" {
+                                        if block.name() != "minecraft:air"
+                                            && block.name() != "minecraft:grass"
+                                        // && block.name() == "minecraft:stone"
+                                        {
                                             // dbg!(block.name());
                                             //let block_id = match_block(block.name());
                                             let block_id = match block.name() {
@@ -70,7 +74,7 @@ impl Plat {
                                                 _ => 404,
                                             };
 
-                                            // let block_id = 1;
+                                            //let block_id = 1;
 
                                             segment.set(
                                                 uvec3(x as u32, y as u32, z as u32)

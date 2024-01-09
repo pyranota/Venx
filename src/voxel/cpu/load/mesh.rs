@@ -4,134 +4,232 @@ use crate::{chunk::chunk::Chunk, voxel::cpu::voxel::Voxel};
 
 pub type Mesh = Vec<(Vec3, Vec4)>; // Position, Color
 
-impl Voxel {
-    /// No side culling
-    pub fn to_mesh_no_culling(&self, chunk: &Chunk) -> Mesh {
-        let mut mesh = vec![];
+// impl Voxel {
+//     /// No side culling
+//     pub fn to_mesh_no_culling(&self, chunk: &Chunk) -> Mesh {
+//         let mut mesh = vec![];
 
-        chunk.iter(|pos, block| {
-            if block != 0 {
-                let cube = cube::FULL;
-                for vertex in cube {
-                    mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
-                }
-            }
-        });
-        mesh
-    }
-    /// Fast way to do it, with side culling
-    pub fn to_mesh_naive(&self, chunk: &Chunk) -> Mesh {
-        let mut mesh = vec![];
+//         chunk.iter(|pos, block| {
+//             if block != 0 {
+//                 let cube = cube::FULL;
+//                 for vertex in cube {
+//                     mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+//                 }
+//             }
+//         });
+//         mesh
+//     }
+//     /// Fast way to do it, with side culling
+//     pub fn to_mesh_naive(&self, chunk: &Chunk) -> Mesh {
+//         let mut mesh = vec![];
 
-        chunk.iter(|pos, block| {
-            if block != 0 {
-                let block_color = match block {
-                    1 => vec4(1., 1., 1., 0.5), // White
-                    2 => vec4(0., 1., 0., 0.5), // Green
-                    3 => vec4(1., 0., 0., 0.5), // Red
-                    4 => vec4(0., 0., 1., 0.5), // Blue
-                    8 => vec4(0., 0., 1., 0.5), // Blue
-                    _ => vec4(0., 0., 0., 0.5),
-                };
+//         chunk.iter(|pos, block| {
+//             if block != 0 {
+//                 let block_color = match block {
+//                     1 => vec4(1., 1., 1., 0.5), // White
+//                     2 => vec4(0., 1., 0., 0.5), // Green
+//                     3 => vec4(1., 0., 0., 0.5), // Red
+//                     4 => vec4(0., 0., 1., 0.5), // Blue
+//                     8 => vec4(0., 0., 1., 0.5), // Blue
+//                     _ => vec4(0., 0., 0., 0.5),
+//                 };
 
-                if self
-                    .get_neighbor(
-                        chunk,
-                        (pos - chunk.position * chunk.size()).as_ivec3(),
-                        (0, 1, 0),
-                    )
-                    .is_none()
-                {
-                    let cube = cube::TOP;
-                    for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), block_color))
-                    }
-                } else {
-                }
-                if self
-                    .get_neighbor(
-                        chunk,
-                        (pos - chunk.position * chunk.size()).as_ivec3(),
-                        (0, -1, 0),
-                    )
-                    .is_none()
-                {
-                    let cube = cube::BOTTOM;
-                    for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), block_color))
-                    }
-                }
-                if self
-                    .get_neighbor(
-                        chunk,
-                        (pos - chunk.position * chunk.size()).as_ivec3(),
-                        (1, 0, 0),
-                    )
-                    .is_none()
-                {
-                    let cube = cube::RIGHT;
-                    for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), block_color))
-                    }
-                }
-                if self
-                    .get_neighbor(
-                        chunk,
-                        (pos - chunk.position * chunk.size()).as_ivec3(),
-                        (-1, 0, 0),
-                    )
-                    .is_none()
-                {
-                    let cube = cube::LEFT;
-                    for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), block_color))
-                    }
-                }
-                if self
-                    .get_neighbor(
-                        chunk,
-                        (pos - chunk.position * chunk.size()).as_ivec3(),
-                        (0, 0, 1),
-                    )
-                    .is_none()
-                {
-                    let cube = cube::FRONT;
-                    for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), block_color))
-                    }
-                }
-                if self
-                    .get_neighbor(
-                        chunk,
-                        (pos - chunk.position * chunk.size()).as_ivec3(),
-                        (0, 0, -1),
-                    )
-                    .is_none()
-                {
-                    let cube = cube::BACK;
-                    for vertex in cube {
-                        mesh.push(((vertex + pos.as_vec3()), block_color))
-                    }
-                }
-            }
-        });
-        mesh
-    }
-    /// Side culling and Greedy meshing
-    pub fn to_mesh(&self, chunk: &Chunk) -> Mesh {
-        let mut mesh = vec![];
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (0, 1, 0),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::TOP;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 } else {
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (0, -1, 0),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::BOTTOM;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (1, 0, 0),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::RIGHT;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (-1, 0, 0),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::LEFT;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (0, 0, 1),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::FRONT;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (0, 0, -1),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::BACK;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//             }
+//         });
+//         mesh
+//     }
 
-        chunk.iter(|pos, block| {
-            if block != 0 {
-                let cube = cube::FULL;
-                for vertex in cube {
-                    mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
-                }
-            }
-        });
-        mesh
-    }
-}
+//     pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
+//         let mut mesh = vec![];
+
+//         chunk.iter(|pos, block| {
+//             if block != 0 {
+//                 let block_color = match block {
+//                     1 => vec4(1., 1., 1., 0.5), // White
+//                     2 => vec4(0., 1., 0., 0.5), // Green
+//                     3 => vec4(1., 0., 0., 0.5), // Red
+//                     4 => vec4(0., 0., 1., 0.5), // Blue
+//                     8 => vec4(0., 0., 1., 0.5), // Blue
+//                     _ => vec4(0., 0., 0., 0.5),
+//                 };
+
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (0, 1, 0),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::TOP;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 } else {
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (0, -1, 0),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::BOTTOM;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (1, 0, 0),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::RIGHT;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (-1, 0, 0),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::LEFT;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (0, 0, 1),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::FRONT;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//                 if self
+//                     .get_neighbor(
+//                         chunk,
+//                         (pos - chunk.position * chunk.size()).as_ivec3(),
+//                         (0, 0, -1),
+//                     )
+//                     .is_none()
+//                 {
+//                     let cube = cube::BACK;
+//                     for vertex in cube {
+//                         mesh.push(((vertex + pos.as_vec3()), block_color))
+//                     }
+//                 }
+//             }
+//         });
+//         mesh
+//     }
+//     /// Side culling and Greedy meshing
+//     pub fn to_mesh(&self, chunk: &Chunk) -> Mesh {
+//         let mut mesh = vec![];
+
+//         chunk.iter(|pos, block| {
+//             if block != 0 {
+//                 let cube = cube::FULL;
+//                 for vertex in cube {
+//                     mesh.push(((vertex + pos.as_vec3()), vec4(1., 1., 1., 1.)))
+//                 }
+//             }
+//         });
+//         mesh
+//     }
+// }
 
 // #[test]
 // fn test_mesh_creation() {

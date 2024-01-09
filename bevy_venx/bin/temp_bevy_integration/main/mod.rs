@@ -3,15 +3,27 @@ pub mod plat;
 
 use std::f32::consts::PI;
 
-use bevy::{pbr::CascadeShadowConfigBuilder, prelude::*};
+use bevy::{
+    core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
+    pbr::{
+        wireframe::WireframePlugin, CascadeShadowConfigBuilder, ScreenSpaceAmbientOcclusionBundle,
+    },
+    prelude::*,
+};
 use bevy_panorbit_camera::PanOrbitCamera;
+use glam::vec3;
 
 pub struct Venx;
 
 impl Plugin for Venx {
     fn build(&self, app: &mut App) {
-        app.add_plugins((bevy_panorbit_camera::PanOrbitCameraPlugin))
-            .add_systems(Startup, setup);
+        app.add_plugins((
+            bevy_panorbit_camera::PanOrbitCameraPlugin,
+            WireframePlugin,
+            TemporalAntiAliasPlugin,
+        ))
+        .add_systems(Startup, setup)
+        .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)));
     }
 }
 
@@ -38,20 +50,20 @@ fn setup(
     // ambient light
     commands.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 0.03,
+        brightness: 2.13,
     });
     // light
-    // commands.spawn(PointLightBundle {
-    //     point_light: PointLight {
-    //         intensity: 4000.0,
-    //         shadows_enabled: true,
-    //         range: 400.,
-    //         radius: 200.,
-    //         ..default()
-    //     },
-    //     transform: Transform::from_xyz(0.0, 15.0, 0.0),
-    //     ..default()
-    // });
+    commands.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 4000.0,
+            shadows_enabled: true,
+            range: 400.,
+            radius: 200.,
+            ..default()
+        },
+        transform: Transform::from_xyz(0.0, 15.0, 0.0),
+        ..default()
+    });
     // directional 'sun' light
     commands.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
@@ -75,11 +87,48 @@ fn setup(
         ..default()
     });
 
+    // commands.spawn(DirectionalLightBundle {
+    //     directional_light: DirectionalLight {
+    //         shadows_enabled: true,
+    //         ..default()
+    //     },
+    //     transform: Transform {
+    //         translation: Vec3::new(-100.0, 300.0, -10.0),
+    //         rotation: Quat::from_rotation_x(-PI / 3.87),
+    //         ..default()
+    //     },
+    //     // The default cascade config is designed to handle large scenes.
+    //     // As this example has a much smaller world, we can tighten the shadow
+    //     // bounds for better visual quality.
+    //     // cascade_shadow_config: CascadeShadowConfigBuilder {
+    //     //     first_cascade_far_bound: 4.0,
+    //     //     maximum_distance: 10.0,
+    //     //     ..default()
+    //     // }
+    //     // .into(),
+    //     ..default()
+    // });
+
     // camera
     commands.spawn((
         Camera3dBundle {
-            transform: Transform::from_xyz(128.0, 150., 128.0).looking_at(Vec3::ZERO, Vec3::Y),
+            camera: Camera {
+                hdr: true,
+                ..default()
+            },
+            transform: Transform::from_xyz(128.0, 150., 128.0)
+                .looking_at(vec3(250., 100., 250.), Vec3::Y),
             ..default()
+        },
+        //ScreenSpaceAmbientOcclusionBundle::default(),
+        TemporalAntiAliasBundle::default(),
+        FogSettings {
+            color: Color::rgb(0.52, 0.80, 0.92),
+            falloff: FogFalloff::Linear {
+                start: 200.0,
+                end: 10000.0,
+            },
+            ..Default::default()
         },
         PanOrbitCamera::default(),
     ));

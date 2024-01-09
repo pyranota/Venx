@@ -47,7 +47,7 @@ impl LayerInterface for VoxelGpu {
 }
 
 impl LoadInterface for VoxelGpu {
-    fn load_chunk(&self, position: glam::UVec3) -> Chunk {
+    fn load_chunk(&self, position: glam::UVec3, level: u8) -> Chunk {
         todo!()
     }
 

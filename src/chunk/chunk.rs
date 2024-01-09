@@ -10,7 +10,12 @@ pub struct Chunk {
     pub chunk_level: u8,
 }
 impl Chunk {
+    /// Size in blocks, tells how many blocks in chunk
     pub fn size(&self) -> u32 {
+        lvl_to_size(self.chunk_level - self.lod_level)
+    }
+    /// Width in meters, tells how much space in 3d space chunk takes
+    pub fn width(&self) -> u32 {
         lvl_to_size(self.chunk_level)
     }
     pub fn level(&self) -> u8 {
@@ -25,7 +30,12 @@ impl Chunk {
             chunk_level,
         }
     }
-    pub fn get(&self, block_position: impl Into<UVec3>) -> Option<i32> {
+    pub fn get(&self, block_position: UVec3) -> Option<i32> {
+        // Check for out of bound
+        if block_position.max_element() >= self.size() {
+            return None;
+        }
+
         let val = self.get_raw(block_position);
         if val != 0 {
             return Some(val);
@@ -38,12 +48,12 @@ impl Chunk {
 
         self.mtx[pos.x as usize][pos.y as usize][pos.z as usize]
     }
-    /// Gets in input local position
+    /// Sets local positioned block
     pub fn set(&mut self, position: impl Into<UVec3>, block: i32) {
         let position = position.into();
         self.mtx[position.x as usize][position.y as usize][position.z as usize] = block;
     }
-    /// Warning! In chunk you have global position, in segment local
+    /// Iterating over local positions and blocks
     pub fn iter<F>(&self, mut callback: F)
     where
         F: FnMut(UVec3, i32),
@@ -51,10 +61,7 @@ impl Chunk {
         for (x, x_row) in self.mtx.iter().enumerate() {
             for (y, y_row) in x_row.iter().enumerate() {
                 for (z, block) in y_row.iter().enumerate() {
-                    callback(
-                        uvec3(x as u32, y as u32, z as u32) + (self.position * self.size()),
-                        *block,
-                    );
+                    callback(uvec3(x as u32, y as u32, z as u32), *block);
                 }
             }
         }
