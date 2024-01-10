@@ -65,6 +65,6 @@ impl LoadInterface for Voxel {
     }
 
     fn compute_mesh_from_chunk(&self, chunk: &Chunk) -> crate::voxel::cpu::mesh::Mesh {
-        self.to_mesh_naive(chunk)
+        self.to_mesh_greedy(chunk)
     }
 }
