@@ -22,6 +22,10 @@ pub struct Plat {
     // chunks: ChunksStorage,
 }
 
+pub struct VenxPlat {
+    plat: plats::plat::Plat,
+}
+
 impl std::fmt::Debug for Plat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("Plat")
