@@ -1,10 +1,12 @@
 //! A simple 3D scene with light shining over a cube sitting on a plane.
+mod fps;
 pub mod plat;
 
 use std::f32::consts::PI;
 
 use bevy::{
     core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
+    diagnostic::FrameTimeDiagnosticsPlugin,
     pbr::{
         wireframe::WireframePlugin, CascadeShadowConfigBuilder, ScreenSpaceAmbientOcclusionBundle,
     },
@@ -13,6 +15,8 @@ use bevy::{
 use bevy_panorbit_camera::PanOrbitCamera;
 use glam::vec3;
 
+use self::fps::{fps_counter_showhide, fps_text_update_system, setup_fps_counter};
+
 pub struct Venx;
 
 impl Plugin for Venx {
@@ -20,9 +24,12 @@ impl Plugin for Venx {
         app.add_plugins((
             bevy_panorbit_camera::PanOrbitCameraPlugin,
             WireframePlugin,
+            FrameTimeDiagnosticsPlugin::default(),
             TemporalAntiAliasPlugin,
+            // MaterialPlugin::<CustomMaterial>::default(),
         ))
-        .add_systems(Startup, setup)
+        .add_systems(Startup, (setup, setup_fps_counter))
+        .add_systems(Update, (fps_text_update_system, fps_counter_showhide))
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)));
     }
 }
@@ -126,7 +133,7 @@ fn setup(
             color: Color::rgb(0.52, 0.80, 0.92),
             falloff: FogFalloff::Linear {
                 start: 200.0,
-                end: 10000.0,
+                end: 5000.0,
             },
             ..Default::default()
         },
