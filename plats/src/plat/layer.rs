@@ -5,6 +5,9 @@ use super::{level::Level, node::Node, Plat};
 #[derive(Debug)]
 pub struct Layer {
     pub name: String,
+    /// Nodes are organized in levels. That helps to instantly get all nodes at same level
+    /// Each level contains only nodes that are referenced only one time
+    /// You can safely edit this graph aslong it does not contain link to shared storage
     pub levels: Vec<Level>,
 }
 
@@ -57,7 +60,6 @@ impl Plat {
     pub fn remove_named_layer(&mut self, name: &str) -> anyhow::Result<()> {
         self.verify_layer_limit()?;
         self.layers.retain(|e| &e.name != name);
-
         Ok(())
     }
 

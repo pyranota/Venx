@@ -1,6 +1,7 @@
 use bevy::diagnostic::DiagnosticsStore;
 use bevy::diagnostic::FrameTimeDiagnosticsPlugin;
 use bevy::prelude::*;
+use bevy::window::PresentMode;
 
 /// Marker to find the container entity so we can show/hide the FPS counter
 #[derive(Component)]
@@ -75,6 +76,15 @@ pub fn setup_fps_counter(mut commands: Commands) {
         ))
         .id();
     commands.entity(root).push_children(&[text_fps]);
+}
+
+pub fn disable_vsync(input: Res<Input<KeyCode>>, mut windows: Query<&mut Window>) {
+    if input.just_pressed(KeyCode::V) {
+        let mut window = windows.single_mut();
+
+        window.present_mode = PresentMode::Immediate;
+        info!("PRESENT_MODE: {:?}", window.present_mode);
+    }
 }
 
 pub fn fps_text_update_system(

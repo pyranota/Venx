@@ -18,7 +18,7 @@ use crate::{
 };
 // #[derive(Clone)]
 pub struct Plat {
-    pub controller: Controller,
+    pub controller: Voxel,
     // chunks: ChunksStorage,
 }
 

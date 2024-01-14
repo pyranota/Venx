@@ -16,8 +16,9 @@ use super::{attribute::storage::GpuTeTreeStorage, topology::storage::GpuGraphSto
 
 #[derive(Debug)]
 pub struct VoxelGpu {
-    pub attribute: GpuTeTreeStorage,
-    pub topology: GpuGraphStorage,
+    pub cs: ComputeServer,
+    bg: ...
+    buffers: ...
 }
 
 impl LayerInterface for VoxelGpu {

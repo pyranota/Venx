@@ -14,10 +14,7 @@ use super::{layer::VXLayer, topology::graph::Graph};
 // #[derive(bitcode::Encode, bitcode::Decode)]
 #[derive(Debug, Clone, bitcode::Encode, bitcode::Decode)]
 pub struct Voxel {
-    pub layers: Vec<VXLayer>,
-    pub chunk_level: u8,
-    pub segment_level: u8,
-    pub depth: u8,
+    raw_plat: RawPlat
 }
 
 impl Voxel {

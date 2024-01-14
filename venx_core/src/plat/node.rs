@@ -1,7 +1,4 @@
-use bitcode::{Decode, Encode};
-use serde::Serialize;
-
-#[derive(Clone, Debug, Encode, Decode)]
+#[derive(Clone, Debug)]
 pub struct Node {
     /// `0` - normal branch,
     /// `1` - link to shared,

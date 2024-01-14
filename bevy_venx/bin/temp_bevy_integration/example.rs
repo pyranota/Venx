@@ -2,8 +2,10 @@ use std::time::{Duration, Instant};
 
 use bevy::pbr::wireframe::Wireframe;
 use bevy::render::render_resource::PrimitiveTopology;
+use bevy::window::{PresentMode, WindowTheme};
 use bevy::{log, prelude::*};
 use glam::{uvec3, vec4};
+use main::disable_vsync;
 use main::{plat::VenxPlat, Venx};
 use venx::plat::Plat;
 use venx::voxel::cpu::topology::graph::Graph;
@@ -19,8 +21,20 @@ use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, Venx))
-        .add_systems(Startup, setup)
+        .add_plugins((
+            DefaultPlugins.set(WindowPlugin {
+                // primary_window: Some(Window {
+                //     present_mode: PresentMode::Immediate,
+                //     // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
+                //     prevent_default_event_handling: false,
+                //     window_theme: Some(WindowTheme::Dark),
+                //     ..default()
+                // }),
+                ..default()
+            }),
+            Venx,
+        ))
+        .add_systems(Startup, (setup, disable_vsync))
         .run();
 }
 fn setup(
@@ -40,6 +54,102 @@ fn setup(
         Mesh::new(PrimitiveTopology::TriangleList),
         Mesh::new(PrimitiveTopology::TriangleList),
         Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
+        Mesh::new(PrimitiveTopology::TriangleList),
     ];
 
     info!("Starting the program");
@@ -49,8 +159,8 @@ fn setup(
     //let mut plat = Plat::load_mca("./assets/mca/121/", (0..11, 0..11)).unwrap();
     let mut plat = Plat::new(12, 4, 9);
 
-    plat.load("saves/49_typed.plat");
-    let capacity = 8_000_000;
+    plat.load("saves/25_typed.plat");
+    let capacity = 350_000;
     // panic!();
     let start = Instant::now();
     let mut mshs = vec![
@@ -63,7 +173,7 @@ fn setup(
     ];
     log::info!("Loading chunks and computing mesh");
 
-    let chunks_width = 32 * 1;
+    let chunks_width = 32 * 2;
     let chunk_start = 1;
     let mut counter = 0;
     for x in chunk_start..chunks_width {
@@ -71,11 +181,12 @@ fn setup(
         for z in chunk_start..chunks_width {
             for y in (7..13).rev() {
                 let time = Instant::now();
-                let mut lod_level = (u32::max(z, x) / 64) as u8;
+                let mut lod_level = (u32::max(z, x) / 128) as u8;
 
                 if lod_level > 2 {
                     lod_level = 2;
                 }
+
                 lod_level = 0;
                 let chunk = plat
                     .controller
@@ -116,6 +227,7 @@ fn setup(
         cmd.spawn(PbrBundle {
             mesh: bevy_meshes.add(mesh.clone()),
             material: materials.add(StandardMaterial {
+                reflectance: 0.1,
                 base_color: Color::rgb(1., 1., 1.),
                // alpha_mode: AlphaMode::Blend,
                 ..default()
