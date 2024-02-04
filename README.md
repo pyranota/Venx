@@ -23,6 +23,10 @@ Venx is feature rich highly performant voxel engine focused on large worlds and 
 ## Getting started
 > cargo update -p gpu-descriptor:0.2.4 --precise 0.2.3
 
+`cargo install just`
+
+`just` or `just help`
+
 ### Cargo
 ### Nix/NixOS
 Currently you can only run mca converter example 
