@@ -54,6 +54,7 @@ impl Layer {
         if entry != 0 {
             branch.children[child_index] = 1;
         } else {
+            panic!("D:");
             todo!()
         }
     }

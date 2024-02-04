@@ -1,11 +1,11 @@
-use venx_core::utils::Grid;
+use venx_core::{plat::chunk::chunk::Chunk, utils::Grid};
 
 use crate::plat::interfaces::load::LoadInterface;
 
 use super::gpu_plat::GpuPlat;
 
 impl LoadInterface for GpuPlat {
-    fn load_chunk<const SIZE: usize>(&self, position: glam::UVec3, lod_level: u8) -> Grid<SIZE> {
+    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Chunk {
         todo!()
     }
 
@@ -21,10 +21,7 @@ impl LoadInterface for GpuPlat {
         todo!()
     }
 
-    fn compute_mesh_from_chunk<'a, const SIZE: usize>(
-        &self,
-        chunk: &Grid<SIZE>,
-    ) -> &'a [(glam::Vec3, glam::Vec4, glam::Vec3)] {
+    fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> crate::plat::cpu::mesh::Mesh {
         todo!()
     }
 }

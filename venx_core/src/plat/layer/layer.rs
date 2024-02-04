@@ -1,5 +1,7 @@
 use core::ops::{Index, IndexMut};
 
+use spirv_std::glam::UVec3;
+
 use crate::plat::node::Node;
 
 #[derive(Debug)]
@@ -7,7 +9,7 @@ pub struct Layer {
     /// Can be edited or not
     pub freezed: bool,
     pub depth: u8,
-    pub entries: *mut [usize],
+    pub entries: [usize; 5_000],
     // pub meta: LayerMeta,
     /// Link to first node which is empty (flag == -1)
     /// If there is no empty nodes its 0
@@ -34,17 +36,32 @@ impl Layer {
         nodes[1].children = [1; 8];
         // Set reserved node
         nodes[0].flag = 9;
+        // Chain holders
+        // First 2 nodes are not holders, the rest is holders
+        for (i, holder) in nodes.iter_mut().enumerate().skip(2) {
+            // Mark as holder
+            holder.flag = -1;
+            // Set link to next holder
+            holder.children[0] = i as u32 + 1;
+        }
+
         Layer {
             depth,
-            entries: &mut [],
-            holder_head: 0,
+            entries: [0; 5_000],
+            holder_head: 2, // 0 Reserved, 1 Leaf, 2 Holder, 3 Holder, ... 5_000 Holder ...
             nodes: &mut nodes,
             freezed: false,
         }
     }
     /// Get ref to root of existing subtree, or create new
     pub fn entry(&mut self, idx: usize) -> usize {
-        todo!()
+        if self.entries[idx] != 0 {
+            return self.entries[idx];
+        } else {
+            let new = self.allocate_node();
+            self.entries[idx] = new;
+            return new;
+        }
     }
     /// Allocate node from holder-pool
     pub fn allocate_node(&mut self) -> usize {
@@ -59,6 +76,14 @@ impl Layer {
         } else {
             panic!("You are out of holder-nodes");
         }
+    }
+    /// Returns slice of sorted by priority voxel types existing in specified region
+    /// If position is None, than it returns all entries in layer
+    pub fn get_entries_in_region<'a>(&self, position: Option<UVec3>) -> &'a [usize] {
+        // TODO do actual algorithm
+        // For now just return all voxel types in layer
+
+        &self.entries
     }
 }
 

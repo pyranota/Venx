@@ -37,10 +37,6 @@ impl RawPlat {
     pub fn size(&self) -> u32 {
         1 << (self.depth())
     }
-
-    pub fn get_entries_in_region<'a>(&self, position: UVec3) -> &'a [usize] {
-        todo!()
-    }
 }
 
 impl Index<usize> for RawPlat {
@@ -61,6 +57,14 @@ impl Index<usize> for RawPlat {
 
 impl IndexMut<usize> for RawPlat {
     fn index_mut(&mut self, index_mut: usize) -> &mut Self::Output {
-        todo!()
+        unsafe {
+            match index_mut {
+                0 => &mut *self.base,
+                1 => &mut *self.tmp,
+                2 => &mut *self.schem,
+                3 => &mut *self.canvas,
+                _ => panic!("There is no layer on {} index", index_mut),
+            }
+        }
     }
 }

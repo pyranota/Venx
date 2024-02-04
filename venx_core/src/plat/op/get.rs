@@ -20,7 +20,22 @@ impl RawPlat {
         //let path = self.find_path(position.as_uvec3(), level);
         //todo!()
         let path = [];
-        self.get_node_pathed(position, level, entry, layer, &path)
+
+        self.opts(
+            Some(position.as_uvec3()),
+            layer,
+            entry,
+            false,
+            |plat, layer, entry| {
+                if let Some(entry) =
+                    self.get_node_direct(position.as_uvec3(), level, layer as usize, entry as usize)
+                {
+                    return Some(entry);
+                }
+                None
+            },
+        )
+        // self.get_node_pathed(position, level, entry, layer, &path)
     }
 
     fn find_path<'a>(&self, mut position: UVec3, to_level: u8) -> &'a [usize] {
@@ -40,67 +55,6 @@ impl RawPlat {
         }
         todo!()
         // &path
-    }
-    // Todo
-    fn get_node_pathed(
-        &self,
-        position: Vec3,
-        level: u8,
-        entry: EntryOpts,
-        layer: LayerOpts,
-        path: &[usize],
-    ) -> Option<usize> {
-        match &layer {
-            LayerOpts::All => {
-                // Calling layers in right order
-                for single_layer in 0..4 {
-                    let idx_op =
-                        self.get_node(position, level, entry, LayerOpts::Single(single_layer));
-                    if idx_op.is_some() {
-                        // Return it to stop any further calculations
-                        return idx_op;
-                    }
-                }
-                None
-            }
-            LayerOpts::Single(layer) => {
-                match entry {
-                    EntryOpts::All => {
-                        // Calling entries in right order
-                        // Only entries within this region are being checked
-                        // Check `LayerMeta` for more info
-                        for entry in self.get_entries_in_region(position.as_uvec3()) {
-                            let idx_op = self.get_node_direct(
-                                position.as_uvec3(),
-                                level,
-                                *entry,
-                                *layer as usize,
-                            );
-                            if idx_op.is_some() {
-                                // Return it to stop any further calculations
-                                return idx_op;
-                            }
-                        }
-                        None
-                    }
-                    EntryOpts::Single(entry) => {
-                        let idx_op = self.get_node_direct(
-                            position.as_uvec3(),
-                            level,
-                            entry as usize,
-                            *layer as usize,
-                        );
-                        // If it is some, than we found it
-                        if idx_op.is_some() {
-                            // Return it to stop any further calculations
-                            return idx_op;
-                        }
-
-                        None
-                    }
-                }
-            }
-        }
     }
 
     fn get_node_cached(

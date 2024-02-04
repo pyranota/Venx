@@ -138,11 +138,11 @@ fn setup(
     info!("Converting minecraft mca map into plat");
 
     //let mut plat = Plat::load_mca("./assets/mca/121/", (0..11, 0..11)).unwrap();
-    let mut plat = VenxPlat::new(12, 4, 9);
+    let mut plat = VenxPlat::new(12, 5, 9);
 
     //plat.load("saves/25_typed.plat");
 
-    plat.set_voxel(0, (4, 4, 4).into(), 1);
+    // plat.set_voxel(0, (4, 4, 4).into(), 1);
 
     let capacity = 350_000;
     // panic!();
@@ -172,7 +172,7 @@ fn setup(
                 }
 
                 lod_level = 0;
-                let chunk = plat.load_chunk::<32>(uvec3(x, y, z), lod_level);
+                let chunk = plat.load_chunk(uvec3(x, y, z), lod_level);
                 let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
 
                 let idx = counter / capacity;

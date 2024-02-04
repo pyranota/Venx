@@ -1,10 +1,7 @@
 mod get;
+pub mod load;
+pub mod opts;
 mod set;
+pub mod traverse;
 
-#[derive(Clone, Copy)]
-pub enum EntryOpts {
-    All,
-    Single(u32),
-}
-
-pub type LayerOpts = EntryOpts;
+pub use opts::*;
