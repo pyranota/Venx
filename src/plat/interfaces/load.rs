@@ -1,7 +1,7 @@
 use glam::{UVec3, Vec3, Vec4};
 use venx_core::{plat::chunk::chunk::Chunk, utils::Grid};
 
-use crate::plat::cpu::mesh::Mesh;
+use crate::plat::normal::mesh::Mesh;
 
 pub trait LoadInterface {
     /// Position in chunk grid
