@@ -8,3 +8,5 @@ pub fn l2s(lvl: u8) -> u32 {
 pub fn s2l(size: u32) -> anyhow::Result<u8> {
     todo!()
 }
+
+pub type Grid<const SIZE: usize> = [[[u32; SIZE]; SIZE]; SIZE];

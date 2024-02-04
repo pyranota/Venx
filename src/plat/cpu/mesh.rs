@@ -1,26 +1,25 @@
-use std::collections::{HashMap, HashSet};
-
 use venx_core::{glam::*, plat::chunk::chunk::Chunk, utils::l2s};
 
 use super::cpu_plat::CpuPlat;
 
-pub type Mesh = Vec<(Vec3, Vec4, Vec3)>; // Position, Color, Normal
+pub type Mesh = [(Vec3, Vec4, Vec3); 1_000_000]; // Position, Color, Normal
 
 impl CpuPlat {
     pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
-        let mut mesh = vec![];
+        let mut mesh = [(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); 1_000_000];
+        let mut mesh_idx = 0;
 
         let scale = l2s(chunk.lod_level) as f32;
         let scale2 = l2s(chunk.lod_level) as f32;
         //let scale = 1.;
         //let scale = 1.;
 
-        let mut mesh_helper_up: HashSet<UVec3> = HashSet::new();
-        let mut mesh_helper_down: HashSet<UVec3> = HashSet::new();
-        let mut mesh_helper_front: HashSet<UVec3> = HashSet::new();
-        let mut mesh_helper_back: HashSet<UVec3> = HashSet::new();
-        let mut mesh_helper_left: HashSet<UVec3> = HashSet::new();
-        let mut mesh_helper_right: HashSet<UVec3> = HashSet::new();
+        let mut mesh_helper_up = Chunk::new(UVec3::ZERO, 0, 5);
+        let mut mesh_helper_down = Chunk::new(UVec3::ZERO, 0, 5);
+        let mut mesh_helper_front = Chunk::new(UVec3::ZERO, 0, 5);
+        let mut mesh_helper_back = Chunk::new(UVec3::ZERO, 0, 5);
+        let mut mesh_helper_left = Chunk::new(UVec3::ZERO, 0, 5);
+        let mut mesh_helper_right = Chunk::new(UVec3::ZERO, 0, 5);
 
         const DIRECTION: Vec3 = vec3(0., 0., 1.);
 
@@ -49,250 +48,100 @@ impl CpuPlat {
                     _ => ivec3(0, 0, 0),               // Else
                 };
 
-                let block_color = block_color.as_vec3().extend(1.) / vec4(256., 256., 256., 1.0);
+                let block_color = block_color.as_vec3().extend(0.5) / vec4(256., 256., 256., 1.0);
 
-                if !mesh_helper_up.contains(&pos)
-                    && chunk
-                        .get_neighbor(&self.raw_plat, pos.as_ivec3(), (0, 1, 0))
-                        .is_none()
-                {
-                    // Create run
-                    // 1 it is just our first block
-                    let mut line_len: u32 = 1;
-                    mesh_helper_up.insert(pos);
-                    // Iter over entire line
-                    loop {
-                        // Local position of next block in line
-                        let next_pos = (pos.as_vec3() + DIRECTION * (line_len as f32)).as_uvec3();
+                // TOP
+                self.raw_plat.greedy_runner(
+                    &mut mesh_helper_up,
+                    &chunk,
+                    block,
+                    pos,
+                    0,
+                    2,
+                    ivec3(0, 1, 0),
+                    &mut mesh,
+                    &mut mesh_idx,
+                    block_color,
+                    cube::TOP,
+                );
 
-                        // Is there a block at this position?
-                        if let Some(run_block) = chunk.get(next_pos) {
-                            // Is it the same as origin block?
-                            if run_block == block {
-                                // Is it visible?
-                                if chunk
-                                    .get_neighbor(&self.raw_plat, (next_pos).as_ivec3(), (0, 1, 0))
-                                    .is_none()
-                                {
-                                    //dbg!("Found");
-                                    // Marking this block as
-                                    mesh_helper_up.insert(next_pos);
-                                    // It continues only if all conditions were met
-                                    line_len += 1;
-                                    continue;
-                                }
-                            }
-                        }
-                        // Breaking a loop if any condition returned false
-                        break;
-                    }
-                    // Fill the mesh
-                    let stretcher = vec3(1., 1., 1.) + (DIRECTION * line_len as f32);
-                    let cube = cube::TOP;
-                    for mut vertex in cube {
-                        // vertex.x *= stretcher.x;
-                        // vertex.y *= stretcher.y;
-                        vertex.z *= line_len as f32;
+                // BOTTOM
+                self.raw_plat.greedy_runner(
+                    &mut mesh_helper_down,
+                    &chunk,
+                    block,
+                    pos,
+                    0,
+                    2,
+                    ivec3(0, -1, 0),
+                    &mut mesh,
+                    &mut mesh_idx,
+                    block_color,
+                    cube::BOTTOM,
+                );
 
-                        mesh.push((
-                            ((vertex * scale2)
-                                + (pos + (chunk.position * chunk.size() * (scale as u32)))
-                                    .as_vec3()),
-                            block_color,
-                            vec3(0., 1., 0.),
-                        ))
-                    }
-                }
-                if chunk
-                    .get_neighbor(&self.raw_plat, (pos).as_ivec3(), (0, -1, 0))
-                    .is_none()
-                {
-                    let cube = cube::BOTTOM;
-                    for vertex in cube {
-                        mesh.push((
-                            ((vertex * scale2)
-                                + (pos + (chunk.position * chunk.size() * (scale as u32)))
-                                    .as_vec3()),
-                            block_color,
-                            vec3(0., -1., 0.),
-                        ))
-                    }
-                }
-                if !mesh_helper_right.contains(&pos)
-                    && chunk
-                        .get_neighbor(&self.raw_plat, (pos).as_ivec3(), (1, 0, 0))
-                        .is_none()
-                {
-                    // Create run
-                    // 1 it is just our first block
-                    let mut line_len: u32 = 1;
-                    mesh_helper_up.insert(pos);
-                    // Iter over entire line
-                    loop {
-                        // Local position of next block in line
-                        let next_pos =
-                            (pos.as_vec3() + vec3(0., 0., 1.) * (line_len as f32)).as_uvec3();
+                // LEFT
+                self.raw_plat.greedy_runner(
+                    &mut mesh_helper_left,
+                    &chunk,
+                    block,
+                    pos,
+                    2,
+                    1,
+                    ivec3(-1, 0, 0),
+                    &mut mesh,
+                    &mut mesh_idx,
+                    block_color,
+                    cube::LEFT,
+                );
 
-                        // Is there a block at this position?
-                        if let Some(run_block) = chunk.get(next_pos) {
-                            // Is it the same as origin block?
-                            if run_block == block {
-                                // Is it visible?
-                                if chunk
-                                    .get_neighbor(&self.raw_plat, (next_pos).as_ivec3(), (0, 1, 0))
-                                    .is_none()
-                                {
-                                    //dbg!("Found");
-                                    // Marking this block as
-                                    mesh_helper_right.insert(next_pos);
-                                    // It continues only if all conditions were met
-                                    line_len += 1;
-                                    continue;
-                                }
-                            }
-                        }
-                        // Breaking a loop if any condition returned false
-                        break;
-                    }
-                    let cube = cube::RIGHT;
-                    for mut vertex in cube {
-                        vertex.z *= line_len as f32;
-                        mesh.push((
-                            ((vertex * scale2)
-                                + (pos + (chunk.position * chunk.size() * (scale as u32)))
-                                    .as_vec3()),
-                            block_color,
-                            vec3(1., 0., 0.),
-                        ))
-                    }
-                }
-                if !mesh_helper_left.contains(&pos)
-                    && chunk
-                        .get_neighbor(&self.raw_plat, (pos).as_ivec3(), (-1, 0, 0))
-                        .is_none()
-                {
-                    // Create run
-                    // 1 it is just our first block
-                    let mut line_len: u32 = 1;
-                    mesh_helper_up.insert(pos);
-                    // Iter over entire line
-                    loop {
-                        // Local position of next block in line
-                        let next_pos =
-                            (pos.as_vec3() + vec3(0., 0., 1.) * (line_len as f32)).as_uvec3();
+                // RIGHT
+                self.raw_plat.greedy_runner(
+                    &mut mesh_helper_right,
+                    &chunk,
+                    block,
+                    pos,
+                    2,
+                    1,
+                    ivec3(1, 0, 0),
+                    &mut mesh,
+                    &mut mesh_idx,
+                    block_color,
+                    cube::RIGHT,
+                );
 
-                        // Is there a block at this position?
-                        if let Some(run_block) = chunk.get(next_pos) {
-                            // Is it the same as origin block?
-                            if run_block == block {
-                                // Is it visible?
-                                if self
-                                    .get_neighbor(chunk, (next_pos).as_ivec3(), (0, 1, 0))
-                                    .is_none()
-                                {
-                                    //dbg!("Found");
-                                    // Marking this block as
-                                    mesh_helper_left.insert(next_pos);
-                                    // It continues only if all conditions were met
-                                    line_len += 1;
-                                    continue;
-                                }
-                            }
-                        }
-                        // Breaking a loop if any condition returned false
-                        break;
-                    }
-                    let cube = cube::LEFT;
-                    for mut vertex in cube {
-                        vertex.z *= line_len as f32;
-                        mesh.push((
-                            ((vertex * scale2)
-                                + (pos + (chunk.position * chunk.size() * (scale as u32)))
-                                    .as_vec3()),
-                            block_color,
-                            vec3(-1., 0., 0.),
-                        ))
-                    }
-                }
-                if !mesh_helper_front.contains(&pos)
-                    && self
-                        .get_neighbor(chunk, (pos).as_ivec3(), (0, 0, 1))
-                        .is_none()
-                {
-                    // Create run
-                    // 1 it is just our first block
-                    let mut line_len: u32 = 1;
-                    mesh_helper_up.insert(pos);
-                    // Iter over entire line
-                    loop {
-                        // Local position of next block in line
-                        let next_pos =
-                            (pos.as_vec3() + vec3(1., 0., 0.) * (line_len as f32)).as_uvec3();
+                // FRONT
+                self.raw_plat.greedy_runner(
+                    &mut mesh_helper_front,
+                    &chunk,
+                    block,
+                    pos,
+                    0,
+                    1,
+                    ivec3(0, 0, 1),
+                    &mut mesh,
+                    &mut mesh_idx,
+                    block_color,
+                    cube::FRONT,
+                );
 
-                        // Is there a block at this position?
-                        if let Some(run_block) = chunk.get(next_pos) {
-                            // Is it the same as origin block?
-                            if run_block == block {
-                                // Is it visible?
-                                if self
-                                    .get_neighbor(chunk, (next_pos).as_ivec3(), (0, 1, 0))
-                                    .is_none()
-                                {
-                                    //dbg!("Found");
-                                    // Marking this block as
-                                    mesh_helper_front.insert(next_pos);
-                                    // It continues only if all conditions were met
-                                    line_len += 1;
-                                    continue;
-                                }
-                            }
-                        }
-                        // Breaking a loop if any condition returned false
-                        break;
-                    }
-                    // Fill the mesh
-                    // let stretcher = vec3(1., 1., 1.) + (DIRECTION * line_len as f32);
-                    // let cube = cube::TOP;
-                    // for mut vertex in cube {
-                    //     // vertex.x *= stretcher.x;
-                    //     // vertex.y *= stretcher.y;
-                    //     vertex.z *= line_len as f32;
-
-                    //     mesh.push((
-                    //         ((vertex) + (pos + (chunk.position * chunk.size())).as_vec3()),
-                    //         block_color,
-                    //         vec3(0., 1., 0.),
-                    //     ))
-                    // }
-                    let cube = cube::FRONT;
-                    for mut vertex in cube {
-                        vertex.x *= line_len as f32;
-                        mesh.push((
-                            ((vertex * scale2)
-                                + (pos + (chunk.position * chunk.size() * (scale as u32)))
-                                    .as_vec3()),
-                            block_color,
-                            vec3(0., 0., 1.),
-                        ))
-                    }
-                }
-                if chunk
-                    .get_neighbor(chunk, (pos).as_ivec3(), (0, 0, -1))
-                    .is_none()
-                {
-                    let cube = cube::BACK;
-                    for vertex in cube {
-                        mesh.push((
-                            ((vertex * scale2)
-                                + (pos + (chunk.position * chunk.size() * (scale as u32)))
-                                    .as_vec3()),
-                            block_color,
-                            vec3(0., 0., -1.),
-                        ))
-                    }
-                }
+                // BACK
+                self.raw_plat.greedy_runner(
+                    &mut mesh_helper_back,
+                    &chunk,
+                    block,
+                    pos,
+                    0,
+                    1,
+                    ivec3(0, 0, -1),
+                    &mut mesh,
+                    &mut mesh_idx,
+                    block_color,
+                    cube::BACK,
+                );
             }
         });
+
         mesh
     }
 }
@@ -453,7 +302,7 @@ impl CpuPlat {
 // }
 
 pub mod cube {
-    use glam::Vec3;
+    use venx_core::glam::*;
 
     pub const FRONT: [Vec3; 6] = [
         Vec3::new(-0., -0., 1.0),

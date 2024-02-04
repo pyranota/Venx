@@ -1,7 +1,10 @@
 use std::usize;
 
 use glam::{UVec3, Vec3, Vec4};
-use venx_core::plat::{layer::layer::Layer, raw_plat::RawPlat};
+use venx_core::{
+    plat::{layer::layer::Layer, raw_plat::RawPlat},
+    utils::Grid,
+};
 
 use self::{
     cpu::cpu_plat::CpuPlat,
@@ -59,11 +62,7 @@ impl VenxPlat {
 impl PlatInterface for VenxPlat {}
 
 impl LoadInterface for VenxPlat {
-    fn load_chunk<const SIZE: usize>(
-        &self,
-        position: glam::UVec3,
-        lod_level: u8,
-    ) -> interfaces::Grid<SIZE> {
+    fn load_chunk<const SIZE: usize>(&self, position: glam::UVec3, lod_level: u8) -> Grid<SIZE> {
         match &self.plat {
             Plat::Cpu(ref plat) => plat.load_chunk(position, lod_level),
             Plat::Gpu(ref plat) => plat.load_chunk(position, lod_level),
@@ -84,7 +83,7 @@ impl LoadInterface for VenxPlat {
 
     fn compute_mesh_from_chunk<'a, const SIZE: usize>(
         &self,
-        chunk: &interfaces::Grid<SIZE>,
+        chunk: &Grid<SIZE>,
     ) -> &'a [(Vec3, Vec4, Vec3)] {
         match &self.plat {
             Plat::Cpu(ref plat) => plat.compute_mesh_from_chunk(chunk),
@@ -97,7 +96,7 @@ impl LayerInterface for VenxPlat {
     fn set_segment<const SIZE: usize>(
         &mut self,
         layer: usize,
-        segment: interfaces::Grid<SIZE>,
+        segment: Grid<SIZE>,
         position: glam::UVec3,
     ) {
         todo!()

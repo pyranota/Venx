@@ -1,3 +1,5 @@
+use venx_core::utils::Grid;
+
 use crate::plat::interfaces::layer::LayerInterface;
 
 use super::gpu_plat::GpuPlat;
@@ -6,7 +8,7 @@ impl LayerInterface for GpuPlat {
     fn set_segment<const SIZE: usize>(
         &mut self,
         layer: usize,
-        segment: crate::plat::interfaces::Grid<SIZE>,
+        segment: Grid<SIZE>,
         position: glam::UVec3,
     ) {
         todo!()

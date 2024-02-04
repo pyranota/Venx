@@ -1,8 +1,7 @@
 use std::sync::Arc;
 
 use glam::UVec3;
-
-use super::Grid;
+use venx_core::utils::Grid;
 
 pub trait LayerInterface {
     // fn new_image(&mut self, name: &str) -> usize;

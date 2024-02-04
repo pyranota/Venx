@@ -1,6 +1,5 @@
 use glam::{UVec3, Vec3, Vec4};
-
-use super::Grid;
+use venx_core::utils::Grid;
 
 pub trait LoadInterface {
     /// Position in chunk grid

@@ -10,8 +10,6 @@ use glam::UVec3;
 
 use self::{layer::LayerInterface, load::LoadInterface};
 
-pub type Grid<const SIZE: usize> = [[[u32; SIZE]; SIZE]; SIZE];
-
 pub trait PlatInterface: Debug + LayerInterface + LoadInterface + Downcast {
     // fn insert_segment(&mut self, segment: Segment, position: UVec3);
     // fn load_chunk(&self, position: UVec3, level: u8) -> Option<Chunk>;
