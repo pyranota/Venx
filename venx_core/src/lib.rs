@@ -1,4 +1,4 @@
 #![no_std]
-mod chunk;
-mod plat;
+
+pub mod plat;
 mod utils;

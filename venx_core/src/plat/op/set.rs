@@ -1,14 +1,17 @@
-impl Plat {
-        /// ty 0 is reserved for air and will remove voxel if there is any
+use spirv_std::glam::UVec3;
+
+use crate::plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat};
+
+impl RawPlat {
+    /// ty 0 is reserved for air and will remove voxel if there is any
     /// you can add any ty if there is no already created entry for it
     /// It will create one
-    pub fn set(&mut self, mut pos: UVec3, entry: u32, layer: usize) {
+    pub fn set(&mut self, mut pos: UVec3, entry: u32, layer: &mut Layer) {
         if entry == 0 {
             return;
         }
-
         // Identify starting point according to given entry
-        let mut idx = self.entry(entry as usize);
+        let mut idx = layer.entry(entry as usize);
         // dbg!(idx, entry);
 
         let mut size = self.size();
@@ -21,18 +24,18 @@ impl Plat {
         }
 
         while level > 1 {
-            let child_index = Branch::get_child_index(pos, level - 1);
+            let child_index = Node::get_child_index(pos, level - 1);
 
-            let branch = &self.levels[level as usize][idx];
+            let branch = layer[idx];
 
             let child_id = branch.children[child_index];
 
             if child_id == 0 {
-                let new_child_id = self.add_branch(level - 1);
-                self.levels[level as usize][idx].children[child_index] = new_child_id as u32;
+                let new_child_id = layer.allocate_node();
+                layer[idx].children[child_index] = new_child_id as u32;
                 idx = new_child_id;
             } else {
-                idx = self.levels[level as usize][idx].children[child_index] as usize;
+                idx = layer[idx].children[child_index] as usize;
             }
 
             {
@@ -43,8 +46,8 @@ impl Plat {
                 pos.z %= size;
             }
         }
-        let child_index = Branch::get_child_index(pos, 0);
-        let branch = &mut self.levels[1][idx];
+        let child_index = Node::get_child_index(pos, 0);
+        let branch = &mut layer[idx];
         if entry != 0 {
             branch.children[child_index] = 1;
         } else {

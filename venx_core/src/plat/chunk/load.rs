@@ -17,9 +17,6 @@ fn load_chunk(&self, position: glam::UVec3, level: u8) -> crate::chunk::chunk::C
                 uvec3(0, 0, 0),
                 chunk_level,
                 |props| {
-                    // if let TrProps::Leaf { position, .. } = props {
-                    //     chunk.set(*position, entry as i32);
-                    // }
 
                     if props.level == level {
                         chunk.set(*props.position / chunk_lod_scaler, entry as i32);

@@ -11,12 +11,11 @@ pub struct VenxLoader {
     /// Maximum lod level
     /// Above that level there will be no loaded chunks
     pub max_lod_level: u8,
-    /// Shows what chunk and what level is loaded
-    /// Vec<(Chunk position, LOD Level)>
-    pub chunks: Vec<(UVec3, u8)>,
+    /// Shows what chunk and what level are loaded
+    pub chunks: VoxTree<()>,
     /// Says how much each lod level can take vertices
     /// Input is current amount of vertices, output is which level should write
-    vertices_formel: dyn Fn(usize) -> u8,
+    vertices_formule: dyn Fn(usize) -> u8,
 }
 
 impl VenxLoader {

@@ -1,4 +1,6 @@
-#[derive(Clone, Debug)]
+use spirv_std::glam::UVec3;
+
+#[derive(Copy, Clone, Debug, Default)]
 pub struct Node {
     /// `0` - normal branch,
     /// `1` - link to shared,
@@ -16,4 +18,25 @@ pub struct Node {
     // And for making things uniform and similar it uses that simple types.
     // Plus its makes much easier to convert and send to gpu.
     pub children: [u32; 8],
+}
+
+impl Node {
+    /// Internal index of node converted to normalized vector
+    pub fn get_child_position(i: u32) -> UVec3 {
+        UVec3::new(i & 1, (i >> 1) & 1, (i >> 2) & 1)
+    }
+    /// Convert position of node in 3d space coordinate to internal child branch index
+    pub fn get_child_index(pos: UVec3, level: u8) -> usize {
+        let child_size = 1 << level;
+        let x = if pos[0] < child_size { 0 } else { 1 };
+        let y = if pos[1] < child_size { 0 } else { 1 };
+        let z = if pos[2] < child_size { 0 } else { 1 };
+        (x + y * 2 + z * 4) as usize
+    }
+    pub fn new(level: u8, flag: i32) -> Self {
+        Self {
+            flag,
+            children: Default::default(),
+        }
+    }
 }

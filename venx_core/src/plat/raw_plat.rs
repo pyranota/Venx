@@ -1,3 +1,10 @@
+use core::ops::{Index, IndexMut};
+
+use spirv_std::glam::UVec3;
+
+use super::layer::layer::Layer;
+
+#[derive(Debug, Clone)]
 pub struct RawPlat {
     pub position: (i32, i32, i32),
     pub rotation: (i32, i32, i32),
@@ -8,6 +15,7 @@ pub struct RawPlat {
     /// 2^depth represents maximum world size
     pub depth: u8,
     pub layer_limit: u8,
+
     /// Each layer is laying on top of layers behind
     /// To provide cross-game exprience, layers specified
     /// Quick tour of layers and its responsobilities:
@@ -16,8 +24,44 @@ pub struct RawPlat {
     /// 2 - Schematic: Used to place autopasted schematics, also used for AI buildings provided by FWGen
     /// 3 - Canvas: Each voxel you want to place as a player will go there
     //pub layers: Vec<Layer>,
-    base: Layer,
-    tmp: Layer,
-    schem: Layer,
-    canvas: Layer
+    pub base: *mut Layer,
+    pub tmp: *mut Layer,
+    pub schem: *mut Layer,
+    pub canvas: *mut Layer,
+}
+
+impl RawPlat {
+    pub fn depth(&self) -> u8 {
+        self.depth as u8
+    }
+
+    pub fn size(&self) -> u32 {
+        1 << (self.depth())
+    }
+
+    pub fn get_entries_in_region<'a>(&self, position: UVec3) -> &'a [usize] {
+        todo!()
+    }
+}
+
+impl Index<usize> for RawPlat {
+    type Output = Layer;
+
+    fn index(&self, index: usize) -> &Self::Output {
+        unsafe {
+            match index {
+                0 => &*self.base,
+                1 => &*self.tmp,
+                2 => &*self.schem,
+                3 => &*self.canvas,
+                _ => panic!("There is no layer on {} index", index),
+            }
+        }
+    }
+}
+
+impl IndexMut<usize> for RawPlat {
+    fn index_mut(&mut self, index_mut: usize) -> &mut Self::Output {
+        todo!()
+    }
 }

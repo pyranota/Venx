@@ -13,7 +13,7 @@ use glam::UVec3;
 pub struct AdaptiveMesh {
     /// Small overview of loaded chunks
     /// HashMap<Chunk position, (SubMesh idx, first Vertex idx of chunk)>
-    chunks: HashMap<UVec3, (usize, usize)>,
+    chunks_map: VoxTree<(usize, usize)>,
     /// Why not to use 1?
     /// If you have only one mesh and it grows bigger,
     /// grows also chance that your mesh could not be allocated on gpu
