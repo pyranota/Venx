@@ -2,12 +2,19 @@ use std::sync::Arc;
 
 use glam::UVec3;
 
+use super::Grid;
+
 pub trait LayerInterface {
     // fn new_image(&mut self, name: &str) -> usize;
     /// Set segment with overwriting everything within its bounding box.
     /// Alternatively you can set it with `set_voxel` and than call `compress` on its location
     /// Be aware, that you should do it only if you understand what are u doing
-    // fn set_segment(&mut self, layer: usize, segment: Segment, position: UVec3);
+    fn set_segment<const SIZE: usize>(
+        &mut self,
+        layer: usize,
+        segment: Grid<SIZE>,
+        position: UVec3,
+    );
     fn set_voxel(&mut self, layer: usize, position: UVec3, ty: usize);
     fn compress(&mut self, layer: usize);
 

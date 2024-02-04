@@ -1,12 +1,14 @@
 use glam::uvec3;
 use venx_core::plat::raw_plat::RawPlat;
+
+use crate::plat::interfaces::PlatInterface;
 // #[derive(bitcode::Encode, bitcode::Decode)]
 #[derive(Debug, Clone)]
 pub struct CpuPlat {
-    raw_plat: RawPlat,
+    pub raw_plat: RawPlat,
 }
 
-// impl PlatInterface for CpuPlat {}
+impl PlatInterface for CpuPlat {}
 // #[test]
 // fn test_insert_segment() {
 //     let mut plat = Plat::new(5, 2, 4);

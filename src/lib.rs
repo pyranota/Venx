@@ -1,12 +1,3 @@
-// Fix `cargo check` error
-
-// // mod topology;
-// pub mod adaptive_mesh;
-// // pub mod chunk;
+// mod topology;
 
 pub mod plat;
-// // pub mod shared;
-// // pub mod voxel;
-
-// #[cfg(feature = "loader")]
-// pub mod loader;

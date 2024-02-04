@@ -1,35 +1,37 @@
 //! A simple 3D scene with light shining over a cube sitting on a plane.
-pub mod fps;
+// pub mod fps;
 pub mod plat;
-pub use fps::disable_vsync;
+
 use std::f32::consts::PI;
 
 use bevy::{
-    core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
+    app::{App, Plugin},
+    asset::Assets,
     diagnostic::FrameTimeDiagnosticsPlugin,
-    pbr::{
-        wireframe::WireframePlugin, CascadeShadowConfigBuilder, ScreenSpaceAmbientOcclusionBundle,
-    },
+    ecs::system::{Commands, ResMut},
+    math::vec3,
+    pbr::{wireframe::WireframePlugin, PbrBundle, StandardMaterial},
     prelude::*,
+    render::{
+        color::Color,
+        mesh::{shape, Mesh},
+    },
 };
 use bevy_panorbit_camera::PanOrbitCamera;
-use glam::vec3;
-
-use self::fps::{fps_counter_showhide, fps_text_update_system, setup_fps_counter};
 
 pub struct Venx;
 
 impl Plugin for Venx {
     fn build(&self, app: &mut App) {
-        app.add_plugins((
-            bevy_panorbit_camera::PanOrbitCameraPlugin,
-            WireframePlugin,
+        app.add_plugin(
+            // bevy_panorbit_camera::PanOrbitCameraPlugin,
+            // WireframePlugin,
             FrameTimeDiagnosticsPlugin::default(),
-            TemporalAntiAliasPlugin,
+            // TemporalAntiAliasPlugin,
             // MaterialPlugin::<CustomMaterial>::default(),
-        ))
-        .add_systems(Startup, (setup, setup_fps_counter))
-        .add_systems(Update, (fps_text_update_system, fps_counter_showhide))
+        )
+        .add_startup_system(setup)
+        // .add_systems((fps_text_update_system, fps_counter_showhide))
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)));
     }
 }
@@ -127,7 +129,7 @@ fn setup(
                 .looking_at(vec3(250., 100., 250.), Vec3::Y),
             ..default()
         },
-        ScreenSpaceAmbientOcclusionBundle::default(),
+        // ScreenSpaceAmbientOcclusionBundle::default(),
         // TemporalAntiAliasBundle::default(),
         FogSettings {
             color: Color::rgb(0.52, 0.80, 0.92),

@@ -6,6 +6,7 @@ use crate::plat::node::Node;
 pub struct Layer {
     /// Can be edited or not
     pub freezed: bool,
+    pub depth: u8,
     pub entries: *mut [usize],
     // pub meta: LayerMeta,
     /// Link to first node which is empty (flag == -1)
@@ -26,7 +27,7 @@ pub struct Layer {
 }
 
 impl Layer {
-    pub fn new<const LEN: usize>(name: &str, depth: u8) -> Self {
+    pub fn new<const LEN: usize>(depth: u8) -> Self {
         let mut nodes = [Node::default(); LEN];
         // Set leaf node
         nodes[1].flag = 3;
@@ -34,6 +35,7 @@ impl Layer {
         // Set reserved node
         nodes[0].flag = 9;
         Layer {
+            depth,
             entries: &mut [],
             holder_head: 0,
             nodes: &mut nodes,

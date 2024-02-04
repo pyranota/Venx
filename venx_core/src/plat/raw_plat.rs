@@ -14,7 +14,6 @@ pub struct RawPlat {
     /// Maximal depth of plat, can be extended and/or shrinked
     /// 2^depth represents maximum world size
     pub depth: u8,
-    pub layer_limit: u8,
 
     /// Each layer is laying on top of layers behind
     /// To provide cross-game exprience, layers specified
