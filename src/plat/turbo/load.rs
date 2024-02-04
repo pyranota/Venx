@@ -21,7 +21,7 @@ impl LoadInterface for GpuPlat {
         todo!()
     }
 
-    fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> crate::plat::cpu::mesh::Mesh {
+    fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> crate::plat::normal::mesh::Mesh {
         todo!()
     }
 }

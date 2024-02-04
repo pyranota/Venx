@@ -7,17 +7,17 @@ use venx_core::{
 };
 
 use self::{
-    cpu::{cpu_plat::CpuPlat, mesh::Mesh},
-    gpu::gpu_plat::GpuPlat,
     interfaces::{layer::LayerInterface, load::LoadInterface, PlatInterface},
+    normal::{cpu_plat::CpuPlat, mesh::Mesh},
+    turbo::gpu_plat::GpuPlat,
 };
 
-mod cpu;
-mod gpu;
 pub mod interfaces;
 #[cfg(feature = "mca_converter")]
 mod mca_converter;
 mod minecraft_blocks;
+mod normal;
+mod turbo;
 
 #[derive(Debug)]
 pub struct VenxPlat {
