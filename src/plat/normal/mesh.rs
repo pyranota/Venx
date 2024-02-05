@@ -2,7 +2,7 @@ use venx_core::{glam::*, plat::chunk::chunk::Chunk, utils::l2s};
 
 use super::cpu_plat::CpuPlat;
 
-pub type Mesh = [(Vec3, Vec4, Vec3); 1_000_000]; // Position, Color, Normal
+pub type Mesh = [(Vec3, Vec4, Vec3); 1_000]; // Position, Color, Normal
 
 impl CpuPlat {
     pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
