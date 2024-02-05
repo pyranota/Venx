@@ -19,13 +19,14 @@ impl RawPlat {
     pub fn opts_mut<T, C: FnMut(&mut RawPlat, u32, u32) -> Option<T>>(
         &mut self,
         position: Option<UVec3>,
+        // TODO: level: u8,
         layer_opts: LayerOpts,
         entry_opts: EntryOpts,
         bottom_up: bool,
-        mut callback: C,
+        callback: &mut C,
     ) -> Option<T> {
         match layer_opts {
-            EntryOpts::All => {
+            LayerOpts::All => {
                 for i in if bottom_up { 0..=3 } else { 3..=0 } {
                     let opt = self.opts_mut(
                         position,
@@ -41,17 +42,17 @@ impl RawPlat {
 
                 None
             }
-            EntryOpts::Single(layer) => match entry_opts {
+            LayerOpts::Single(layer) => match entry_opts {
                 EntryOpts::All => {
                     for i in self[layer as usize].get_entries_in_region(position) {
                         // If entry is 0, that means, all following entries are also 0
-                        if *i == 0 {
+                        if i == 0 {
                             return None;
                         }
                         let opt = self.opts_mut(
                             position,
                             LayerOpts::Single(layer),
-                            EntryOpts::Single(*i as u32),
+                            EntryOpts::Single(i as u32),
                             bottom_up,
                             callback,
                         );
@@ -72,6 +73,7 @@ impl RawPlat {
             },
         }
     }
+    // TODO: remove RawPlat from callback
     /// The way to iterate over all layers and entries in right order and with maximum performance
     /// If position is None, no optimizations in entries performed
     /// Collback(Plat, LayerIdx, EntryIdx)
@@ -81,14 +83,16 @@ impl RawPlat {
     #[inline]
     pub fn opts<T, C: FnMut(&RawPlat, u32, u32) -> Option<T>>(
         &self,
+        // TODO: remove Opt, and use level for indicating instead.
         position: Option<UVec3>,
+        // TODO: level: u8,
         layer_opts: LayerOpts,
         entry_opts: EntryOpts,
         bottom_up: bool,
-        mut callback: C,
+        callback: &mut C,
     ) -> Option<T> {
         match layer_opts {
-            EntryOpts::All => {
+            LayerOpts::All => {
                 for i in if bottom_up { 0..=3 } else { 3..=0 } {
                     let opt = self.opts(
                         position,
@@ -104,17 +108,17 @@ impl RawPlat {
 
                 None
             }
-            EntryOpts::Single(layer) => match entry_opts {
+            LayerOpts::Single(layer) => match entry_opts {
                 EntryOpts::All => {
                     for i in self[layer as usize].get_entries_in_region(position) {
                         // If entry is 0, that means, all following entries are also 0
-                        if *i == 0 {
+                        if i == 0 {
                             return None;
                         }
                         let opt = self.opts(
                             position,
                             LayerOpts::Single(layer),
-                            EntryOpts::Single(*i as u32),
+                            EntryOpts::Single(i as u32),
                             bottom_up,
                             callback,
                         );
