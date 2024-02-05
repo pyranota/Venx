@@ -1,8 +1,13 @@
-use spirv_std::glam::UVec3;
+use crate::plat::raw_plat::RawPlat;
 
+use spirv_std::{
+    glam::{uvec3, UVec3},
+    macros::debug_printfln,
+};
+#[macro_use(print)]
 use crate::{
     plat::{layer::layer::Layer, node::Node},
-    utils::l2s,
+    utils::{l2s},
 };
 
 impl Layer {
@@ -50,12 +55,151 @@ impl Layer {
             }
         }
         let child_index = Node::get_child_index(pos, 0);
-        let branch = &mut self[idx];
-        if entry != 0 {
-            branch.children[child_index] = 1;
-        } else {
-            panic!("D:");
-            todo!()
-        }
+        self[idx].children[child_index] = 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    extern crate std;
+
+    use spirv_std::glam::uvec3;
+
+    use crate::plat::{node::Node, raw_plat::RawPlat};
+
+    #[test]
+    fn set_voxel() {
+        let mut plat = RawPlat::new(2, 2, 2);
+
+        plat[1].set(uvec3(0, 0, 0), 1);
+        plat[1].set(uvec3(0, 0, 0), 2);
+        // Incorrect entry
+        plat[1].set(uvec3(0, 1, 0), 0);
+        // Out of bound
+        plat[1].set(uvec3(0, 7, 0), 1);
+        plat[1].set(uvec3(0, 8, 0), 2);
+
+        let nodes = &plat[1].nodes;
+
+        // std::println!("{:?}", &plat[1].entries[0..10]);
+        // std::println!("{:?}", nodes);
+
+        assert_eq!(
+            nodes[0],
+            Node {
+                flag: 9,
+                children: [0; 8]
+            }
+        );
+
+        assert_eq!(
+            nodes[1],
+            Node {
+                flag: 3,
+                children: [1; 8]
+            }
+        );
+
+        assert_eq!(
+            nodes[2],
+            Node {
+                flag: 0,
+                children: [3, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+        assert_eq!(
+            nodes[3],
+            Node {
+                flag: 0,
+                children: [1, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+        assert_eq!(
+            nodes[4],
+            Node {
+                flag: 0,
+                children: [5, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+        assert_eq!(
+            nodes[5],
+            Node {
+                flag: 0,
+                children: [1, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+        assert_eq!(
+            nodes[6],
+            Node {
+                flag: -1,
+                children: [7, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+
+        // Another layer
+        plat[2].set(uvec3(0, 0, 0), 1);
+        plat[2].set(uvec3(0, 0, 0), 2);
+        // Incorrect entry
+        plat[2].set(uvec3(0, 1, 0), 0);
+        // Out of bound
+        plat[2].set(uvec3(0, 7, 0), 1);
+        plat[2].set(uvec3(0, 8, 0), 2);
+
+        let nodes = &plat[2].nodes;
+
+        // std::println!("{:?}", &plat[1].entries[0..10]);
+        // std::println!("{:?}", nodes);
+
+        assert_eq!(
+            nodes[0],
+            Node {
+                flag: 9,
+                children: [0; 8]
+            }
+        );
+
+        assert_eq!(
+            nodes[1],
+            Node {
+                flag: 3,
+                children: [1; 8]
+            }
+        );
+
+        assert_eq!(
+            nodes[2],
+            Node {
+                flag: 0,
+                children: [3, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+        assert_eq!(
+            nodes[3],
+            Node {
+                flag: 0,
+                children: [1, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+        assert_eq!(
+            nodes[4],
+            Node {
+                flag: 0,
+                children: [5, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+        assert_eq!(
+            nodes[5],
+            Node {
+                flag: 0,
+                children: [1, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
+        assert_eq!(
+            nodes[6],
+            Node {
+                flag: -1,
+                children: [7, 0, 0, 0, 0, 0, 0, 0]
+            }
+        );
     }
 }

@@ -1,4 +1,4 @@
-use spirv_std::glam::UVec3;
+use spirv_std::glam::{uvec3, UVec3};
 
 use crate::{
     plat::{chunk::chunk::Chunk, raw_plat::RawPlat},
@@ -29,30 +29,17 @@ impl RawPlat {
                 true
             },
         );
-        // let entries = self.layers[0].graph.entries();
-        // // iterate over all entries in graph
-        // for entry in 1..entries {
-        //     if let Some(chunk_idx) =
-        //         self.layers[0]
-        //             .graph
-        //             .get_node(chunk_level, position * real_chunk_size, entry)
-        //     {
-        //         self.layers[0].graph.traverse_from(
-        //             chunk_idx,
-        //             uvec3(0, 0, 0),
-        //             chunk_level,
-        //             |props| {
-        //                 if props.level == level {
-        //                     chunk.set(*props.position / chunk_lod_scaler, entry as i32);
-        //                     return false;
-        //                 }
-
-        //                 true
-        //             },
-        //         )
-        //     }
-        // }
-
         chunk
     }
+}
+
+#[test]
+fn load_chunk() {
+    let mut plat = RawPlat::new(7, 5, 6);
+
+    plat[0].set(uvec3(0, 0, 0), 2);
+
+    let chunk = plat.load_chunk(UVec3::ZERO, 0);
+
+    assert!(chunk.get(uvec3(0, 0, 0)).is_some());
 }
