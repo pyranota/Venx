@@ -4,16 +4,21 @@ use crate::plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat};
 
 use super::{EntryOpts, LayerOpts};
 
+type Entry_Idx = usize;
+type Layer_Idx = Entry_Idx;
+type Node_Idx = Layer_Idx;
+
 impl RawPlat {
     /// If Entry is Entry::All, than it will return the most valuable (by voxel-collection) block
     /// Same goes for Layer, if it is Layer::All, it will return the most higher layer
+    /// Return (Node_Idx, (Entry, Layer))
     pub fn get_node(
         &self,
         position: UVec3,
         level: u8,
         entry: EntryOpts,
         layer: LayerOpts,
-    ) -> Option<usize> {
+    ) -> Option<(Node_Idx, (Layer_Idx, Entry_Idx))> {
         // TODO make binary (take u64 and divide by 3 bits)
         // Small optimization
         // With this we should not calculate children indices each run.
@@ -27,10 +32,10 @@ impl RawPlat {
             entry,
             false,
             &mut |_plat, layer, entry| {
-                if let Some(entry) =
+                if let Some(node_idx) =
                     self.get_node_direct(position, level, layer as usize, entry as usize)
                 {
-                    return Some(entry);
+                    return Some((node_idx, (layer as usize, entry as usize)));
                 }
                 None
             },
@@ -74,22 +79,18 @@ impl RawPlat {
         layer: usize,
         entry: usize,
     ) -> Option<usize> {
-        //let child_pos = GBranch::get_child_position(i as u32) * (size) + node_position;
-        //todo!()
         let mut current_level = self.depth as u8;
 
         let mut size = self.size();
         let mut found_idx = None;
 
-        let mut idx = self[layer].entries[entry]; // 1;
+        let mut idx = self[layer].entries[entry];
 
         while current_level > level {
             let child_index = Node::get_child_index(position, current_level - 1);
-            // dbg!(child_index);
-            // panic!();
+
             let child_id = self[layer][idx].children[child_index];
 
-            // dbg!(child_id);
             if child_id != 0 {
                 idx = child_id as usize;
                 found_idx = Some(child_id as usize);
@@ -104,9 +105,13 @@ impl RawPlat {
         }
         found_idx
     }
-
+    // TODO: make it return actual block, but not the entry
     pub fn get_voxel(&self, position: UVec3) -> Option<usize> {
-        self.get_node(position, 0, EntryOpts::All, LayerOpts::All)
+        if let Some((.., (.., entry))) = self.get_node(position, 0, EntryOpts::All, LayerOpts::All)
+        {
+            return Some(entry);
+        }
+        None
     }
 
     /// Is there a voxel or not at given position
@@ -129,6 +134,8 @@ impl RawPlat {
 #[cfg(test)]
 mod tests {
     extern crate std;
+
+    use std::println;
 
     use spirv_std::glam::uvec3;
 
@@ -203,17 +210,6 @@ mod tests {
                 LayerOpts::Single(1),
             )
             .is_some());
-
-        // Test if plat.get_node is the same as plat.get_voxel
-        assert_eq!(
-            plat.get_node(
-                uvec3(0, 0, 0),
-                0,
-                EntryOpts::Single(1),
-                LayerOpts::Single(1),
-            ),
-            plat.get_voxel(uvec3(0, 0, 0))
-        );
     }
 
     #[test]
@@ -226,15 +222,20 @@ mod tests {
         plat[0].set(uvec3(0, 2, 0), 1);
 
         // Overlapping (Canvas)
+        plat[1].set(uvec3(0, 0, 0), 1);
+        plat[1].set(uvec3(0, 1, 0), 1);
+        plat[1].set(uvec3(0, 2, 0), 1);
+
+        // Overlapping above canvas
         plat[1].set(uvec3(0, 0, 0), 2);
         plat[1].set(uvec3(0, 1, 0), 2);
         plat[1].set(uvec3(0, 2, 0), 2);
 
-        assert!(plat
-            .get_node(uvec3(0, 0, 0), 0, EntryOpts::Single(2), LayerOpts::All,)
-            .is_some());
-        // assert_eq!(plat.get_voxel((0, 0, 0).into()).unwrap(), 2);
-        // assert_eq!(plat.get_voxel((0, 1, 0).into()).unwrap(), 2);
-        // assert_eq!(plat.get_voxel((0, 2, 0).into()).unwrap(), 2);
+        // Even more
+        plat[1].set(uvec3(0, 1, 0), 3);
+
+        assert_eq!(plat.get_voxel((0, 0, 0).into()).unwrap(), 2);
+        assert_eq!(plat.get_voxel((0, 1, 0).into()).unwrap(), 3);
+        assert_eq!(plat.get_voxel((0, 2, 0).into()).unwrap(), 2);
     }
 }
