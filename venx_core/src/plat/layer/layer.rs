@@ -4,11 +4,12 @@ use spirv_std::glam::UVec3;
 
 use crate::plat::node::Node;
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct Layer {
     /// Can be edited or not
     pub freezed: bool,
     pub depth: u8,
+    // Maybe use custom struct Entry instead of usize?
     pub entries: [usize; 5_000],
     // pub meta: LayerMeta,
     /// Link to first node which is empty (flag == -1)
@@ -25,12 +26,12 @@ pub struct Layer {
     /// You can identify this types of nodes with 9 in every field of it
     /// This is in that way because if there would be node at 0 index,
     /// that would conflict with 0 as "no child" interpretation
-    nodes: *mut [Node],
+    pub(crate) nodes: [Node; 128],
 }
 
 impl Layer {
     pub fn new<const LEN: usize>(depth: u8) -> Self {
-        let mut nodes = [Node::default(); LEN];
+        let mut nodes = [Node::default(); 128];
         // Set leaf node
         nodes[1].flag = 3;
         nodes[1].children = [1; 8];
@@ -49,7 +50,7 @@ impl Layer {
             depth,
             entries: [0; 5_000],
             holder_head: 2, // 0 Reserved, 1 Leaf, 2 Holder, 3 Holder, ... 5_000 Holder ...
-            nodes: &mut nodes,
+            nodes,
             freezed: false,
         }
     }
@@ -79,11 +80,11 @@ impl Layer {
     }
     /// Returns slice of sorted by priority voxel types existing in specified region
     /// If position is None, than it returns all entries in layer
-    pub fn get_entries_in_region<'a>(&self, position: Option<UVec3>) -> &'a [usize] {
+    pub fn get_entries_in_region<'a>(&self, position: Option<UVec3>) -> [usize; 5_000] {
         // TODO do actual algorithm
         // For now just return all voxel types in layer
 
-        &self.entries
+        self.entries
     }
 }
 
@@ -91,12 +92,12 @@ impl Index<usize> for Layer {
     type Output = Node;
 
     fn index(&self, index: usize) -> &Self::Output {
-        todo!()
+        &self.nodes[index]
     }
 }
 
 impl IndexMut<usize> for Layer {
     fn index_mut(&mut self, index_mut: usize) -> &mut Self::Output {
-        todo!()
+        &mut self.nodes[index_mut]
     }
 }

@@ -23,13 +23,25 @@ pub struct RawPlat {
     /// 2 - Schematic: Used to place autopasted schematics, also used for AI buildings provided by FWGen
     /// 3 - Canvas: Each voxel you want to place as a player will go there
     //pub layers: Vec<Layer>,
-    pub base: *mut Layer,
-    pub tmp: *mut Layer,
-    pub schem: *mut Layer,
-    pub canvas: *mut Layer,
+    pub base: Layer,
+    pub tmp: Layer,
+    pub schem: Layer,
+    pub canvas: Layer,
 }
 
 impl RawPlat {
+    pub fn new(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
+        RawPlat {
+            //controller: Controller::new(depth, chunk_level, segment_level),
+            position: (0, 0, 0),
+            rotation: (0, 0, 0),
+            depth,
+            base: Layer::new::<1_280>(depth),
+            tmp: Layer::new::<128>(depth),
+            schem: Layer::new::<128>(depth),
+            canvas: Layer::new::<128>(depth),
+        }
+    }
     pub fn depth(&self) -> u8 {
         self.depth as u8
     }
@@ -43,28 +55,24 @@ impl Index<usize> for RawPlat {
     type Output = Layer;
 
     fn index(&self, index: usize) -> &Self::Output {
-        unsafe {
-            match index {
-                0 => &*self.base,
-                1 => &*self.tmp,
-                2 => &*self.schem,
-                3 => &*self.canvas,
-                _ => panic!("There is no layer on {} index", index),
-            }
+        match index {
+            0 => &self.base,
+            1 => &self.tmp,
+            2 => &self.schem,
+            3 => &self.canvas,
+            _ => panic!("There is no layer on {} index", index),
         }
     }
 }
 
 impl IndexMut<usize> for RawPlat {
     fn index_mut(&mut self, index_mut: usize) -> &mut Self::Output {
-        unsafe {
-            match index_mut {
-                0 => &mut *self.base,
-                1 => &mut *self.tmp,
-                2 => &mut *self.schem,
-                3 => &mut *self.canvas,
-                _ => panic!("There is no layer on {} index", index_mut),
-            }
+        match index_mut {
+            0 => &mut self.base,
+            1 => &mut self.tmp,
+            2 => &mut self.schem,
+            3 => &mut self.canvas,
+            _ => panic!("There is no layer on {} index", index_mut),
         }
     }
 }

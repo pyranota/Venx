@@ -29,7 +29,7 @@ impl LoadInterface for CpuPlat {
         venx_core::glam::Vec3,
         venx_core::glam::Vec4,
         venx_core::glam::Vec3,
-    ); 1000000] {
+    ); 1_000] {
         self.to_mesh_greedy(chunk)
     }
 }

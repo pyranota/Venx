@@ -1,6 +1,6 @@
 use spirv_std::glam::UVec3;
 
-#[derive(Copy, Clone, Debug, Default)]
+#[derive(Copy, Clone, Debug, Default, PartialEq, PartialOrd)]
 pub struct Node {
     /// `0` - normal branch,
     /// `1` - link to shared,
