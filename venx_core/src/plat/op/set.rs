@@ -67,6 +67,28 @@ mod tests {
 
     use crate::plat::{node::Node, raw_plat::RawPlat};
 
+    // #[test]
+    // fn problematic_set_voxel() {
+    //     let mut plat = RawPlat::new(5, 5, 5);
+    //     plat[0].set(uvec3(14, 14, 14), 1);
+    //     // plat[0].set(uvec3(0, 0, 0), 2);
+    //     // plat[0].set(uvec3(5, 15, 5), 3);
+    //     plat[0].set(uvec3(0, 10, 0), 1);
+
+    //     let nodes = &plat[0].nodes;
+
+    //     assert_eq!(
+    //         nodes[2],
+    //         Node {
+    //             flag: 0,
+    //             children: [3, 0, 0, 0, 0, 0, 0, 0]
+    //         }
+    //     );
+
+    //     std::println!("{:?}", &plat[0].entries[0..10]);
+    //     std::println!("{:?}", nodes);
+    // }
+
     #[test]
     fn set_voxel() {
         let mut plat = RawPlat::new(2, 2, 2);
