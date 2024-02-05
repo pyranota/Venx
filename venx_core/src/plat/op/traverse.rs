@@ -147,6 +147,7 @@ impl RawPlat {
     /// layers and voxels can overlap
     /// So if you specify a single layer, there are no overlaps
     /// Also region_position is just some value in global space within this region
+    /// Dont traverse from level == depth, use normal `traverse`
     pub fn traverse_region<F>(
         &self,
         region_position: UVec3,
@@ -157,6 +158,7 @@ impl RawPlat {
     ) where
         F: FnMut(Props) -> bool,
     {
+        assert_ne!(self.depth, region_level);
         // TODO: optimize with level
         self.opts(
             None,
@@ -209,7 +211,7 @@ mod tests {
 
     #[test]
     fn traverse_region() {
-        let mut plat = RawPlat::new(5, 5, 5);
+        let mut plat = RawPlat::new(6, 5, 5);
 
         // Base
         plat[0].set(uvec3(14, 14, 14), 1);
@@ -224,7 +226,7 @@ mod tests {
 
         plat.traverse_region(
             UVec3::ZERO,
-            4,
+            5,
             super::EntryOpts::All,
             LayerOpts::All,
             &mut |props| {
