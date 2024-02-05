@@ -7,6 +7,15 @@ use crate::{
 
 use super::{EntryOpts, LayerOpts};
 
+#[derive(Debug, Clone)]
+pub struct Props<'a> {
+    pub position: &'a Option<UVec3>,
+    pub parent_idx: &'a usize,
+    pub node: &'a Node,
+    pub level: u8,
+    pub entry: u32,
+}
+
 impl RawPlat {
     /// Traverse through all voxels in world specified in arguments
     /// Algorithm goes from bottom to up, meaning that some voxels can overlap, in that case works recent-right rule.
@@ -21,10 +30,11 @@ impl RawPlat {
             layer_opts,
             entry_opts,
             true,
-            &mut |_plat, layer, entry| {
+            &mut |plat, layer, entry| {
                 self.traverse_from(
                     entry,
-                    entry as usize,
+                    // TODO: do something about this unsafe cringe
+                    plat[layer as usize].entries[entry as usize],
                     Some(UVec3::ZERO),
                     self.depth,
                     layer,
@@ -70,6 +80,8 @@ impl RawPlat {
     ) where
         F: FnMut(Props) -> bool,
     {
+        assert_ne!(from_node_idx, 0);
+
         visit_node(
             self,
             layer as usize,
@@ -85,7 +97,7 @@ impl RawPlat {
             layer: usize,
             idx: usize,
             parent_idx: usize,
-            mut node_position_opt: Option<UVec3>,
+            node_position_opt: Option<UVec3>,
             level: u8,
             entry: u32,
             callback: &mut F,
@@ -100,7 +112,8 @@ impl RawPlat {
                 node: &node,
                 entry,
                 level,
-            }) {
+            }) || level == 0
+            {
                 return;
             }
             // WATCH: Careful, might be a bug here. Prev: let size = node.size() / 2;
@@ -110,7 +123,8 @@ impl RawPlat {
             for (i, child_id) in node.children.iter().enumerate() {
                 if *child_id != 0 {
                     // TODO: Profile, it might be slow to handle position this way
-                    if let Some(node_position) = &mut node_position_opt {
+                    let mut local_node_position_opt: Option<UVec3> = node_position_opt;
+                    if let Some(node_position) = &mut local_node_position_opt {
                         *node_position += Node::get_child_position(i as u32) * size;
                     }
 
@@ -119,7 +133,7 @@ impl RawPlat {
                         layer,
                         *child_id as usize,
                         idx,
-                        node_position_opt,
+                        local_node_position_opt,
                         level - 1,
                         entry,
                         callback,
@@ -151,15 +165,15 @@ impl RawPlat {
             true,
             &mut |_plat, layer, entry| {
                 // We need explicitly call it for all specified entries and layers. Otherwise it would find just one node with most priority.
-                if let Some(region_idx) = self.get_node(
+                if let Some((region_node_idx, ..)) = self.get_node(
                     region_position * l2s(region_level),
                     region_level,
+                    EntryOpts::Single(entry),
                     LayerOpts::Single(layer),
-                    LayerOpts::Single(entry),
                 ) {
                     self.traverse_from(
                         entry,
-                        region_idx,
+                        region_node_idx,
                         Some(uvec3(0, 0, 0)),
                         region_level,
                         layer,
@@ -170,15 +184,104 @@ impl RawPlat {
                 None as Option<()>
             },
         );
-
-        todo!();
     }
 }
 
-pub struct Props<'a> {
-    pub position: &'a Option<UVec3>,
-    pub parent_idx: &'a usize,
-    pub node: &'a Node,
-    pub level: u8,
-    pub entry: u32,
+#[cfg(test)]
+mod tests {
+    extern crate alloc;
+    extern crate std;
+
+    use std::println;
+
+    use alloc::{borrow::ToOwned, vec};
+    use spirv_std::glam::{uvec3, UVec3};
+
+    use crate::{
+        plat::{
+            chunk::chunk::Chunk,
+            node::Node,
+            op::{EntryOpts, LayerOpts},
+            raw_plat::RawPlat,
+        },
+        utils::l2s,
+    };
+
+    #[test]
+    fn traverse_region() {
+        let mut plat = RawPlat::new(5, 5, 5);
+
+        // Base
+        plat[0].set(uvec3(14, 14, 14), 1);
+        plat[0].set(uvec3(0, 0, 0), 2);
+        plat[0].set(uvec3(5, 15, 5), 3);
+        plat[0].set(uvec3(0, 10, 0), 1);
+
+        // Canvas
+        plat[3].set(uvec3(15, 15, 15), 1);
+        plat[3].set(uvec3(0, 0, 0), 2);
+        let mut seq = vec![];
+
+        plat.traverse_region(
+            UVec3::ZERO,
+            4,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |props| {
+                if props.level == 0 {
+                    seq.push(props.position.clone());
+                }
+                true
+            },
+        );
+        assert_eq!(
+            seq,
+            [
+                Some(uvec3(0, 10, 0)),
+                Some(uvec3(14, 14, 14)),
+                Some(uvec3(0, 0, 0)),
+                Some(uvec3(5, 15, 5)),
+                Some(uvec3(15, 15, 15)),
+                Some(uvec3(0, 0, 0))
+            ]
+        );
+    }
+
+    #[test]
+    fn traverse() {
+        let mut plat = RawPlat::new(5, 5, 5);
+
+        // Base
+        plat[0].set(uvec3(14, 14, 14), 1);
+        plat[0].set(uvec3(0, 0, 0), 2);
+        plat[0].set(uvec3(5, 15, 5), 3);
+        plat[0].set(uvec3(0, 10, 0), 1);
+
+        // Canvas
+        plat[3].set(uvec3(15, 15, 15), 1);
+        plat[3].set(uvec3(0, 0, 0), 2);
+
+        let mut seq = vec![];
+
+        plat.traverse(LayerOpts::All, EntryOpts::All, &mut |props| {
+            if props.level == 0 {
+                seq.push(props.position.clone());
+            }
+            true
+        });
+
+        // println!("{seq:?}");
+
+        assert_eq!(
+            seq,
+            [
+                Some(uvec3(0, 10, 0)),
+                Some(uvec3(14, 14, 14)),
+                Some(uvec3(0, 0, 0)),
+                Some(uvec3(5, 15, 5)),
+                Some(uvec3(15, 15, 15)),
+                Some(uvec3(0, 0, 0))
+            ]
+        );
+    }
 }
