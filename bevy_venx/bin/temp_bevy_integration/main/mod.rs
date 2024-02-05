@@ -30,6 +30,8 @@ impl Plugin for Venx {
             // TemporalAntiAliasPlugin,
             // MaterialPlugin::<CustomMaterial>::default(),
         )
+        .add_plugin(bevy_panorbit_camera::PanOrbitCameraPlugin)
+        .add_plugin(WireframePlugin)
         .add_startup_system(setup)
         // .add_systems((fps_text_update_system, fps_counter_showhide))
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)));
@@ -44,7 +46,7 @@ fn setup(
 ) {
     // plane
     commands.spawn(PbrBundle {
-        mesh: meshes.add(shape::Plane::from_size(5.0).into()),
+        mesh: meshes.add(shape::Plane::from_size(5000.0).into()),
         material: materials.add(Color::rgb(0.3, 0.5, 0.3).into()),
         ..default()
     });
@@ -62,39 +64,39 @@ fn setup(
         brightness: 2.13,
     });
     // // light
-    // commands.spawn(PointLightBundle {
-    //     point_light: PointLight {
-    //         intensity: 4000.0,
-    //         shadows_enabled: true,
-    //         range: 400.,
-    //         radius: 200.,
-    //         ..default()
-    //     },
-    //     transform: Transform::from_xyz(0.0, 15.0, 0.0),
-    //     ..default()
-    // });
+    commands.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 4000.0,
+            shadows_enabled: true,
+            range: 400.,
+            radius: 200.,
+            ..default()
+        },
+        transform: Transform::from_xyz(0.0, 15.0, 0.0),
+        ..default()
+    });
     // directional 'sun' light
-    // commands.spawn(DirectionalLightBundle {
-    //     directional_light: DirectionalLight {
-    //         shadows_enabled: true,
-    //         ..default()
-    //     },
-    //     transform: Transform {
-    //         translation: Vec3::new(-10.0, 300.0, -10.0),
-    //         rotation: Quat::from_rotation_x(-PI / 3.87),
-    //         ..default()
-    //     },
-    //     // The default cascade config is designed to handle large scenes.
-    //     // As this example has a much smaller world, we can tighten the shadow
-    //     // bounds for better visual quality.
-    //     // cascade_shadow_config: CascadeShadowConfigBuilder {
-    //     //     first_cascade_far_bound: 4.0,
-    //     //     maximum_distance: 10.0,
-    //     //     ..default()
-    //     // }
-    //     // .into(),
-    //     ..default()
-    // });
+    commands.spawn(DirectionalLightBundle {
+        directional_light: DirectionalLight {
+            shadows_enabled: true,
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(-10.0, 300.0, -10.0),
+            rotation: Quat::from_rotation_x(-PI / 3.87),
+            ..default()
+        },
+        // The default cascade config is designed to handle large scenes.
+        // As this example has a much smaller world, we can tighten the shadow
+        // bounds for better visual quality.
+        // cascade_shadow_config: CascadeShadowConfigBuilder {
+        //     first_cascade_far_bound: 4.0,
+        //     maximum_distance: 10.0,
+        //     ..default()
+        // }
+        // .into(),
+        ..default()
+    });
 
     // commands.spawn(DirectionalLightBundle {
     //     directional_light: DirectionalLight {
@@ -125,8 +127,7 @@ fn setup(
                 hdr: true,
                 ..default()
             },
-            transform: Transform::from_xyz(128.0, 150., 128.0)
-                .looking_at(vec3(250., 100., 250.), Vec3::Y),
+            transform: Transform::from_xyz(28.0, 50., 28.0).looking_at(vec3(0., 0., 0.), Vec3::Y),
             ..default()
         },
         // ScreenSpaceAmbientOcclusionBundle::default(),

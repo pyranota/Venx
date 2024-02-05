@@ -13,3 +13,6 @@ spirv-std = "0.9.0"
 [features]
 default = []
 no_std = []
+
+[profile.dev]
+incremental = true
