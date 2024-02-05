@@ -6,7 +6,7 @@ pub type Mesh = [(Vec3, Vec4, Vec3); 1_000_000]; // Position, Color, Normal
 
 impl CpuPlat {
     pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
-        let mut mesh = [(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); 1_000_000];
+        let mut mesh = [(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); 1_000];
         let mut mesh_idx = 0;
 
         let scale = l2s(chunk.lod_level) as f32;
