@@ -8,7 +8,7 @@ use crate::{
 use super::LayerOpts;
 
 impl RawPlat {
-    fn load_chunk(&self, position: UVec3, level: u8) -> Chunk {
+    pub fn load_chunk(&self, position: UVec3, level: u8) -> Chunk {
         // TODO change
         let chunk_level = 5;
         let mut chunk = Chunk::new(position, level, chunk_level);
@@ -21,9 +21,9 @@ impl RawPlat {
             chunk_level,
             super::EntryOpts::All,
             LayerOpts::All,
-            |node, idx, pos| {
-                if node.level == level {
-                    chunk.set(*props.position / chunk_lod_scaler, entry as i32);
+            &mut |props| {
+                if props.level == level {
+                    chunk.set(props.position.unwrap() / chunk_lod_scaler, props.entry);
                     return false;
                 }
                 true
