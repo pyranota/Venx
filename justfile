@@ -14,7 +14,7 @@ examples:
 
 # run demo
 demo:
-    echo "Running Demo"
+    cargo r --release --package bevy_venx --bin bevy
 
 # install all deps for debian
 deps:
