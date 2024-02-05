@@ -125,25 +125,48 @@ impl RawPlat {
             }
             LayerOpts::Single(layer) => match entry_opts {
                 EntryOpts::All => {
-                    for (entry, link) in self[layer as usize]
-                        .get_entries_in_region(position)
-                        .iter()
-                        .enumerate()
-                        .skip(1)
-                    {
-                        // If entry is 0, that means, all following entries are also 0
-                        if *link == 0 {
-                            return None;
+                    if !bottom_up {
+                        'entries: for (entry, link) in self[layer as usize]
+                            .get_entries_in_region(position)
+                            .iter()
+                            .enumerate()
+                            .skip(1)
+                            .rev()
+                        {
+                            if *link == 0 {
+                                continue 'entries;
+                            }
+                            let opt = self.opts(
+                                position,
+                                LayerOpts::Single(layer),
+                                EntryOpts::Single(entry as u32),
+                                bottom_up,
+                                callback,
+                            );
+                            if opt.is_some() {
+                                return opt;
+                            }
                         }
-                        let opt = self.opts(
-                            position,
-                            LayerOpts::Single(layer),
-                            EntryOpts::Single(entry as u32),
-                            bottom_up,
-                            callback,
-                        );
-                        if opt.is_some() {
-                            return opt;
+                    } else {
+                        'entries: for (entry, link) in self[layer as usize]
+                            .get_entries_in_region(position)
+                            .iter()
+                            .enumerate()
+                            .skip(1)
+                        {
+                            if *link == 0 {
+                                continue 'entries;
+                            }
+                            let opt = self.opts(
+                                position,
+                                LayerOpts::Single(layer),
+                                EntryOpts::Single(entry as u32),
+                                bottom_up,
+                                callback,
+                            );
+                            if opt.is_some() {
+                                return opt;
+                            }
                         }
                     }
 
@@ -243,7 +266,7 @@ mod tests {
             },
         );
         // println!("{seq:?}");
-        assert_eq!(seq, [(1, 1), (1, 2)]);
+        assert_eq!(seq, [(1, 2), (1, 1)]);
 
         let mut seq = vec![];
         plat.opts(
@@ -257,7 +280,7 @@ mod tests {
             },
         );
         // println!("{seq:?}");
-        assert_eq!(seq, [(2, 1), (1, 1), (1, 2), (0, 1)]);
+        assert_eq!(seq, [(2, 1), (1, 2), (1, 1), (0, 1)]);
 
         let mut seq = vec![];
         plat.opts(
@@ -272,5 +295,38 @@ mod tests {
         );
         // println!("{seq:?}");
         assert_eq!(seq, [(0, 1), (1, 1), (1, 2), (2, 1)]);
+    }
+
+    #[test]
+    fn test_opts_2() {
+        let mut plat = RawPlat::new(3, 3, 3);
+        // Base
+        plat[0].set(uvec3(0, 0, 0), 1);
+        plat[0].set(uvec3(0, 1, 0), 1);
+        plat[0].set(uvec3(0, 2, 0), 1);
+
+        // Overlapping (Canvas)
+        plat[1].set(uvec3(0, 0, 0), 1);
+        plat[1].set(uvec3(0, 1, 0), 1);
+        plat[1].set(uvec3(0, 2, 0), 1);
+
+        // Overlapping above Canvas
+        plat[1].set(uvec3(0, 0, 0), 2);
+        plat[1].set(uvec3(0, 1, 0), 2);
+        plat[1].set(uvec3(0, 2, 0), 2);
+
+        let mut seq = vec![];
+        plat.opts(
+            None,
+            LayerOpts::All,
+            EntryOpts::All,
+            false,
+            &mut |_plat, layer, entry| {
+                seq.push((layer, entry));
+                None as Option<()>
+            },
+        );
+        // println!("{seq:?}");
+        assert_eq!(seq, [(1, 2), (1, 1), (0, 1)]);
     }
 }
