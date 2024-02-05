@@ -9,7 +9,7 @@ impl RawPlat {
     /// Same goes for Layer, if it is Layer::All, it will return the most higher layer
     pub fn get_node(
         &self,
-        position: Vec3,
+        position: UVec3,
         level: u8,
         entry: EntryOpts,
         layer: LayerOpts,
@@ -19,16 +19,16 @@ impl RawPlat {
         // With this we should not calculate children indices each run.
         //let path = self.find_path(position.as_uvec3(), level);
         //todo!()
-        let path = [];
+        //let path = [];
 
         self.opts(
-            Some(position.as_uvec3()),
+            Some(position),
             layer,
             entry,
             false,
-            |plat, layer, entry| {
+            &mut |_plat, layer, entry| {
                 if let Some(entry) =
-                    self.get_node_direct(position.as_uvec3(), level, layer as usize, entry as usize)
+                    self.get_node_direct(position, level, layer as usize, entry as usize)
                 {
                     return Some(entry);
                 }
@@ -109,7 +109,7 @@ impl RawPlat {
         None
     }
 
-    pub fn get_voxel(&self, position: Vec3, layer: LayerOpts) {
+    pub fn get_voxel(&self, position: UVec3, layer: LayerOpts) {
         self.get_node(position, 0, EntryOpts::All, layer);
     }
 
