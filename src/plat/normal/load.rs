@@ -6,7 +6,7 @@ use super::cpu_plat::CpuPlat;
 
 impl LoadInterface for CpuPlat {
     fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Chunk {
-        self.raw_plat
+        self.borrow_raw_plat()
             .load_chunk(position.to_array().into(), lod_level)
     }
 

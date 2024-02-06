@@ -144,13 +144,13 @@ fn setup(
     info!("Converting minecraft mca map into plat");
 
     //let mut plat = Plat::load_mca("./assets/mca/121/", (0..11, 0..11)).unwrap();
-    pollster::block_on(VenxPlat::new_turbo(12, 5, 9));
-
+    // pollster::block_on(VenxPlat::new_turbo(12, 5, 9));
+    let mut plat = VenxPlat::new(12, 5, 5);
     //plat.load("saves/25_typed.plat");
 
-    // plat.set_voxel(0, (4, 4, 4).into(), 1);
-    // plat.set_voxel(0, (4, 5, 4).into(), 1);
-    // plat.set_voxel(0, (5, 5, 5).into(), 2);
+    plat.set_voxel(0, (4, 4, 4).into(), 1);
+    plat.set_voxel(0, (4, 5, 4).into(), 1);
+    plat.set_voxel(0, (5, 5, 5).into(), 2);
 
     let capacity = 350_000;
     // panic!();
@@ -179,27 +179,27 @@ fn setup(
                     lod_level = 2;
                 }
 
-                // lod_level = 0;
-                // dbg!("Load chunk");
-                // let chunk = plat.load_chunk(uvec3(x, y, z), 0);
-                // dbg!("Compute mesh");
-                // let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
-                // // eprintln!("{chunk:?}");
-                // let idx = counter / capacity;
+                lod_level = 0;
+                dbg!("Load chunk");
+                let chunk = plat.load_chunk(uvec3(x, y, z), 0);
+                dbg!("Compute mesh");
+                let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
+                // eprintln!("{chunk:?}");
+                let idx = counter / capacity;
 
-                // for (pos, color, normal) in vx_mesh {
-                //     let new_pos: bevy::prelude::Vec3 =
-                //         bevy::prelude::Vec3::from_array(pos.to_array());
-                //     let new_color: bevy::prelude::Vec4 =
-                //         bevy::prelude::Vec4::from_array(color.to_array());
-                //     let new_normal: bevy::prelude::Vec3 =
-                //         bevy::prelude::Vec3::from_array(normal.to_array());
+                for (pos, color, normal) in vx_mesh {
+                    let new_pos: bevy::prelude::Vec3 =
+                        bevy::prelude::Vec3::from_array(pos.to_array());
+                    let new_color: bevy::prelude::Vec4 =
+                        bevy::prelude::Vec4::from_array(color.to_array());
+                    let new_normal: bevy::prelude::Vec3 =
+                        bevy::prelude::Vec3::from_array(normal.to_array());
 
-                //     counter += 1;
-                //     mshs[idx].0.push(new_pos);
-                //     mshs[idx].1.push(new_color);
-                //     mshs[idx].2.push(new_normal);
-                // }
+                    counter += 1;
+                    mshs[idx].0.push(new_pos);
+                    mshs[idx].1.push(new_color);
+                    mshs[idx].2.push(new_normal);
+                }
             }
         }
     }

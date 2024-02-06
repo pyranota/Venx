@@ -9,7 +9,7 @@ type MeshHelper = Chunk;
 
 pub type Mesh<'a> = &'a mut [(Vec3, Vec4, Vec3)]; // Position, Color, Normal
 
-impl RawPlat {
+impl RawPlat<'_> {
     pub fn greedy_runner(
         &self,
         mesh_helper: &mut MeshHelper,

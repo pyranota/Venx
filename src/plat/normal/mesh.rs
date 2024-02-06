@@ -51,7 +51,7 @@ impl CpuPlat {
                 let block_color = block_color.as_vec3().extend(0.5) / vec4(256., 256., 256., 1.0);
 
                 // TOP
-                self.raw_plat.greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_up,
                     &chunk,
                     block,
@@ -66,7 +66,7 @@ impl CpuPlat {
                 );
 
                 // BOTTOM
-                self.raw_plat.greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_down,
                     &chunk,
                     block,
@@ -81,7 +81,7 @@ impl CpuPlat {
                 );
 
                 // LEFT
-                self.raw_plat.greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_left,
                     &chunk,
                     block,
@@ -96,7 +96,7 @@ impl CpuPlat {
                 );
 
                 // RIGHT
-                self.raw_plat.greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_right,
                     &chunk,
                     block,
@@ -111,7 +111,7 @@ impl CpuPlat {
                 );
 
                 // FRONT
-                self.raw_plat.greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_front,
                     &chunk,
                     block,
@@ -126,7 +126,7 @@ impl CpuPlat {
                 );
 
                 // BACK
-                self.raw_plat.greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_back,
                     &chunk,
                     block,

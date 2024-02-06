@@ -10,7 +10,7 @@ use crate::{
     utils::{l2s},
 };
 
-impl Layer {
+impl Layer<'_> {
     /// ty 0 is reserved for air and will remove voxel if there is any
     /// you can add any ty if there is no already created entry for it
     /// It will create one
@@ -60,7 +60,6 @@ impl Layer {
 }
 
 #[cfg(test)]
-#[cfg(not(feature = "gpu"))]
 
 mod tests {
     extern crate std;
@@ -93,7 +92,17 @@ mod tests {
 
     #[test]
     fn set_voxel() {
-        let mut plat = RawPlat::new(2, 2, 2);
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            2,
+            2,
+            2,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
 
         plat[1].set(uvec3(0, 0, 0), 1);
         plat[1].set(uvec3(0, 0, 0), 2);

@@ -39,3 +39,8 @@ clean:
 # check if everything installed and configured correctly
 check:
     echo "Checking system"
+
+# test specific package in project
+test PACKAGE:
+    cargo test --package {{PACKAGE}}
+

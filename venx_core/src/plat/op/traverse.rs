@@ -16,7 +16,7 @@ pub struct Props<'a> {
     pub entry: u32,
 }
 
-impl RawPlat {
+impl RawPlat<'_> {
     /// Traverse through all voxels in world specified in arguments
     /// Algorithm goes from bottom to up, meaning that some voxels can overlap, in that case works recent-right rule.
     /// Return false in callback to drop traversing of subtree
@@ -190,7 +190,6 @@ impl RawPlat {
 }
 
 #[cfg(test)]
-#[cfg(not(feature = "gpu"))]
 mod tests {
     extern crate alloc;
     extern crate std;
@@ -212,7 +211,17 @@ mod tests {
 
     #[test]
     fn traverse_region() {
-        let mut plat = RawPlat::new(6, 5, 5);
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            6,
+            5,
+            5,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
 
         // Base
         plat[0].set(uvec3(14, 14, 14), 1);
@@ -252,8 +261,17 @@ mod tests {
 
     #[test]
     fn traverse() {
-        let mut plat = RawPlat::new(5, 5, 5);
-
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            5,
+            5,
+            5,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
         // Base
         plat[0].set(uvec3(14, 14, 14), 1);
         plat[0].set(uvec3(0, 0, 0), 2);

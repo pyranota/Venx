@@ -2,10 +2,9 @@ use core::ops::{Index, IndexMut};
 
 use spirv_std::glam::UVec3;
 
-use super::layer::layer::Layer;
+use super::{layer::layer::Layer, node::Node};
 
-#[derive(Clone)]
-pub struct RawPlat {
+pub struct RawPlat<'a> {
     pub position: (i32, i32, i32),
     pub rotation: (i32, i32, i32),
     // pub bcs: Vec<()>,
@@ -23,25 +22,73 @@ pub struct RawPlat {
     /// 2 - Schematic: Used to place autopasted schematics, also used for AI buildings provided by FWGen
     /// 3 - Canvas: Each voxel you want to place as a player will go there
     //pub layers: Vec<Layer>,
-    pub base: Layer,
-    pub tmp: Layer,
-    pub schem: Layer,
-    pub canvas: Layer,
+    pub base: Layer<'a>,
+    pub tmp: Layer<'a>,
+    pub schem: Layer<'a>,
+    pub canvas: Layer<'a>,
 }
 
-impl RawPlat {
-    pub fn new(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
+impl<'a> RawPlat<'a> {
+    pub fn new(
+        depth: u8,
+        chunk_level: u8,
+        segment_level: u8,
+        base: (&'a mut [Node], &'a mut [usize]),
+        tmp: (&'a mut [Node], &'a mut [usize]),
+        schem: (&'a mut [Node], &'a mut [usize]),
+        canvas: (&'a mut [Node], &'a mut [usize]),
+    ) -> Self {
         RawPlat {
             //controller: Controller::new(depth, chunk_level, segment_level),
             position: (0, 0, 0),
             rotation: (0, 0, 0),
             depth,
-            base: Layer::new::<1_280>(depth),
-            tmp: Layer::new::<128>(depth),
-            schem: Layer::new::<128>(depth),
-            canvas: Layer::new::<128>(depth),
+            base: Layer::new(depth, base.0, base.1),
+            tmp: Layer::new(depth, tmp.0, tmp.1),
+            schem: Layer::new(depth, schem.0, schem.1),
+            canvas: Layer::new(depth, canvas.0, canvas.1),
         }
     }
+
+    // #[cfg(test)]
+    // pub fn new_test<
+    //     const BASE_SIZE: usize,
+    //     const TMP_SIZE: usize,
+    //     const SCHEM_SIZE: usize,
+    //     const CANVAS_SIZE: usize,
+    //     const ENTRIES_SIZE: usize,
+    // >(
+    //     depth: u8,
+    //     chunk_level: u8,
+    //     segment_level: u8,
+    // ) -> (
+    //     (
+    //         ([Node; BASE_SIZE], [usize; ENTRIES_SIZE]),
+    //         ([Node; TMP_SIZE], [usize; ENTRIES_SIZE]),
+    //         ([Node; SCHEM_SIZE], [usize; ENTRIES_SIZE]),
+    //         ([Node; CANVAS_SIZE], [usize; ENTRIES_SIZE]),
+    //     ),
+    //     Self,
+    // ) {
+    //     let mut base = ([Node::default(); BASE_SIZE], [0; ENTRIES_SIZE]);
+    //     let mut tmp = ([Node::default(); TMP_SIZE], [0; ENTRIES_SIZE]);
+    //     let mut schem = ([Node::default(); SCHEM_SIZE], [0; ENTRIES_SIZE]);
+    //     let mut canvas = ([Node::default(); CANVAS_SIZE], [0; ENTRIES_SIZE]);
+
+    //     (
+    //         (base, tmp, schem, canvas),
+    //         RawPlat {
+    //             //controller: Controller::new(depth, chunk_level, segment_level),
+    //             position: (0, 0, 0),
+    //             rotation: (0, 0, 0),
+    //             depth,
+    //             base: Layer::new(depth, &mut base.0, &mut base.1),
+    //             tmp: Layer::new(depth, &mut tmp.0, &mut tmp.1),
+    //             schem: Layer::new(depth, &mut schem.0, &mut schem.1),
+    //             canvas: Layer::new(depth, &mut canvas.0, &mut canvas.1),
+    //         },
+    //     )
+    // }
     pub fn depth(&self) -> u8 {
         self.depth as u8
     }
@@ -51,8 +98,8 @@ impl RawPlat {
     }
 }
 
-impl Index<usize> for RawPlat {
-    type Output = Layer;
+impl<'a> Index<usize> for RawPlat<'a> {
+    type Output = Layer<'a>;
 
     fn index(&self, index: usize) -> &Self::Output {
         match index {
@@ -65,7 +112,7 @@ impl Index<usize> for RawPlat {
     }
 }
 
-impl IndexMut<usize> for RawPlat {
+impl<'a> IndexMut<usize> for RawPlat<'a> {
     fn index_mut(&mut self, index_mut: usize) -> &mut Self::Output {
         match index_mut {
             0 => &mut self.base,

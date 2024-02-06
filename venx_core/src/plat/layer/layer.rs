@@ -5,13 +5,13 @@ use spirv_std::glam::UVec3;
 
 use crate::plat::node::Node;
 
-#[derive(Clone, Debug)]
-pub struct Layer {
+#[derive(Debug)]
+pub struct Layer<'a> {
     /// Can be edited or not
     pub freezed: bool,
     pub depth: u8,
     // Maybe use custom struct Entry instead of usize?
-    pub entries: [usize; 5_000],
+    pub entries: &'a mut [usize],
     // pub meta: LayerMeta,
     /// Link to first node which is empty (flag == -1)
     /// If there is no empty nodes its 0
@@ -27,12 +27,11 @@ pub struct Layer {
     /// You can identify this types of nodes with 9 in every field of it
     /// This is in that way because if there would be node at 0 index,
     /// that would conflict with 0 as "no child" interpretation
-    pub nodes: [Node; 128],
+    pub nodes: &'a mut [Node],
 }
 
-impl Layer {
-    pub fn new<const LEN: usize>(depth: u8) -> Self {
-        let mut nodes = [Node::default(); 128];
+impl<'a> Layer<'a> {
+    pub fn new(depth: u8, nodes: &'a mut [Node], entries: &'a mut [usize]) -> Self {
         // Set leaf node
         nodes[1].flag = 3;
         nodes[1].children = [1; 8];
@@ -49,7 +48,7 @@ impl Layer {
 
         Layer {
             depth,
-            entries: [0; 5_000],
+            entries,
             holder_head: 2, // 0 Reserved, 1 Leaf, 2 Holder, 3 Holder, ... 5_000 Holder ...
             nodes,
             freezed: false,
@@ -81,7 +80,7 @@ impl Layer {
     }
     /// Returns slice of sorted by priority voxel types existing in specified region
     /// If position is None, than it returns all entries in layer
-    pub fn get_entries_in_region<'a>(&self, position: Option<UVec3>) -> [usize; 5_000] {
+    pub fn get_entries_in_region(&'a self, position: Option<UVec3>) -> &'a [usize] {
         // TODO do actual algorithm
         // For now just return all voxel types in layer
 
@@ -89,7 +88,7 @@ impl Layer {
     }
 }
 
-impl Index<usize> for Layer {
+impl<'a> Index<usize> for Layer<'a> {
     type Output = Node;
 
     fn index(&self, index: usize) -> &Self::Output {
@@ -97,7 +96,7 @@ impl Index<usize> for Layer {
     }
 }
 
-impl IndexMut<usize> for Layer {
+impl<'a> IndexMut<usize> for Layer<'a> {
     fn index_mut(&mut self, index_mut: usize) -> &mut Self::Output {
         &mut self.nodes[index_mut]
     }

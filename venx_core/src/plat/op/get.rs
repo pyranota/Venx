@@ -8,7 +8,7 @@ type Entry_Idx = usize;
 type Layer_Idx = Entry_Idx;
 type Node_Idx = Layer_Idx;
 
-impl RawPlat {
+impl RawPlat<'_> {
     /// If Entry is Entry::All, than it will return the most valuable (by voxel-collection) block
     /// Same goes for Layer, if it is Layer::All, it will return the most higher layer
     /// Return (Node_Idx, (Entry, Layer))
@@ -133,13 +133,16 @@ impl RawPlat {
 
 #[cfg(test)]
 mod tests {
+    extern crate alloc;
     extern crate std;
 
     use std::println;
 
+    use alloc::vec;
     use spirv_std::glam::uvec3;
 
     use crate::plat::{
+        layer::layer::Layer,
         node::Node,
         op::{EntryOpts, LayerOpts},
         raw_plat::RawPlat,
@@ -147,8 +150,17 @@ mod tests {
 
     #[test]
     fn get_node() {
-        let mut plat = RawPlat::new(3, 3, 3);
-
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            3,
+            3,
+            3,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
         plat[1].set(uvec3(0, 1, 0), 1);
         plat[1].set(uvec3(0, 0, 0), 2);
         plat[1].set(uvec3(4, 4, 1), 3);
@@ -214,8 +226,17 @@ mod tests {
 
     #[test]
     fn get_voxel() {
-        let mut plat = RawPlat::new(3, 3, 3);
-
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            3,
+            3,
+            3,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
         // Base
         plat[0].set(uvec3(0, 0, 0), 1);
         plat[0].set(uvec3(0, 1, 0), 1);

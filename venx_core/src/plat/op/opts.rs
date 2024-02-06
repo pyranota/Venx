@@ -10,7 +10,7 @@ pub enum EntryOpts {
 
 pub type LayerOpts = EntryOpts;
 
-impl RawPlat {
+impl RawPlat<'_> {
     /// The way to iterate over all layers and entries in right order and with maximum performance.
     /// If position is None, no optimizations in entries performed
     /// Stops if returned Some(()))
@@ -203,8 +203,17 @@ mod tests {
 
     #[test]
     fn test_opts() {
-        let mut plat = RawPlat::new(3, 3, 3);
-
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            3,
+            3,
+            3,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
         plat[0].set(UVec3::ZERO, 1);
         plat[1].set(UVec3::ZERO, 1);
         plat[1].set(uvec3(0, 1, 0), 2);
@@ -299,7 +308,17 @@ mod tests {
 
     #[test]
     fn test_opts_2() {
-        let mut plat = RawPlat::new(3, 3, 3);
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            3,
+            3,
+            3,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
         // Base
         plat[0].set(uvec3(0, 0, 0), 1);
         plat[0].set(uvec3(0, 1, 0), 1);
