@@ -1,13 +1,13 @@
 use ouroboros::*;
 use venx_core::plat::{node::Node, raw_plat::RawPlat};
 
-use crate::plat::interfaces::PlatInterface;
+use crate::plat::{interfaces::PlatInterface, turbo::gpu_plat::GpuPlat};
 // #[derive(bitcode::Encode, bitcode::Decode)]
 
 #[self_referencing]
 pub struct CpuPlat {
     // Base
-    base_nodes: Vec<Node>,
+    pub base_nodes: Vec<Node>,
     base_entries: Vec<usize>,
 
     // Tmp
@@ -31,6 +31,17 @@ impl CpuPlat {
         let base = (vec![Node::default(); 128], vec![0; 10]);
         let (tmp, schem, canvas) = (base.clone(), base.clone(), base.clone());
 
+        Self::new_from(depth, chunk_level, segment_level, base, tmp, schem, canvas)
+    }
+    pub(crate) fn new_from(
+        depth: u8,
+        chunk_level: u8,
+        segment_level: u8,
+        base: (Vec<Node>, Vec<usize>),
+        tmp: (Vec<Node>, Vec<usize>),
+        schem: (Vec<Node>, Vec<usize>),
+        canvas: (Vec<Node>, Vec<usize>),
+    ) -> Self {
         CpuPlatBuilder {
             raw_plat_builder: |// Base
                                base_nodes: &mut Vec<Node>,
@@ -67,6 +78,24 @@ impl CpuPlat {
             canvas_entries: canvas.1,
         }
         .build()
+    }
+
+    pub(crate) async fn transfer_to_gpu(self) -> GpuPlat {
+        //
+
+        let plat = self.borrow_raw_plat();
+
+        // WARNING! Hardcoded values
+        GpuPlat::new_from(
+            plat.depth,
+            5,
+            6,
+            (plat.base.nodes.to_vec(), plat.base.entries.to_vec()),
+            (plat.tmp.nodes.to_vec(), plat.tmp.entries.to_vec()),
+            (plat.schem.nodes.to_vec(), plat.schem.entries.to_vec()),
+            (plat.canvas.nodes.to_vec(), plat.canvas.entries.to_vec()),
+        )
+        .await
     }
 }
 

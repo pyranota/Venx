@@ -7,11 +7,14 @@ use crate::plat::node::Node;
 
 #[derive(Debug)]
 pub struct Layer<'a> {
+    // TODO: move to RawPlat metadata
     /// Can be edited or not
     pub freezed: bool,
+    /// Synced depth with RawPlat
     pub depth: u8,
     // Maybe use custom struct Entry instead of usize?
     pub entries: &'a mut [usize],
+    // TODO: move to entries[0]
     // pub meta: LayerMeta,
     /// Link to first node which is empty (flag == -1)
     /// If there is no empty nodes its 0

@@ -40,57 +40,44 @@ impl VenxPlat {
 
         VenxPlat { plat: plat }
     }
+    /// Get depth and verify that its synced
+    pub fn depth(&self) -> u8 {
+        match &self.plat {
+            Plat::Cpu(cpu_plat) => {
+                let plat = cpu_plat.borrow_raw_plat();
+                let plat_depth = plat.depth;
 
+                assert_eq!(plat.base.depth, plat_depth);
+                assert_eq!(plat.tmp.depth, plat_depth);
+                assert_eq!(plat.schem.depth, plat_depth);
+                assert_eq!(plat.canvas.depth, plat_depth);
+
+                plat_depth
+            }
+            Plat::Gpu(_) => todo!("You cant get depth from plat on gpu, yet"),
+        }
+    }
     /// Depth, chunk_level, segment_level
     pub async fn new_turbo(depth: u8, chunk_level: u8, segment_level: u8) -> VenxPlat {
-        // let mut cs = ComputeServer::new().await;
-
-        // let module = cs
-        //     .new_module_spv(include_spirv!(env!("venx_shaders.spv")))
-        //     .unwrap();
-
-        // let plat_meta_buffer = cs.new_buffer(bytemuck::cast_slice(&[depth]));
-
-        // let base = Layer::new::<1_280_000>(depth);
-        // let (nodes, meta) = (base.nodes, (base.entries, base.depth));
-        // let base_buffer = cs.new_buffer(bytemuck::cast_slice(&nodes));
-
-        // let output_buffer = cs.new_staging_buffer(base_buffer.size(), true);
-
-        // let bg = BindGroupBuilder::new()
-        //     .insert(0, false, base_buffer.as_entire_binding())
-        //     .build(&cs);
-
-        // let pipeline = PipelineBuilder::new(&module, "main")
-        //     .for_bindgroup(&bg)
-        //     .build(&cs);
-
-        // cs.eval(|encoder| {
-        //     {
-        //         let mut cpass = encoder.begin_compute_pass(&ComputePassDescriptor { label: None });
-        //         cpass.set_pipeline(&pipeline);
-        //         cpass.set_bind_group(0, &bg.bindgroup, &[]);
-        //         cpass.dispatch_workgroups(1, 1, 1);
-        //     }
-        //     encoder.copy_buffer_to_buffer(&base_buffer, 0, &output_buffer, 0, output_buffer.size());
-        // })
-        // .await;
-
-        // output_buffer
-        //     .read(|a: Vec<Node>| {
-        //         for node in a {
-        //             dbg!(node);
-        //         }
-        //     })
-        //     .await;
-        todo!()
-        // VenxPlat { plat: plat }
+        VenxPlat {
+            plat: Plat::Gpu(GpuPlat::new_plat(depth, chunk_level, segment_level).await),
+        }
     }
-    pub fn transfer_to_gpu(self) -> Self {
-        todo!()
+    pub async fn transfer_to_gpu(self) -> Self {
+        VenxPlat {
+            plat: match self.plat {
+                Plat::Cpu(cpu_plat) => Plat::Gpu(cpu_plat.transfer_to_gpu().await),
+                Plat::Gpu(_) => panic!("It is dumb idea to transfer data from gpu to gpu"),
+            },
+        }
     }
-    pub fn transfer_to_cpu(self) -> Self {
-        todo!()
+    pub async fn transfer_from_gpu(self) -> Self {
+        VenxPlat {
+            plat: match self.plat {
+                Plat::Cpu(_) => panic!("It is dumb idea to transfer data from cpu to cpu"),
+                Plat::Gpu(gpu_plat) => Plat::Cpu(gpu_plat.transfer_from_gpu().await),
+            },
+        }
     }
 }
 

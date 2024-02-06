@@ -144,13 +144,20 @@ fn setup(
     info!("Converting minecraft mca map into plat");
 
     //let mut plat = Plat::load_mca("./assets/mca/121/", (0..11, 0..11)).unwrap();
-    // pollster::block_on(VenxPlat::new_turbo(12, 5, 9));
-    let mut plat = VenxPlat::new(12, 5, 5);
-    //plat.load("saves/25_typed.plat");
+    let mut plat = VenxPlat::new(12, 5, 9);
+
+    // let mut plat = VenxPlat::new(12, 5, 5);
+    // //plat.load("saves/25_typed.plat");
 
     plat.set_voxel(0, (4, 4, 4).into(), 1);
     plat.set_voxel(0, (4, 5, 4).into(), 1);
     plat.set_voxel(0, (5, 5, 5).into(), 2);
+
+    let plat = pollster::block_on(plat.transfer_to_gpu());
+
+    let plat = pollster::block_on(plat.transfer_from_gpu());
+
+    dbg!(plat.depth());
 
     let capacity = 350_000;
     // panic!();
