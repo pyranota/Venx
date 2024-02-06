@@ -5,7 +5,7 @@ pub fn l2s(lvl: u8) -> u32 {
 }
 /// Size to level
 /// 2^(level) = size
-pub fn s2l(size: u32) -> anyhow::Result<u8> {
+pub fn s2l(size: u32) -> u8 {
     todo!()
 }
 

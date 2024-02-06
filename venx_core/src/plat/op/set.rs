@@ -60,6 +60,8 @@ impl Layer {
 }
 
 #[cfg(test)]
+#[cfg(not(feature = "gpu"))]
+
 mod tests {
     extern crate std;
 

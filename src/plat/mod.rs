@@ -1,8 +1,12 @@
 use std::usize;
 
+use easy_compute::{
+    include_spirv, BindGroupBuilder, BufferRW, ComputePassDescriptor, ComputeServer,
+    PipelineBuilder,
+};
 use glam::{UVec3, Vec3, Vec4};
 use venx_core::{
-    plat::{chunk::chunk::Chunk, layer::layer::Layer, raw_plat::RawPlat},
+    plat::{chunk::chunk::Chunk, layer::layer::Layer, node::Node, raw_plat::RawPlat},
     utils::Grid,
 };
 
@@ -19,12 +23,10 @@ mod minecraft_blocks;
 mod normal;
 mod turbo;
 
-#[derive(Debug)]
 pub struct VenxPlat {
     plat: Plat,
 }
 
-#[derive(Debug)]
 pub(crate) enum Plat {
     Cpu(CpuPlat),
     #[cfg(feature = "gpu")]
@@ -51,12 +53,57 @@ impl VenxPlat {
         VenxPlat { plat: plat }
     }
 
-    // fn inner_plat(&self) -> Box<dyn PlatInterface> {
-    //     Box::new(match self.plat {
-    //         Plat::Cpu(plat) => plat,
-    //         Plat::Gpu(plat) => plat,
-    //     })
-    // }
+    /// Depth, chunk_level, segment_level
+    pub async fn new_turbo(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
+        let mut cs = ComputeServer::new().await;
+
+        let module = cs
+            .new_module_spv(include_spirv!(env!("venx_shaders.spv")))
+            .unwrap();
+
+        let plat_meta_buffer = cs.new_buffer(bytemuck::cast_slice(&[depth]));
+
+        let base = Layer::new::<1_280_000>(depth);
+        let (nodes, meta) = (base.nodes, (base.entries, base.depth));
+        let base_buffer = cs.new_buffer(bytemuck::cast_slice(&nodes));
+
+        let output_buffer = cs.new_staging_buffer(base_buffer.size(), true);
+
+        let bg = BindGroupBuilder::new()
+            .insert(0, false, base_buffer.as_entire_binding())
+            .build(&cs);
+
+        let pipeline = PipelineBuilder::new(&module, "main")
+            .for_bindgroup(&bg)
+            .build(&cs);
+
+        cs.eval(|encoder| {
+            {
+                let mut cpass = encoder.begin_compute_pass(&ComputePassDescriptor { label: None });
+                cpass.set_pipeline(&pipeline);
+                cpass.set_bind_group(0, &bg.bindgroup, &[]);
+                cpass.dispatch_workgroups(1, 1, 1);
+            }
+            encoder.copy_buffer_to_buffer(&base_buffer, 0, &output_buffer, 0, output_buffer.size());
+        })
+        .await;
+
+        output_buffer
+            .read(|a: Vec<Node>| {
+                for node in a {
+                    dbg!(node);
+                }
+            })
+            .await;
+        todo!()
+        // VenxPlat { plat: plat }
+    }
+    pub fn transfer_to_gpu(self) -> Self {
+        todo!()
+    }
+    pub fn transfer_to_cpu(self) -> Self {
+        todo!()
+    }
 }
 
 impl PlatInterface for VenxPlat {}

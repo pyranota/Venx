@@ -1,6 +1,8 @@
+use bytemuck::{Pod, Zeroable};
 use spirv_std::glam::UVec3;
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, PartialOrd)]
+#[repr(C)]
+#[derive(Copy, Clone, Default, Debug, PartialEq, PartialOrd, Pod, Zeroable)]
 pub struct Node {
     /// `0` - normal branch,
     /// `1` - link to shared,

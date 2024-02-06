@@ -3,7 +3,7 @@ use venx_core::plat::raw_plat::RawPlat;
 
 use crate::plat::interfaces::PlatInterface;
 // #[derive(bitcode::Encode, bitcode::Decode)]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct CpuPlat {
     pub raw_plat: RawPlat,
 }

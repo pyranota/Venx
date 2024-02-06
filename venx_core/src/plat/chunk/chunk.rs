@@ -2,7 +2,6 @@ use spirv_std::glam::{uvec3, UVec3};
 
 use crate::utils::l2s;
 
-#[derive(Debug)]
 pub struct Chunk {
     pub mtx: [[[u32; 32]; 32]; 32], // TODO: flatten chunk
     pub position: UVec3,

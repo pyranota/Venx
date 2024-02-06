@@ -8,6 +8,14 @@ help:
 run EXAMPLE:
     echo "Hello" {{EXAMPLE}}
 
+# run demo without release flag
+dev:
+    cargo r --package bevy_venx --bin bevy
+    
+# build project and compile shaders
+build:
+    cargo build 
+
 # print available examples
 examples:
     echo "1"

@@ -7,7 +7,8 @@ edition = "2021"
 
 members = [
     "bevy_venx",
-    "venx_core"]
+    "venx_core",
+    "venx_shaders"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -18,6 +19,7 @@ downcast-rs = "1.2.0"
 bytemuck = "1.14.0"
 venx_core = { path = "./venx_core"}
 # plats = { path = "./plats"}
+
 bytemuck_derive = "1.5.0"
 async-trait = "0.1.73"
 bytes-cast = "0.3.0"
@@ -29,6 +31,9 @@ pollster = "0.3.0"
 log = "0.4.20"
 # flate2 = "1.0.27"
 rand = "0.8.5"
+
+[build-dependencies]
+spirv-builder = "0.9"
 # bmp = "0.5.0"
 
 [patch.crates-io]
@@ -41,3 +46,11 @@ gpu = []
 loader = []
 bevy_ecs = []
 mca_converter = ["dep:fastanvil"]
+
+# Compile build-dependencies in release mode with
+# the same settings as regular dependencies.
+[profile.release.build-override]
+opt-level = 3
+codegen-units = 16
+[profile.dev.build-override]
+opt-level = 3

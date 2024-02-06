@@ -10,7 +10,7 @@ use glam::UVec3;
 
 use self::{layer::LayerInterface, load::LoadInterface};
 
-pub trait PlatInterface: Debug + LayerInterface + LoadInterface + Downcast {
+pub trait PlatInterface: LayerInterface + LoadInterface + Downcast {
     // fn insert_segment(&mut self, segment: Segment, position: UVec3);
     // fn load_chunk(&self, position: UVec3, level: u8) -> Option<Chunk>;
     // fn load_chunks(&self, positions: UVec3, level: u8) -> Chunk;

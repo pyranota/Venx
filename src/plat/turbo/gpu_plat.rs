@@ -1,10 +1,11 @@
+use easy_compute::Buffer;
 use venx_core::plat::raw_plat::RawPlat;
 
 use crate::plat::interfaces::PlatInterface;
 
-#[derive(Debug, Clone)]
+#[derive(Debug)]
 pub struct GpuPlat {
-    raw_plat: RawPlat,
+    pub raw_plat: Buffer,
 }
 
 impl PlatInterface for GpuPlat {}

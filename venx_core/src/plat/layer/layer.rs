@@ -1,10 +1,11 @@
 use core::ops::{Index, IndexMut};
 
+use bytemuck::{Pod, Zeroable};
 use spirv_std::glam::UVec3;
 
 use crate::plat::node::Node;
 
-#[derive(Debug, Clone)]
+#[derive(Clone, Debug)]
 pub struct Layer {
     /// Can be edited or not
     pub freezed: bool,
@@ -26,7 +27,7 @@ pub struct Layer {
     /// You can identify this types of nodes with 9 in every field of it
     /// This is in that way because if there would be node at 0 index,
     /// that would conflict with 0 as "no child" interpretation
-    pub(crate) nodes: [Node; 128],
+    pub nodes: [Node; 128],
 }
 
 impl Layer {

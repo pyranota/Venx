@@ -7,7 +7,7 @@ use crate::{
 
 use super::{EntryOpts, LayerOpts};
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct Props<'a> {
     pub position: &'a Option<UVec3>,
     pub parent_idx: &'a usize,
@@ -190,6 +190,7 @@ impl RawPlat {
 }
 
 #[cfg(test)]
+#[cfg(not(feature = "gpu"))]
 mod tests {
     extern crate alloc;
     extern crate std;

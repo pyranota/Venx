@@ -4,7 +4,7 @@ use spirv_std::glam::UVec3;
 
 use super::layer::layer::Layer;
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
 pub struct RawPlat {
     pub position: (i32, i32, i32),
     pub rotation: (i32, i32, i32),
