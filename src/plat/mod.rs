@@ -34,17 +34,45 @@ pub(crate) enum Plat {
 }
 
 impl VenxPlat {
+    pub fn get_normal_unchecked(&mut self) -> &mut CpuPlat {
+        match &mut self.plat {
+            Plat::Cpu(normal) => normal,
+            Plat::Gpu(_) => panic!("Trying to get normal plat while it is turbo"),
+        }
+    }
+    pub fn get_turbo_unchecked(&mut self) -> &mut GpuPlat {
+        match &mut self.plat {
+            Plat::Cpu(_) => panic!("Trying to get turbo plat while it is normal"),
+            Plat::Gpu(turbo) => turbo,
+        }
+    }
     /// Depth, chunk_level, segment_level
     pub fn new(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
         let plat = Plat::Cpu(CpuPlat::new_plat(depth, chunk_level, segment_level));
 
         VenxPlat { plat: plat }
     }
+    /// tmp
+    pub(crate) fn new_with_length(
+        depth: u8,
+        chunk_level: u8,
+        segment_level: u8,
+        len: usize,
+    ) -> Self {
+        let plat = Plat::Cpu(CpuPlat::new_plat_with_length(
+            depth,
+            chunk_level,
+            segment_level,
+            len,
+        ));
+
+        VenxPlat { plat: plat }
+    }
     /// Get depth and verify that its synced
-    pub fn depth(&self) -> u8 {
-        match &self.plat {
+    pub fn depth(&mut self) -> u8 {
+        match &mut self.plat {
             Plat::Cpu(cpu_plat) => {
-                let plat = cpu_plat.borrow_raw_plat();
+                let plat = cpu_plat.zero_copy_raw_plat();
                 let plat_depth = plat.depth;
 
                 assert_eq!(plat.base.depth, plat_depth);
@@ -84,10 +112,10 @@ impl VenxPlat {
 impl PlatInterface for VenxPlat {}
 
 impl LoadInterface for VenxPlat {
-    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Chunk {
-        match &self.plat {
-            Plat::Cpu(ref plat) => plat.load_chunk(position, lod_level),
-            Plat::Gpu(ref plat) => plat.load_chunk(position, lod_level),
+    fn load_chunk(&mut self, position: glam::UVec3, lod_level: u8) -> Chunk {
+        match &mut self.plat {
+            Plat::Cpu(plat) => plat.load_chunk(position, lod_level),
+            Plat::Gpu(plat) => plat.load_chunk(position, lod_level),
         }
     }
 
@@ -103,10 +131,10 @@ impl LoadInterface for VenxPlat {
         todo!()
     }
 
-    fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> Mesh {
-        match &self.plat {
-            Plat::Cpu(ref plat) => plat.compute_mesh_from_chunk(chunk),
-            Plat::Gpu(ref plat) => plat.compute_mesh_from_chunk(chunk),
+    fn compute_mesh_from_chunk<'a>(&mut self, chunk: &Chunk) -> Mesh {
+        match &mut self.plat {
+            Plat::Cpu(plat) => plat.compute_mesh_from_chunk(chunk),
+            Plat::Gpu(plat) => plat.compute_mesh_from_chunk(chunk),
         }
     }
 }
@@ -132,7 +160,46 @@ impl LayerInterface for VenxPlat {
         todo!()
     }
 
-    fn get_voxel(&self, position: glam::UVec3) -> Option<(usize, usize)> {
+    fn get_voxel(&mut self, position: glam::UVec3) -> Option<usize> {
         todo!()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{interfaces::layer::LayerInterface, VenxPlat};
+
+    #[test]
+    fn transfer() {
+        // Create 2 identical plats
+
+        // First
+        let mut normal_plat_1 = VenxPlat::new(12, 5, 9);
+        // Build something
+        normal_plat_1.set_voxel(0, (4, 4, 4).into(), 1);
+        normal_plat_1.set_voxel(0, (4, 5, 4).into(), 1);
+        normal_plat_1.set_voxel(0, (5, 5, 5).into(), 2);
+
+        // Second
+        let mut normal_plat_2 = VenxPlat::new(12, 5, 9);
+        // Build something
+        normal_plat_2.set_voxel(0, (4, 4, 4).into(), 1);
+        normal_plat_2.set_voxel(0, (4, 5, 4).into(), 1);
+        normal_plat_2.set_voxel(0, (5, 5, 5).into(), 2);
+
+        // Transfer first to gpu
+        let turbo_plat = pollster::block_on(normal_plat_1.transfer_to_gpu());
+
+        // Transfer back to cpu
+        let mut transfered_from_gpu = pollster::block_on(turbo_plat.transfer_from_gpu());
+
+        // Compare
+
+        assert_eq!(
+            normal_plat_2.get_normal_unchecked().zero_copy_raw_plat(),
+            transfered_from_gpu
+                .get_normal_unchecked()
+                .zero_copy_raw_plat()
+        );
     }
 }

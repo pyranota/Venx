@@ -44,3 +44,6 @@ check:
 test PACKAGE:
     cargo test --package {{PACKAGE}}
 
+# test just venx crate
+test-venx:
+    cargo test

@@ -5,8 +5,8 @@ use crate::plat::interfaces::load::LoadInterface;
 use super::cpu_plat::CpuPlat;
 
 impl LoadInterface for CpuPlat {
-    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Chunk {
-        self.borrow_raw_plat()
+    fn load_chunk(&mut self, position: glam::UVec3, lod_level: u8) -> Chunk {
+        self.zero_copy_raw_plat()
             .load_chunk(position.to_array().into(), lod_level)
     }
 
@@ -23,7 +23,7 @@ impl LoadInterface for CpuPlat {
     }
 
     fn compute_mesh_from_chunk<'a>(
-        &self,
+        &mut self,
         chunk: &Chunk,
     ) -> [(
         venx_core::glam::Vec3,

@@ -54,111 +54,61 @@ fn setup(
         // Mesh::new(PrimitiveTopology::TriangleList),
         // Mesh::new(PrimitiveTopology::TriangleList),
         // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
-        // Mesh::new(PrimitiveTopology::TriangleList),
     ];
 
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
 
     //let mut plat = Plat::load_mca("./assets/mca/121/", (0..11, 0..11)).unwrap();
-    let mut plat = VenxPlat::new(12, 5, 9);
+    // let mut plat = VenxPlat::new(12, 5, 9);
+
+    // let mut normal_plat_1 = VenxPlat::new(12, 5, 9);
+    // // Build something
+    // normal_plat_1.set_voxel(0, (4, 4, 4).into(), 1);
+    // normal_plat_1.set_voxel(0, (4, 5, 4).into(), 1);
+    // normal_plat_1.set_voxel(0, (5, 5, 5).into(), 2);
+
+    // Second
+    let mut normal_plat_2 = VenxPlat::new(12, 5, 9);
+    // Build something
+    normal_plat_2.set_voxel(0, (4, 4, 4).into(), 1);
+    normal_plat_2.set_voxel(0, (4, 5, 4).into(), 1);
+    normal_plat_2.set_voxel(0, (4, 6, 4).into(), 2);
+    normal_plat_2.set_voxel(0, (4, 7, 4).into(), 2);
+
+    // // Transfer first to gpu
+    // let turbo_plat = pollster::block_on(normal_plat_1.transfer_to_gpu());
+
+    // // Transfer back to cpu
+    // let transfered_from_gpu = pollster::block_on(turbo_plat.transfer_from_gpu());
+
+    // // Compare
+    // assert_eq!(
+    //     normal_plat_2.get_normal_unchecked().borrow_raw_plat(),
+    //     transfered_from_gpu.get_normal_unchecked().borrow_raw_plat()
+    // );
+
+    let mut plat = normal_plat_2;
 
     // let mut plat = VenxPlat::new(12, 5, 5);
     // //plat.load("saves/25_typed.plat");
 
-    plat.set_voxel(0, (4, 4, 4).into(), 1);
-    plat.set_voxel(0, (4, 5, 4).into(), 1);
-    plat.set_voxel(0, (5, 5, 5).into(), 2);
+    // plat_normal.set_voxel(0, (4, 4, 4).into(), 1);
+    // plat_normal.set_voxel(0, (4, 5, 4).into(), 1);
+    // plat_normal.set_voxel(0, (5, 5, 5).into(), 2);
 
-    let plat = pollster::block_on(plat.transfer_to_gpu());
+    let mut plat_turbo = pollster::block_on(plat.transfer_to_gpu());
 
-    let plat = pollster::block_on(plat.transfer_from_gpu());
+    let mut plat = pollster::block_on(plat_turbo.transfer_from_gpu());
 
-    dbg!(plat.depth());
+    // plat.get_normal_unchecked().with_raw_plat(|plat| dbg!(plat));
 
+    // dbg!(plat.get_normal_unchecked().zero_copy_raw_plat());
+    // dbg!(a.get_voxel((4, 4, 4).into()));
+    // dbg!(a.get_voxel((6, 6, 6).into()));
+    // dbg!(a.get_voxel((7, 7, 7).into()));
+    // dbg!(a.get_voxel((8, 8, 8).into()));
+    // dbg!(a.get_voxel((9, 9, 9).into()));
     let capacity = 350_000;
     // panic!();
     let start = Instant::now();

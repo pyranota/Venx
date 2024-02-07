@@ -5,7 +5,7 @@ use super::cpu_plat::CpuPlat;
 pub type Mesh = [(Vec3, Vec4, Vec3); 1_000]; // Position, Color, Normal
 
 impl CpuPlat {
-    pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
+    pub fn to_mesh_greedy(&mut self, chunk: &Chunk) -> Mesh {
         let mut mesh = [(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); 1_000];
         let mut mesh_idx = 0;
 
@@ -51,7 +51,7 @@ impl CpuPlat {
                 let block_color = block_color.as_vec3().extend(0.5) / vec4(256., 256., 256., 1.0);
 
                 // TOP
-                self.borrow_raw_plat().greedy_runner(
+                self.zero_copy_raw_plat().greedy_runner(
                     &mut mesh_helper_up,
                     &chunk,
                     block,
@@ -66,7 +66,7 @@ impl CpuPlat {
                 );
 
                 // BOTTOM
-                self.borrow_raw_plat().greedy_runner(
+                self.zero_copy_raw_plat().greedy_runner(
                     &mut mesh_helper_down,
                     &chunk,
                     block,
@@ -81,7 +81,7 @@ impl CpuPlat {
                 );
 
                 // LEFT
-                self.borrow_raw_plat().greedy_runner(
+                self.zero_copy_raw_plat().greedy_runner(
                     &mut mesh_helper_left,
                     &chunk,
                     block,
@@ -96,7 +96,7 @@ impl CpuPlat {
                 );
 
                 // RIGHT
-                self.borrow_raw_plat().greedy_runner(
+                self.zero_copy_raw_plat().greedy_runner(
                     &mut mesh_helper_right,
                     &chunk,
                     block,
@@ -111,7 +111,7 @@ impl CpuPlat {
                 );
 
                 // FRONT
-                self.borrow_raw_plat().greedy_runner(
+                self.zero_copy_raw_plat().greedy_runner(
                     &mut mesh_helper_front,
                     &chunk,
                     block,
@@ -126,7 +126,7 @@ impl CpuPlat {
                 );
 
                 // BACK
-                self.borrow_raw_plat().greedy_runner(
+                self.zero_copy_raw_plat().greedy_runner(
                     &mut mesh_helper_back,
                     &chunk,
                     block,

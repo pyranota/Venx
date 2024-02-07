@@ -5,7 +5,7 @@ use crate::plat::interfaces::load::LoadInterface;
 use super::gpu_plat::GpuPlat;
 
 impl LoadInterface for GpuPlat {
-    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Chunk {
+    fn load_chunk(&mut self, position: glam::UVec3, lod_level: u8) -> Chunk {
         todo!()
     }
 
@@ -21,7 +21,7 @@ impl LoadInterface for GpuPlat {
         todo!()
     }
 
-    fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> crate::plat::normal::mesh::Mesh {
+    fn compute_mesh_from_chunk<'a>(&mut self, chunk: &Chunk) -> crate::plat::normal::mesh::Mesh {
         todo!()
     }
 }

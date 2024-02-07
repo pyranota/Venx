@@ -17,7 +17,7 @@ pub trait LayerInterface {
     fn set_voxel(&mut self, layer: usize, position: UVec3, ty: usize);
     fn compress(&mut self, layer: usize);
 
-    fn get_voxel(&self, position: UVec3) -> Option<(usize, usize)>;
+    fn get_voxel(&mut self, position: UVec3) -> Option<usize>;
     // fn get_image(&self, handle: usize) -> &Image;
     // fn get_image_mut(&mut self, handle: usize) -> &mut Image;
 

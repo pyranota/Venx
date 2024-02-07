@@ -4,6 +4,8 @@ use spirv_std::glam::UVec3;
 
 use super::{layer::layer::Layer, node::Node};
 
+// TODO: rename to RawPlatMut and create LayerMut
+#[derive(PartialEq, Debug)]
 pub struct RawPlat<'a> {
     pub position: (i32, i32, i32),
     pub rotation: (i32, i32, i32),

@@ -1,8 +1,10 @@
+use core::fmt::Debug;
+
 use bytemuck::{Pod, Zeroable};
 use spirv_std::glam::UVec3;
 
 #[repr(C)]
-#[derive(Copy, Clone, Default, Debug, PartialEq, PartialOrd, Pod, Zeroable)]
+#[derive(Copy, Debug, Clone, Default, PartialEq, PartialOrd, Pod, Zeroable)]
 pub struct Node {
     /// `0` - normal branch,
     /// `1` - link to shared,

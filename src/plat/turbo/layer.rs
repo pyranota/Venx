@@ -22,7 +22,7 @@ impl LayerInterface for GpuPlat {
         todo!()
     }
 
-    fn get_voxel(&self, position: glam::UVec3) -> Option<(usize, usize)> {
+    fn get_voxel(&mut self, position: glam::UVec3) -> Option<usize> {
         todo!()
     }
 }
