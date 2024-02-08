@@ -5,7 +5,7 @@ use crate::plat::interfaces::load::LoadInterface;
 use super::gpu_plat::GpuPlat;
 
 impl LoadInterface for GpuPlat {
-    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Chunk {
+    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Box<Chunk> {
         todo!()
     }
 

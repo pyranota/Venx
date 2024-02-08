@@ -282,7 +282,7 @@ impl VenxPlat {
 impl PlatInterface for VenxPlat {}
 
 impl LoadInterface for VenxPlat {
-    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Chunk {
+    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Box<Chunk> {
         match &self.plat {
             Plat::Cpu(plat) => plat.load_chunk(position, lod_level),
             Plat::Gpu(plat) => plat.load_chunk(position, lod_level),

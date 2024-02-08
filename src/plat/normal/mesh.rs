@@ -14,8 +14,8 @@ impl CpuPlat {
         let mut mesh_idx = 0;
         let mut mesh = &mut *mesh_box;
 
-        let scale = l2s(chunk.lod_level) as f32;
-        let scale2 = l2s(chunk.lod_level) as f32;
+        let scale = l2s(chunk.lod_level()) as f32;
+        let scale2 = l2s(chunk.lod_level()) as f32;
         //let scale = 1.;
         //let scale = 1.;
 
