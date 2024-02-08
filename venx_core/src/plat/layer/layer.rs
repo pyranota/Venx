@@ -42,6 +42,9 @@ impl<'a> Layer<'a> {
         nodes[0].flag = 9;
         // Chain holders
         // First 2 nodes are not holders, the rest is holders
+        // TODO: Make last holder reference 0 instaed of non-existing node
+        // TODO: Decouple chaining holders and validating/creating layer
+        // TODO: clear every node up
         for (i, holder) in nodes.iter_mut().enumerate().skip(2) {
             // Mark as holder
             holder.flag = -1;

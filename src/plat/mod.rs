@@ -1,10 +1,19 @@
-use std::usize;
+use std::{
+    fs::{create_dir_all, read, read_to_string, File},
+    io::{Read, Write},
+    ops::Range,
+    usize,
+};
 
+use anyhow::bail;
+use bytes_cast::BytesCast;
 use easy_compute::{
     include_spirv, BindGroupBuilder, BufferRW, ComputePassDescriptor, ComputeServer,
     PipelineBuilder,
 };
-use glam::{UVec3, Vec3, Vec4};
+use glam::{uvec3, UVec3, Vec3, Vec4};
+use log::info;
+use serde::{Deserialize, Serialize};
 use venx_core::{
     plat::{chunk::chunk::Chunk, layer::layer::Layer, node::Node, raw_plat::RawPlat},
     utils::Grid,
@@ -33,9 +42,93 @@ pub(crate) enum Plat {
     Gpu(GpuPlat),
 }
 
+#[derive(Default, Serialize, Deserialize)]
+struct MetaSerDeser {
+    depth: u8,
+    position: (f32, f32, f32),
+    rotation: (f32, f32, f32),
+}
+
 impl VenxPlat {
-    pub fn get_normal_unchecked(&mut self) -> &mut CpuPlat {
-        match &mut self.plat {
+    /// Save plat to .config directory
+    pub fn save(&self, name: &str) -> anyhow::Result<()> {
+        info!("Saving {name}.plat");
+        let path = ".cache/".to_owned() + name;
+        // TODO: Make .config in custom location
+        create_dir_all(format!("{}.plat", path))?;
+        create_dir_all(format!("{}.plat/layers/", path))?;
+        //   let entry: String = ron::ser::to_string_pretty(&self, ron::ser::PrettyConfig::default())?;
+        let mut file = File::create(format!("{}.plat/meta.ron", path))?;
+
+        let raw_plat = self.get_normal_unchecked().borrow_raw_plat();
+        let meta: String = ron::ser::to_string_pretty(
+            &MetaSerDeser {
+                depth: raw_plat.depth,
+                position: (0., 0., 0.),
+                rotation: (0., 0., 0.),
+            },
+            ron::ser::PrettyConfig::default(),
+        )?;
+        file.write_all(meta.as_bytes())?;
+        // Create layers dirs
+
+        for (layer_name, layer) in raw_plat.layers() {
+            let layer_path = format!("{path}.plat/layers/{layer_name}");
+
+            create_dir_all(&layer_path)?;
+
+            // let level_stringified: String =
+            //     ron::ser::to_string_pretty(&level, ron::ser::PrettyConfig::default())?;
+            let encoded_entries: Vec<u8> = bitcode::encode(layer.entries).unwrap();
+            let encoded_nodes: Vec<u8> = bitcode::encode(layer.nodes).unwrap();
+
+            let mut entries_file = File::create(format!("{}/entries", layer_path))?;
+            entries_file.write_all(&encoded_entries)?;
+
+            let mut nodes_file = File::create(format!("{}/nodes", layer_path))?;
+            nodes_file.write_all(&encoded_nodes)?;
+        }
+        Ok(())
+    }
+
+    pub fn load(name: &str) -> anyhow::Result<Self> {
+        info!("Loading {name}.plat");
+        let path = ".cache/".to_owned() + name;
+        let meta: MetaSerDeser = ron::from_str(&read_to_string(format!("{path}.plat/meta.ron"))?)?;
+
+        let mut components = [
+            (vec![], vec![]),
+            (vec![], vec![]),
+            (vec![], vec![]),
+            (vec![], vec![]),
+        ];
+
+        for (i, layer_name) in ["base", "tmp", "schem", "canvas"].iter().enumerate() {
+            let entries_path = format!("{path}.plat/layers/{layer_name}/entries");
+            let nodes_path = format!("{path}.plat/layers/{layer_name}/nodes");
+
+            let entries: Vec<usize> = bitcode::decode(&read(entries_path)?)?;
+            let nodes: Vec<Node> = bitcode::decode(&read(nodes_path)?)?;
+
+            components[i] = (nodes, entries);
+        }
+
+        // TODO: remove bottleneck. Handle this without cloning
+        Ok(VenxPlat {
+            plat: Plat::Cpu(CpuPlat::from_existing(
+                meta.depth,
+                5,
+                5,
+                components[0].clone(),
+                components[1].clone(),
+                components[2].clone(),
+                components[3].clone(),
+            )),
+        })
+    }
+
+    pub fn get_normal_unchecked(&self) -> &CpuPlat {
+        match &self.plat {
             Plat::Cpu(normal) => normal,
             Plat::Gpu(_) => panic!("Trying to get normal plat while it is turbo"),
         }
@@ -106,6 +199,82 @@ impl VenxPlat {
                 Plat::Gpu(gpu_plat) => Plat::Cpu(gpu_plat.transfer_from_gpu().await),
             },
         }
+    }
+    /// Load meshes for given chunks. Used for debug purposes and examples
+    /// Its block-on operation
+    /// Returns Vec of (Vertices, Colors, Normals)
+    pub fn static_mesh(
+        &self,
+        chunk_range_x: Range<u32>,
+        chunk_range_y: Range<u32>,
+        chunk_range_z: Range<u32>,
+    ) -> Vec<(Vec<[f32; 3]>, Vec<[f32; 4]>, Vec<[f32; 3]>)> {
+        let chunks_amount = (chunk_range_x.end - chunk_range_x.start)
+            * (chunk_range_z.end - chunk_range_z.start)
+            * (chunk_range_y.end - chunk_range_y.start);
+
+        // Basically amount of inidvidual 3d models / draw-calls
+        let meshes_amount = 128;
+        // How many vertices can be in single mesh
+        let capacity = 500 * chunks_amount as usize;
+        let mut meshes = vec![
+            // Single mesh
+            (
+                Vec::<[f32; 3]>::with_capacity(capacity),
+                Vec::<[f32; 4]>::with_capacity(capacity),
+                Vec::<[f32; 3]>::with_capacity(capacity)
+            );
+            meshes_amount
+        ];
+
+        log::info!("Loading chunks and computing meshes");
+
+        // Global amount of vertices. Used to determine which mesh should be written
+        let mut counter = 0;
+        let plat = self;
+
+        // TODO: Make use of `load_chunks` to speed up calculations with turbo mode enabled
+        for x in chunk_range_x.clone() {
+            info!(
+                "Progress: {}/{}",
+                x - chunk_range_x.start,
+                chunk_range_x.end - chunk_range_x.start
+            );
+            for z in chunk_range_z.clone() {
+                for y in chunk_range_y.clone() {
+                    // let mut lod_level = (u32::max(z, x) / 128) as u8;
+
+                    // if lod_level > 2 {
+                    //     lod_level = 2;
+                    // }
+
+                    // lod_level = 0;
+
+                    // TODO: Make LOD's work
+                    let chunk = plat.load_chunk(uvec3(x, y, z), 0);
+
+                    let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
+
+                    let mesh_idx = counter / capacity;
+
+                    'mesh: for (pos, color, normal) in vx_mesh.iter() {
+                        // Each returned mesh is static length, so not all attributes in that mesh are used
+                        // To prevent leaking zero attributes into actual mesh, we check it
+                        // Dont create blocks with color Vec4::ZERO, it will break the mesh
+                        if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
+                            break 'mesh;
+                        }
+
+                        counter += 1;
+                        meshes[mesh_idx].0.push(pos.to_array());
+                        meshes[mesh_idx].1.push(color.to_array());
+                        meshes[mesh_idx].2.push(normal.to_array());
+                    }
+                }
+            }
+        }
+
+        meshes
     }
 }
 

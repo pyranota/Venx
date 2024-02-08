@@ -8,6 +8,7 @@ easy_compute/Cargo.lock
 saves
 assets/mca/49 
 assets/mca/121
+.cache/*
 
 # Added by cargo
 #

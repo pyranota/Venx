@@ -5,6 +5,7 @@ use spirv_std::glam::UVec3;
 
 #[repr(C)]
 #[derive(Copy, Debug, Clone, Default, PartialEq, PartialOrd, Pod, Zeroable)]
+#[cfg_attr(feature = "bitcode_support", derive(bitcode::Encode, bitcode::Decode))]
 pub struct Node {
     /// `0` - normal branch,
     /// `1` - link to shared,

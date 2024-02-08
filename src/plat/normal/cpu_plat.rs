@@ -2,7 +2,10 @@ use std::marker::PhantomPinned;
 
 use ouroboros::*;
 use owning_ref::{BoxRefMut, OwningRefMut};
-use venx_core::plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat};
+use venx_core::{
+    plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat},
+    utils::l2s,
+};
 
 use crate::plat::{interfaces::PlatInterface, turbo::gpu_plat::GpuPlat};
 
@@ -85,7 +88,10 @@ impl CpuPlat {
     // }
 
     pub(crate) fn new_plat(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
-        let base = (vec![Node::default(); 15_280_000], vec![0; 1_200]);
+        let base = (
+            vec![Node::default(); 100 * (l2s(depth) * l2s(depth)) as usize],
+            vec![0; 1_200],
+        );
         let tmp = (vec![Node::default(); 128_000], vec![0; 1_200]);
         let (schem, canvas) = (tmp.clone(), tmp.clone());
 
@@ -149,6 +155,7 @@ impl CpuPlat {
 
         Self::new_from(depth, chunk_level, segment_level, base, tmp, schem, canvas)
     }
+    /// Create an empty CpuPlat
     pub(crate) fn new_from(
         depth: u8,
         chunk_level: u8,
@@ -164,6 +171,18 @@ impl CpuPlat {
         Layer::new(0, &mut schem.0, &mut schem.1);
         Layer::new(0, &mut canvas.0, &mut canvas.1);
 
+        Self::from_existing(depth, chunk_level, segment_level, base, tmp, schem, canvas)
+    }
+    /// Create CpuPlat with already filled layer components
+    pub(crate) fn from_existing(
+        depth: u8,
+        chunk_level: u8,
+        segment_level: u8,
+        base: (Vec<Node>, Vec<usize>),
+        tmp: (Vec<Node>, Vec<usize>),
+        schem: (Vec<Node>, Vec<usize>),
+        canvas: (Vec<Node>, Vec<usize>),
+    ) -> Self {
         CpuPlatBuilder {
             raw_plat_builder: |// Base
                                base_nodes: &mut Vec<Node>,
@@ -183,28 +202,28 @@ impl CpuPlat {
                 RawPlat {
                     position: (0, 0, 0),
                     rotation: (0, 0, 0),
-                    depth: 12,
+                    depth,
                     base: Layer {
                         freezed: false,
-                        depth: 12,
+                        depth,
                         entries: base_entries,
                         nodes: base_nodes,
                     },
                     tmp: Layer {
                         freezed: false,
-                        depth: 12,
+                        depth,
                         entries: tmp_entries,
                         nodes: tmp_nodes,
                     },
                     schem: Layer {
                         freezed: false,
-                        depth: 12,
+                        depth,
                         entries: schem_entries,
                         nodes: schem_nodes,
                     },
                     canvas: Layer {
                         freezed: false,
-                        depth: 12,
+                        depth,
                         entries: canvas_entries,
                         nodes: canvas_nodes,
                     },
@@ -220,20 +239,9 @@ impl CpuPlat {
             canvas_entries: canvas.1,
         }
         .build()
-
-        // CpuPlat {
-        //     base_nodes: base.0,
-        //     base_entries: base.1,
-        //     tmp_nodes: tmp.0,
-        //     tmp_entries: tmp.1,
-        //     schem_nodes: schem.0,
-        //     schem_entries: schem.1,
-        //     canvas_nodes: canvas.0,
-        //     canvas_entries: canvas.1,
-        // }
     }
 
-    pub(crate) async fn transfer_to_gpu(mut self) -> GpuPlat {
+    pub(crate) async fn transfer_to_gpu(self) -> GpuPlat {
         //
 
         let plat = self.borrow_raw_plat();

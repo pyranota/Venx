@@ -3,6 +3,7 @@ use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
 use pollster::block_on;
 use std::{collections::HashMap, fs, ops::Range, path::PathBuf};
+use venx_core::utils::s2l;
 
 use super::{interfaces::layer::LayerInterface, Plat, VenxPlat};
 
@@ -14,11 +15,11 @@ impl VenxPlat {
         dir_path: &'a str,
         region_range: (Range<RegionX>, Range<RegionZ>),
     ) -> Result<Self> {
+        let rr = region_range.clone();
+        let max_width = i32::max(rr.0.end - rr.0.start, rr.1.end - rr.1.start) * 512;
+
         let rgs = from_dir(PathBuf::from(dir_path), region_range)?;
-
-        let mut plat = VenxPlat::new(13, 4, 9);
-
-        let mut hashmap: HashMap<String, u32> = HashMap::new();
+        let mut plat = VenxPlat::new(s2l(max_width as u32), 5, 9);
 
         for (rg_pos, mut region) in rgs {
             //let mut segment = Segment::new(9);

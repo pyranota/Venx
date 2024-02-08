@@ -51,7 +51,14 @@ impl<'a> RawPlat<'a> {
             canvas: Layer::new(depth, canvas.0, canvas.1),
         }
     }
-
+    pub fn layers(&'a self) -> [(&'a str, &'a Layer<'a>); 4] {
+        [
+            ("base", &self[0]),
+            ("tmp", &self[1]),
+            ("schem", &self[2]),
+            ("canvas", &self[3]),
+        ]
+    }
     // #[cfg(test)]
     // pub fn new_test<
     //     const BASE_SIZE: usize,
