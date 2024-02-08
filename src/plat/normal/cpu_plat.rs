@@ -85,8 +85,9 @@ impl CpuPlat {
     // }
 
     pub(crate) fn new_plat(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
-        let base = (vec![Node::default(); 110_280_000], vec![0; 1_200]);
-        let (tmp, schem, canvas) = (base.clone(), base.clone(), base.clone());
+        let base = (vec![Node::default(); 15_280_000], vec![0; 1_200]);
+        let tmp = (vec![Node::default(); 128_000], vec![0; 1_200]);
+        let (schem, canvas) = (tmp.clone(), tmp.clone());
 
         // let mut tt = Box::pin(Test {
         //     base_nodes: base.0,

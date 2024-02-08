@@ -257,7 +257,7 @@ fn setup(
     // vx.topology.set(uvec3(0, 8, 0), true);
     info!("Converting minecraft mca map into plat");
 
-    let mut plat = VenxPlat::load_mca("./assets/mca/9/", (0..11, 0..11)).unwrap();
+    let mut plat = VenxPlat::load_mca("./assets/mca/1/", (0..11, 0..11)).unwrap();
     // let mut plat = VenxPlat::new(12, 5, 9);
 
     // let mut normal_plat_1 = VenxPlat::new(12, 5, 9);
@@ -320,13 +320,13 @@ fn setup(
     ];
     log::info!("Loading chunks and computing mesh");
 
-    let chunks_width = 16 * 3;
-    let chunk_start = 1;
+    let chunks_width = 16 * 1;
+    let chunk_start = 0;
     let mut counter = 0;
     for x in chunk_start..chunks_width {
         info!("Progress: {}/{}", x, chunks_width);
         for z in chunk_start..chunks_width {
-            for y in (3..15) {
+            for y in (1..15) {
                 let time = Instant::now();
                 let mut lod_level = (u32::max(z, x) / 128) as u8;
 
