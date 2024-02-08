@@ -25,7 +25,7 @@ impl RawPlat<'_> {
         face_vertices: [Vec3; 6],
     ) {
         let scale = l2s(chunk.lod_level()) as f32;
-        let scale2 = l2s(chunk.lod_level()) as f32;
+
         let mut line_direction = Vec3::ZERO;
 
         line_direction[line_idx] = 1.;
@@ -135,8 +135,8 @@ impl RawPlat<'_> {
                 vertex[width_idx] *= (line_width) as f32;
 
                 mesh[*mesh_idx] = ((
-                    ((vertex * scale2)
-                        + (block_position + (chunk.position() * chunk.size() * (scale as u32)))
+                    ((vertex * scale)
+                        + (block_position * scale as u32 + (chunk.position() * chunk.width()))
                             .as_vec3()),
                     block_color,
                     neighbor_direction.as_vec3(),

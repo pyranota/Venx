@@ -12,21 +12,19 @@ impl CpuPlat {
     pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
         let mut mesh_box = Box::new([(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); MESH_SIZE]);
         let mut mesh_idx = 0;
-        let mut mesh = &mut *mesh_box;
+        let mesh = &mut *mesh_box;
 
-        let scale = l2s(chunk.lod_level()) as f32;
-        let scale2 = l2s(chunk.lod_level()) as f32;
         //let scale = 1.;
         //let scale = 1.;
 
-        let mut mesh_helper_up = Chunk::new(UVec3::ZERO, 0, 5);
-        let mut mesh_helper_down = Chunk::new(UVec3::ZERO, 0, 5);
-        let mut mesh_helper_front = Chunk::new(UVec3::ZERO, 0, 5);
-        let mut mesh_helper_back = Chunk::new(UVec3::ZERO, 0, 5);
-        let mut mesh_helper_left = Chunk::new(UVec3::ZERO, 0, 5);
-        let mut mesh_helper_right = Chunk::new(UVec3::ZERO, 0, 5);
+        let lod_level = chunk.lod_level();
 
-        const DIRECTION: Vec3 = vec3(0., 0., 1.);
+        let mut mesh_helper_up = Chunk::new(UVec3::ZERO, lod_level, 5);
+        let mut mesh_helper_down = Chunk::new(UVec3::ZERO, lod_level, 5);
+        let mut mesh_helper_front = Chunk::new(UVec3::ZERO, lod_level, 5);
+        let mut mesh_helper_back = Chunk::new(UVec3::ZERO, lod_level, 5);
+        let mut mesh_helper_left = Chunk::new(UVec3::ZERO, lod_level, 5);
+        let mut mesh_helper_right = Chunk::new(UVec3::ZERO, lod_level, 5);
 
         chunk.iter(|pos, block| {
             if block != 0 {

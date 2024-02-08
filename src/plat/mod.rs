@@ -15,8 +15,14 @@ use glam::{uvec3, UVec3, Vec3, Vec4};
 use log::info;
 use serde::{Deserialize, Serialize};
 use venx_core::{
-    plat::{chunk::chunk::Chunk, layer::layer::Layer, node::Node, raw_plat::RawPlat},
-    utils::Grid,
+    plat::{
+        chunk::chunk::Chunk,
+        layer::{self, layer::Layer},
+        node::Node,
+        op::{EntryOpts, LayerOpts},
+        raw_plat::RawPlat,
+    },
+    utils::{l2s, Grid},
 };
 
 use self::{
@@ -252,7 +258,31 @@ impl VenxPlat {
                     // lod_level = 0;
 
                     // TODO: Make LOD's work
-                    let chunk = plat.load_chunk(uvec3(x, y, z), lod.unwrap_or(0));
+
+                    let chunk = plat.load_chunk(
+                        uvec3(x, y, z),
+                        lod.unwrap_or_else(|| {
+                            // TODO: Move all these stuff in plat.load_chunk()
+                            // 14, 20 ,22
+                            if let Some((_idx, (layer, entry))) =
+                                plat.get_normal_unchecked().borrow_raw_plat().get_node(
+                                    venx_core::glam::uvec3(x, y, z) * l2s(5),
+                                    5,
+                                    EntryOpts::Single(19),
+                                    LayerOpts::All,
+                                )
+                            {
+                                // dbg!("Found node", entry, layer);
+                                //if entry >= 21 {
+                                // dbg!("Found leave", entry);
+                                return 0;
+                                //}
+                            }
+
+                            // dbg!("No leave");
+                            1
+                        }),
+                    );
 
                     let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
 

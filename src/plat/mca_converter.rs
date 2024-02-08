@@ -67,7 +67,7 @@ impl VenxPlat {
                                                 "minecraft:birch_leaves" => 20,
                                                 "minecraft:dark_oak_log" => 21,
                                                 "minecraft:dark_oak_leaves" => 22,
-                                                _ => 404,
+                                                _ => 1,
                                             };
 
                                             //let block_id = 1;

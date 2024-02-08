@@ -11,7 +11,8 @@ type Node_Idx = Layer_Idx;
 impl RawPlat<'_> {
     /// If Entry is Entry::All, than it will return the most valuable (by voxel-collection) block
     /// Same goes for Layer, if it is Layer::All, it will return the most higher layer
-    /// Return (Node_Idx, (Entry, Layer))
+    /// Return (Node_Idx, (Layer, Entry))
+    ///  position is global!
     pub fn get_node(
         &self,
         position: UVec3,
