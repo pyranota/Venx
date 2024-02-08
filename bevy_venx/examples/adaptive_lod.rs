@@ -1,6 +1,11 @@
 use std::f32::consts::PI;
 
-use bevy::{math::vec3, prelude::*, render::render_resource::PrimitiveTopology};
+use bevy::{
+    math::vec3,
+    pbr::wireframe::{Wireframe, WireframePlugin},
+    prelude::*,
+    render::render_resource::PrimitiveTopology,
+};
 use bevy_panorbit_camera::PanOrbitCamera;
 use venx::plat::VenxPlat;
 
@@ -8,6 +13,7 @@ fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
         .add_plugin(bevy_panorbit_camera::PanOrbitCameraPlugin)
+        .add_plugin(WireframePlugin)
         .add_startup_system(setup)
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)))
         .run();
@@ -18,14 +24,14 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Its small-sized plat, its slow to convert it from mca each run, it will be saved
-    let plat = VenxPlat::load("mca_small").unwrap_or_else(|e| {
+    let plat = VenxPlat::load("ALOD").unwrap_or_else(|e| {
         warn!("Plat wasnt found on device, creating new and saving ({e})");
         // Convert from minecraft map
         let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1)).unwrap();
-        plat.save("mca_small").unwrap();
+        plat.save("ALOD").unwrap();
         plat
     });
-    for mesh in plat.static_mesh(0..16, 0..6, 0..16) {
+    for mesh in plat.static_mesh(0..16, 3..7, 5..16) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
@@ -42,8 +48,7 @@ fn setup(
             }),
             ..default()
         })
-        //.insert(Wireframe)
-        ;
+        .insert(Wireframe);
     }
 
     // ambient light
