@@ -31,7 +31,7 @@ fn setup(
         plat.save("ALOD").unwrap();
         plat
     });
-    for mesh in plat.static_mesh(0..16, 3..7, 5..16) {
+    for mesh in plat.static_mesh(13..16, 5..7, 13..16, None) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
@@ -98,7 +98,8 @@ fn setup(
                 // hdr: true,
                 ..default()
             },
-            transform: Transform::from_xyz(28.0, 50., 28.0).looking_at(vec3(0., 0., 0.), Vec3::Y),
+            transform: Transform::from_xyz(512.0, 200., 512.0)
+                .looking_at(vec3(512., 0., 512.), Vec3::Y),
             ..default()
         },
         // ScreenSpaceAmbientOcclusionBundle::default(),
@@ -111,6 +112,10 @@ fn setup(
         //     },
         //     ..Default::default()
         // },
-        PanOrbitCamera::default(),
+        PanOrbitCamera {
+            // Set focal point (what the camera should look at)
+            focus: Vec3::new(452., 190., 452.),
+            ..Default::default()
+        },
     ));
 }

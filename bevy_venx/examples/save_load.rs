@@ -28,7 +28,7 @@ fn setup(
         plat
     });
 
-    for mesh in plat.static_mesh(0..16, 0..6, 0..16) {
+    for mesh in plat.static_mesh(0..16, 0..6, 0..16, None) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());

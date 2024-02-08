@@ -208,6 +208,7 @@ impl VenxPlat {
         chunk_range_x: Range<u32>,
         chunk_range_y: Range<u32>,
         chunk_range_z: Range<u32>,
+        lod: Option<u8>,
     ) -> Vec<(Vec<[f32; 3]>, Vec<[f32; 4]>, Vec<[f32; 3]>)> {
         let chunks_amount = (chunk_range_x.end - chunk_range_x.start)
             * (chunk_range_z.end - chunk_range_z.start)
@@ -251,7 +252,7 @@ impl VenxPlat {
                     // lod_level = 0;
 
                     // TODO: Make LOD's work
-                    let chunk = plat.load_chunk(uvec3(x, y, z), 0);
+                    let chunk = plat.load_chunk(uvec3(x, y, z), lod.unwrap_or(0));
 
                     let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
 
