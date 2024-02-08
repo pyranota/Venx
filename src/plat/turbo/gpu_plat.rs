@@ -182,16 +182,15 @@ impl GpuPlat {
 
         // Create CpuPlat from copied
         // WARNING! Hardcoded values
-        CpuPlat {
-            base_nodes,
-            base_entries,
-            tmp_nodes,
-            tmp_entries,
-            schem_nodes,
-            schem_entries,
-            canvas_nodes,
-            canvas_entries,
-        }
+        CpuPlat::new_from(
+            depth[0],
+            5,
+            6,
+            (base_nodes, base_entries),
+            (tmp_nodes, tmp_entries),
+            (schem_nodes, schem_entries),
+            (canvas_nodes, canvas_entries),
+        )
     }
     pub async fn new_plat(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
         // TODO: make more flexible

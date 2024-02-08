@@ -4,29 +4,24 @@ use glam::{uvec3, Vec2, Vec3};
 use pollster::block_on;
 use std::{collections::HashMap, fs, ops::Range, path::PathBuf};
 
-use crate::{
-    plat::minecraft_blocks::match_block,
-    voxel::{cpu::voxel::Voxel, segment::Segment},
-};
-
-use super::Plat;
+use super::{interfaces::layer::LayerInterface, Plat, VenxPlat};
 
 pub type RegionX = i32;
 pub type RegionZ = RegionX;
 
-impl Plat {
+impl VenxPlat {
     pub fn load_mca<'a>(
         dir_path: &'a str,
         region_range: (Range<RegionX>, Range<RegionZ>),
     ) -> Result<Self> {
         let rgs = from_dir(PathBuf::from(dir_path), region_range)?;
 
-        let mut plat = Plat::new(13, 4, 9);
+        let mut plat = VenxPlat::new(13, 4, 9);
 
         let mut hashmap: HashMap<String, u32> = HashMap::new();
 
         for (rg_pos, mut region) in rgs {
-            let mut segment = Segment::new(9);
+            //let mut segment = Segment::new(9);
             for ch_x in 0..32 {
                 for ch_z in 0..32 {
                     if let Ok(Some(data)) = region.read_chunk(ch_x, ch_z) {
@@ -76,9 +71,12 @@ impl Plat {
 
                                             //let block_id = 1;
 
-                                            segment.set(
+                                            plat.set_voxel(
+                                                0,
                                                 uvec3(x as u32, y as u32, z as u32)
-                                                    + uvec3(ch_x as u32 * 16, 0, ch_z as u32 * 16),
+                                                    + uvec3(ch_x as u32, 0, ch_z as u32) * 16
+                                                    + uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32)
+                                                        * 512,
                                                 block_id,
                                             );
                                         }
@@ -89,22 +87,22 @@ impl Plat {
                     }
                 }
             }
-            let segment_level = segment.level;
-            dbg!("Set Segment");
-            plat.controller.get_voxel_mut().set_segment(
-                0,
-                segment,
-                uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
-            );
-            dbg!("Segment is inserted");
+            // let segment_level = segment.level;
+            // dbg!("Set Segment");
+            // plat.controller.get_voxel_mut().set_segment(
+            //     0,
+            //     segment,
+            //     uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
+            // );
+            // dbg!("Segment is inserted");
 
-            dbg!("Merging", (rg_pos[0] as u32, 0, rg_pos[1] as u32));
-            let v: &mut Voxel = plat.controller.get_voxel_mut().downcast_mut().unwrap();
-            v.layers[0].graph.merge_segment(
-                (rg_pos[0] as u32, 0, rg_pos[1] as u32).into(),
-                segment_level,
-            );
-            dbg!("Merged");
+            // dbg!("Merging", (rg_pos[0] as u32, 0, rg_pos[1] as u32));
+            // let v: &mut Voxel = plat.controller.get_voxel_mut().downcast_mut().unwrap();
+            // v.layers[0].graph.merge_segment(
+            //     (rg_pos[0] as u32, 0, rg_pos[1] as u32).into(),
+            //     segment_level,
+            // );
+            // dbg!("Merged");
         }
 
         //   println!("{:?}", hashmap);

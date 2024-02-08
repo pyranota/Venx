@@ -72,7 +72,7 @@ impl VenxPlat {
     pub fn depth(&mut self) -> u8 {
         match &mut self.plat {
             Plat::Cpu(cpu_plat) => {
-                let plat = cpu_plat.zero_copy_raw_plat();
+                let plat = cpu_plat.borrow_raw_plat();
                 let plat_depth = plat.depth;
 
                 assert_eq!(plat.base.depth, plat_depth);
@@ -112,8 +112,8 @@ impl VenxPlat {
 impl PlatInterface for VenxPlat {}
 
 impl LoadInterface for VenxPlat {
-    fn load_chunk(&mut self, position: glam::UVec3, lod_level: u8) -> Chunk {
-        match &mut self.plat {
+    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Chunk {
+        match &self.plat {
             Plat::Cpu(plat) => plat.load_chunk(position, lod_level),
             Plat::Gpu(plat) => plat.load_chunk(position, lod_level),
         }
@@ -131,8 +131,8 @@ impl LoadInterface for VenxPlat {
         todo!()
     }
 
-    fn compute_mesh_from_chunk<'a>(&mut self, chunk: &Chunk) -> Mesh {
-        match &mut self.plat {
+    fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> Mesh {
+        match &self.plat {
             Plat::Cpu(plat) => plat.compute_mesh_from_chunk(chunk),
             Plat::Gpu(plat) => plat.compute_mesh_from_chunk(chunk),
         }
@@ -160,7 +160,7 @@ impl LayerInterface for VenxPlat {
         todo!()
     }
 
-    fn get_voxel(&mut self, position: glam::UVec3) -> Option<usize> {
+    fn get_voxel(&self, position: glam::UVec3) -> Option<usize> {
         todo!()
     }
 }
@@ -196,10 +196,8 @@ mod tests {
         // Compare
 
         assert_eq!(
-            normal_plat_2.get_normal_unchecked().zero_copy_raw_plat(),
-            transfered_from_gpu
-                .get_normal_unchecked()
-                .zero_copy_raw_plat()
+            normal_plat_2.get_normal_unchecked().borrow_raw_plat(),
+            transfered_from_gpu.get_normal_unchecked().borrow_raw_plat()
         );
     }
 }

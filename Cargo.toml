@@ -8,12 +8,15 @@ edition = "2021"
 members = [
     "bevy_venx",
     "venx_core",
-    "venx_shaders"]
+    "venx_shaders",
+    "easy_compute",
+    "easy_compute/shaders/*"
+    ]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-easy_compute = { path = "../easy_compute"}
+easy_compute = { path = "./easy_compute"}
 glam = "*"
 downcast-rs = "1.2.0"
 bytemuck = "1.14.0"
@@ -32,6 +35,7 @@ log = "0.4.20"
 # flate2 = "1.0.27"
 rand = "0.8.5"
 ouroboros = "0.18.3"
+owning_ref = "0.4.1"
 
 [build-dependencies]
 spirv-builder = "0.9"
@@ -42,7 +46,7 @@ spirv-builder = "0.9"
 # ahash = "0.7.7"
 
 [features]
-default = ["gpu", "loader"]
+default = ["gpu", "loader", "mca_converter"]
 gpu = []
 loader = []
 bevy_ecs = []

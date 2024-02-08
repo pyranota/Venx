@@ -1,13 +1,18 @@
+use std::borrow::{Borrow, BorrowMut};
+
 use venx_core::{glam::*, plat::chunk::chunk::Chunk, utils::l2s};
 
 use super::cpu_plat::CpuPlat;
 
-pub type Mesh = [(Vec3, Vec4, Vec3); 1_000]; // Position, Color, Normal
+const MESH_SIZE: usize = 25_000;
+
+pub type Mesh = Box<[(Vec3, Vec4, Vec3); MESH_SIZE]>; // Position, Color, Normal
 
 impl CpuPlat {
-    pub fn to_mesh_greedy(&mut self, chunk: &Chunk) -> Mesh {
-        let mut mesh = [(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); 1_000];
+    pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
+        let mut mesh_box = Box::new([(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); MESH_SIZE]);
         let mut mesh_idx = 0;
+        let mut mesh = &mut *mesh_box;
 
         let scale = l2s(chunk.lod_level) as f32;
         let scale2 = l2s(chunk.lod_level) as f32;
@@ -51,7 +56,7 @@ impl CpuPlat {
                 let block_color = block_color.as_vec3().extend(0.5) / vec4(256., 256., 256., 1.0);
 
                 // TOP
-                self.zero_copy_raw_plat().greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_up,
                     &chunk,
                     block,
@@ -59,14 +64,14 @@ impl CpuPlat {
                     0,
                     2,
                     ivec3(0, 1, 0),
-                    &mut mesh,
+                    mesh,
                     &mut mesh_idx,
                     block_color,
                     cube::TOP,
                 );
 
                 // BOTTOM
-                self.zero_copy_raw_plat().greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_down,
                     &chunk,
                     block,
@@ -74,14 +79,14 @@ impl CpuPlat {
                     0,
                     2,
                     ivec3(0, -1, 0),
-                    &mut mesh,
+                    mesh,
                     &mut mesh_idx,
                     block_color,
                     cube::BOTTOM,
                 );
 
                 // LEFT
-                self.zero_copy_raw_plat().greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_left,
                     &chunk,
                     block,
@@ -89,14 +94,14 @@ impl CpuPlat {
                     2,
                     1,
                     ivec3(-1, 0, 0),
-                    &mut mesh,
+                    mesh,
                     &mut mesh_idx,
                     block_color,
                     cube::LEFT,
                 );
 
                 // RIGHT
-                self.zero_copy_raw_plat().greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_right,
                     &chunk,
                     block,
@@ -104,14 +109,14 @@ impl CpuPlat {
                     2,
                     1,
                     ivec3(1, 0, 0),
-                    &mut mesh,
+                    mesh,
                     &mut mesh_idx,
                     block_color,
                     cube::RIGHT,
                 );
 
                 // FRONT
-                self.zero_copy_raw_plat().greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_front,
                     &chunk,
                     block,
@@ -119,14 +124,14 @@ impl CpuPlat {
                     0,
                     1,
                     ivec3(0, 0, 1),
-                    &mut mesh,
+                    mesh,
                     &mut mesh_idx,
                     block_color,
                     cube::FRONT,
                 );
 
                 // BACK
-                self.zero_copy_raw_plat().greedy_runner(
+                self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_back,
                     &chunk,
                     block,
@@ -134,7 +139,7 @@ impl CpuPlat {
                     0,
                     1,
                     ivec3(0, 0, -1),
-                    &mut mesh,
+                    mesh,
                     &mut mesh_idx,
                     block_color,
                     cube::BACK,
@@ -142,7 +147,7 @@ impl CpuPlat {
             }
         });
 
-        mesh
+        mesh_box
     }
 }
 
