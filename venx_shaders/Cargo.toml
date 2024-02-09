@@ -11,3 +11,9 @@ crate-type = ["dylib", "lib"]
 [dependencies]
 spirv-std = "0.9.0"
 venx_core = {path = "../venx_core", features = ["gpu"]}
+
+#[profile.dev]
+#incremental = true
+
+#[profile.release]
+#incremental = true

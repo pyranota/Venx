@@ -3,22 +3,23 @@ use std::intrinsics::size_of;
 use bytemuck::{cast, cast_ref, cast_slice};
 use easy_compute::{BindGroupBuilder, BufferRW, ComputePassDescriptor};
 use pollster::block_on;
-use venx_core::{
-    plat::chunk::chunk::{any_as_u8_slice, Chunk},
-    utils::Grid,
-};
+use venx_core::{plat::chunk::chunk::Chunk, utils::Grid};
 
 use crate::plat::interfaces::load::LoadInterface;
 
 use super::gpu_plat::GpuPlat;
 
 impl LoadInterface for GpuPlat {
-    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Box<Chunk> {
+    fn load_chunk(&self, position: glam::UVec3, lod_level: usize) -> Box<Chunk> {
         block_on(async {
             // TODO: Make use of push constants for position and lod_level
             let chunk_buffer = self.cs.new_buffer(unsafe {
                 // TODO: Use bytemuck or whatever, just to avoid copying while casting to/from bytes + make it more safe
-                any_as_u8_slice(&Chunk::new(position.to_array(), lod_level, 5))
+                venx_core::plat::chunk::chunk::any_as_u8_slice(&Chunk::new(
+                    position.to_array(),
+                    lod_level,
+                    5,
+                ))
             });
 
             let chunk_bg = BindGroupBuilder::new()
@@ -52,7 +53,7 @@ impl LoadInterface for GpuPlat {
                     );
                 })
                 .await;
-            let output_bytes: Vec<u8> = output_buffer.read_manual().await;
+            let output_bytes: Vec<usize> = output_buffer.read_manual().await;
         });
 
         todo!()

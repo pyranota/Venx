@@ -18,6 +18,7 @@ impl Layer<'_> {
         if entry == 0 {
             return;
         }
+
         // Identify starting point according to given entry
         let mut idx = self.entry(entry as usize);
         // dbg!(idx, entry);
@@ -40,6 +41,7 @@ impl Layer<'_> {
 
             if child_id == 0 {
                 let new_child_id = self.allocate_node();
+
                 self[idx].children[child_index] = new_child_id as u32;
                 idx = new_child_id;
             } else {

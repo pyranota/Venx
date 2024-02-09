@@ -8,10 +8,11 @@ use crate::{
 use super::LayerOpts;
 
 impl RawPlat<'_> {
-    pub fn load_chunk(&self, position: UVec3, lod_level: u8) -> Chunk {
+    pub fn load_chunk(&self, position: UVec3, lod_level: usize) -> Chunk {
         // TODO change
         let chunk_level = 5;
         let mut chunk = Chunk::new(position, lod_level, chunk_level);
+
         let chunk_lod_scaler = l2s(lod_level);
 
         // let real_chunk_size = l2s(chunk.level());
@@ -29,6 +30,7 @@ impl RawPlat<'_> {
                 true
             },
         );
+
         chunk
     }
 }

@@ -50,7 +50,7 @@ pub(crate) enum Plat {
 
 #[derive(Default, Serialize, Deserialize)]
 struct MetaSerDeser {
-    depth: u8,
+    depth: usize,
     position: (f32, f32, f32),
     rotation: (f32, f32, f32),
 }
@@ -146,16 +146,16 @@ impl VenxPlat {
         }
     }
     /// Depth, chunk_level, segment_level
-    pub fn new(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
+    pub fn new(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         let plat = Plat::Cpu(CpuPlat::new_plat(depth, chunk_level, segment_level));
 
         VenxPlat { plat: plat }
     }
     /// tmp
     pub(crate) fn new_with_length(
-        depth: u8,
-        chunk_level: u8,
-        segment_level: u8,
+        depth: usize,
+        chunk_level: usize,
+        segment_level: usize,
         len: usize,
     ) -> Self {
         let plat = Plat::Cpu(CpuPlat::new_plat_with_length(
@@ -168,7 +168,7 @@ impl VenxPlat {
         VenxPlat { plat: plat }
     }
     /// Get depth and verify that its synced
-    pub fn depth(&mut self) -> u8 {
+    pub fn depth(&mut self) -> usize {
         match &mut self.plat {
             Plat::Cpu(cpu_plat) => {
                 let plat = cpu_plat.borrow_raw_plat();
@@ -185,7 +185,7 @@ impl VenxPlat {
         }
     }
     /// Depth, chunk_level, segment_level
-    pub async fn new_turbo(depth: u8, chunk_level: u8, segment_level: u8) -> VenxPlat {
+    pub async fn new_turbo(depth: usize, chunk_level: usize, segment_level: usize) -> VenxPlat {
         VenxPlat {
             plat: Plat::Gpu(GpuPlat::new_plat(depth, chunk_level, segment_level).await),
         }
@@ -214,7 +214,7 @@ impl VenxPlat {
         chunk_range_x: Range<u32>,
         chunk_range_y: Range<u32>,
         chunk_range_z: Range<u32>,
-        lod: Option<u8>,
+        lod: Option<usize>,
     ) -> Vec<(Vec<[f32; 3]>, Vec<[f32; 4]>, Vec<[f32; 3]>)> {
         let chunks_amount = (chunk_range_x.end - chunk_range_x.start)
             * (chunk_range_z.end - chunk_range_z.start)
@@ -249,7 +249,7 @@ impl VenxPlat {
             );
             for z in chunk_range_z.clone() {
                 for y in chunk_range_y.clone() {
-                    // let mut lod_level = (u32::max(z, x) / 128) as u8;
+                    // let mut lod_level = (u32::max(z, x) / 128) as usize;
 
                     // if lod_level > 2 {
                     //     lod_level = 2;
@@ -328,7 +328,7 @@ impl VenxPlat {
 impl PlatInterface for VenxPlat {}
 
 impl LoadInterface for VenxPlat {
-    fn load_chunk(&self, position: glam::UVec3, lod_level: u8) -> Box<Chunk> {
+    fn load_chunk(&self, position: glam::UVec3, lod_level: usize) -> Box<Chunk> {
         match &self.plat {
             Plat::Cpu(plat) => plat.load_chunk(position, lod_level),
             Plat::Gpu(plat) => plat.load_chunk(position, lod_level),

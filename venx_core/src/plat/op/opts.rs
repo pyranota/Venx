@@ -1,8 +1,10 @@
+use core::ops::Range;
+
 use spirv_std::glam::UVec3;
 
-use crate::plat::raw_plat::RawPlat;
+use crate::plat::{layer::layer::Layer, raw_plat::RawPlat};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum EntryOpts {
     All,
     Single(u32),
@@ -10,80 +12,79 @@ pub enum EntryOpts {
 
 pub type LayerOpts = EntryOpts;
 
+#[macro_export]
+macro_rules! match_layer_idx {
+    ($layer_idx:ident, $plat:ident, $entry_opts:ident, $bottom_up:ident, $callback:tt) => {
+        match $layer_idx {
+            0 => opts_layer!($plat, base, $entry_opts, 0, $bottom_up, $callback),
+            1 => opts_layer!($plat, tmp, $entry_opts, 1, $bottom_up, $callback),
+            2 => opts_layer!($plat, schem, $entry_opts, 2, $bottom_up, $callback),
+            3 => opts_layer!($plat, canvas, $entry_opts, 3, $bottom_up, $callback),
+            _ => panic!("You specified the wrong layer"),
+        };
+    };
+}
+
+#[macro_export]
+macro_rules! opts_layer {
+    ($plat:ident, $name:ident, $entry_opts:ident, $idx:expr, $bottom_up:ident, $callback:tt) => {
+        match $entry_opts {
+            EntryOpts::All => {
+                let entries = &$plat.$name.entries;
+                if $bottom_up {
+                    'entries: for entry in 1..(entries.len()) {
+                        // let link = entries[entry];
+                        // if link == 0 {
+                        //     continue 'entries;
+                        // }
+
+                        if $plat.$name.entries[entry as usize] == 0 {
+                            continue 'entries;
+                        } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32)
+                        {
+                            return Some(t);
+                        }
+
+                        // else {
+                        //     return None;
+                        // }
+                    }
+                } else {
+                    'entries: for entry in (1..entries.len()).rev() {
+                        // let link = entries[entry];
+                        // if link == 0 {
+                        //     continue 'entries;
+                        // }
+
+                        if $plat.$name.entries[entry as usize] == 0 {
+                            continue 'entries;
+                        } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32)
+                        {
+                            return Some(t);
+                        }
+                        // else {
+                        //     return None;
+                        // }
+                    }
+                }
+
+                //return None;
+            }
+            EntryOpts::Single(entry) => {
+                if $plat.$name.entries[entry as usize] == 0 {
+                    //return None;
+                } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32) {
+                    return Some(t);
+                }
+                // else {
+                //     return None;
+                // }
+            }
+        }
+    };
+}
+
 impl RawPlat<'_> {
-    /// The way to iterate over all layers and entries in right order and with maximum performance.
-    /// If position is None, no optimizations in entries performed
-    /// Stops if returned Some(()))
-    /// Collback(Plat, LayerIdx, EntryIdx)
-    // #[inline]
-    // pub fn opts_mut<T, C: FnMut(&mut RawPlat, u32, u32) -> Option<T>>(
-    //     &mut self,
-    //     position: Option<UVec3>,
-    //     // TODO: level: u8,
-    //     layer_opts: LayerOpts,
-    //     entry_opts: EntryOpts,
-    //     bottom_up: bool,
-    //     callback: &mut C,
-    // ) -> Option<T> {
-    //     match layer_opts {
-    //         LayerOpts::All => {
-    //             for i in if bottom_up {
-    //                 [0, 1, 2, 3]
-    //             } else {
-    //                 [3, 2, 1, 0]
-    //             } {
-    //                 let opt = self.opts_mut(
-    //                     position,
-    //                     LayerOpts::Single(i),
-    //                     entry_opts,
-    //                     bottom_up,
-    //                     callback,
-    //                 );
-    //                 if opt.is_some() {
-    //                     return opt;
-    //                 }
-    //             }
-
-    //             None
-    //         }
-    //         LayerOpts::Single(layer) => match entry_opts {
-    //             EntryOpts::All => {
-    //                 for i in self[layer as usize]
-    //                     .get_entries_in_region(position)
-    //                     .iter()
-    //                     .skip(1)
-    //                 {
-    //                     // If entry is 0, that means, all following entries are also 0
-    //                     if *i == 0 {
-    //                         return None;
-    //                     }
-    //                     let opt = self.opts_mut(
-    //                         position,
-    //                         LayerOpts::Single(layer),
-    //                         EntryOpts::Single(*i as u32),
-    //                         bottom_up,
-    //                         callback,
-    //                     );
-    //                     if opt.is_some() {
-    //                         return opt;
-    //                     }
-    //                 }
-
-    //                 None
-    //             }
-    //             EntryOpts::Single(entry) => {
-    //                 // If given entry does not exist
-    //                 if self[layer as usize].entries[entry as usize] == 0 {
-    //                     return None;
-    //                 } else if let Some(t) = callback(self, layer, entry) {
-    //                     return Some(t);
-    //                 } else {
-    //                     return None;
-    //                 }
-    //             }
-    //         },
-    //     }
-    // }
     // TODO: remove RawPlat from callback
     /// The way to iterate over all layers and entries in right order and with maximum performance
     /// If position is None, no optimizations in entries performed
@@ -92,98 +93,29 @@ impl RawPlat<'_> {
     /// In that case there are overlaps.
     /// If bottom-up is false, than traversing from cavas to base. Its faster, but more unsafe. In that case dont forget return Some(()) in time.
     #[inline]
-    pub fn opts<T, C: FnMut(&RawPlat, u32, u32) -> Option<T>>(
+    pub fn opts<T, C: FnMut(&RawPlat, (&Layer, u32), u32) -> Option<T>>(
         &self,
         // TODO: remove Opt, and use level for indicating instead.
         position: Option<UVec3>,
-        // TODO: level: u8,
+        // TODO: level: usize,
         layer_opts: LayerOpts,
         entry_opts: EntryOpts,
         bottom_up: bool,
         callback: &mut C,
     ) -> Option<T> {
-        match layer_opts {
-            LayerOpts::All => {
-                for i in if bottom_up {
-                    [0, 1, 2, 3]
-                } else {
-                    [3, 2, 1, 0]
-                } {
-                    let opt = self.opts(
-                        position,
-                        LayerOpts::Single(i),
-                        entry_opts,
-                        bottom_up,
-                        callback,
-                    );
-                    if opt.is_some() {
-                        return opt;
-                    }
-                }
-
-                None
+        if let LayerOpts::Single(layer_idx) = layer_opts {
+            match_layer_idx!(layer_idx, self, entry_opts, bottom_up, callback)
+        } else if bottom_up {
+            for layer_idx in 0..4 {
+                match_layer_idx!(layer_idx, self, entry_opts, bottom_up, callback)
             }
-            LayerOpts::Single(layer) => match entry_opts {
-                EntryOpts::All => {
-                    if !bottom_up {
-                        'entries: for (entry, link) in self[layer as usize]
-                            .get_entries_in_region(position)
-                            .iter()
-                            .enumerate()
-                            .skip(1)
-                            .rev()
-                        {
-                            if *link == 0 {
-                                continue 'entries;
-                            }
-                            let opt = self.opts(
-                                position,
-                                LayerOpts::Single(layer),
-                                EntryOpts::Single(entry as u32),
-                                bottom_up,
-                                callback,
-                            );
-                            if opt.is_some() {
-                                return opt;
-                            }
-                        }
-                    } else {
-                        'entries: for (entry, link) in self[layer as usize]
-                            .get_entries_in_region(position)
-                            .iter()
-                            .enumerate()
-                            .skip(1)
-                        {
-                            if *link == 0 {
-                                continue 'entries;
-                            }
-                            let opt = self.opts(
-                                position,
-                                LayerOpts::Single(layer),
-                                EntryOpts::Single(entry as u32),
-                                bottom_up,
-                                callback,
-                            );
-                            if opt.is_some() {
-                                return opt;
-                            }
-                        }
-                    }
-
-                    None
-                }
-                EntryOpts::Single(entry) => {
-                    // If given entry does not exist
-                    if self[layer as usize].entries[entry as usize] == 0 {
-                        return None;
-                    } else if let Some(t) = callback(self, layer, entry) {
-                        return Some(t);
-                    } else {
-                        return None;
-                    }
-                }
-            },
+        } else {
+            for layer_idx in (0..4).rev() {
+                match_layer_idx!(layer_idx, self, entry_opts, bottom_up, callback)
+            }
         }
+
+        None
     }
 }
 
@@ -224,8 +156,8 @@ mod tests {
             LayerOpts::Single(2),
             EntryOpts::Single(1),
             false,
-            &mut |_plat, layer, entry| {
-                assert!(layer == 2);
+            &mut |_plat, (layer, layer_id), entry| {
+                assert!(layer == &plat[2]);
                 assert!(entry == 1);
                 None as Option<()>
             },
@@ -238,8 +170,8 @@ mod tests {
             LayerOpts::All,
             EntryOpts::Single(1),
             false,
-            &mut |_plat, layer, entry| {
-                seq.push((layer, entry));
+            &mut |_plat, (layer, layer_id), entry| {
+                seq.push((layer_id, entry));
                 None as Option<()>
             },
         );
@@ -253,8 +185,8 @@ mod tests {
             LayerOpts::All,
             EntryOpts::Single(1),
             true,
-            &mut |_plat, layer, entry| {
-                seq.push((layer, entry));
+            &mut |_plat, (layer, layer_id), entry| {
+                seq.push((layer_id, entry));
                 None as Option<()>
             },
         );
@@ -269,8 +201,8 @@ mod tests {
             LayerOpts::Single(1),
             EntryOpts::All,
             false,
-            &mut |_plat, layer, entry| {
-                seq.push((layer, entry));
+            &mut |_plat, (layer, layer_id), entry| {
+                seq.push((layer_id, entry));
                 None as Option<()>
             },
         );
@@ -283,8 +215,8 @@ mod tests {
             LayerOpts::All,
             EntryOpts::All,
             false,
-            &mut |_plat, layer, entry| {
-                seq.push((layer, entry));
+            &mut |_plat, (layer, layer_id), entry| {
+                seq.push((layer_id, entry));
                 None as Option<()>
             },
         );
@@ -297,8 +229,8 @@ mod tests {
             LayerOpts::All,
             EntryOpts::All,
             true,
-            &mut |_plat, layer, entry| {
-                seq.push((layer, entry));
+            &mut |_plat, (layer, layer_id), entry| {
+                seq.push((layer_id, entry));
                 None as Option<()>
             },
         );
@@ -340,8 +272,8 @@ mod tests {
             LayerOpts::All,
             EntryOpts::All,
             false,
-            &mut |_plat, layer, entry| {
-                seq.push((layer, entry));
+            &mut |_plat, (_layer, layer_id), entry| {
+                seq.push((layer_id, entry));
                 None as Option<()>
             },
         );

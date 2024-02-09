@@ -1,7 +1,7 @@
 use bevy::{ecs::event::Event, prelude::*};
 
 pub enum MountPlatEv {
-    New { depth: u8 },
+    New { depth: usize },
 }
 
 pub enum Plat {

@@ -20,3 +20,6 @@ bitcode_support = ["dep:bitcode", "dep:serde"]
 
 [profile.dev]
 incremental = true
+
+[profile.release]
+incremental = true

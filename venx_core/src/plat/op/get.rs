@@ -16,7 +16,7 @@ impl RawPlat<'_> {
     pub fn get_node(
         &self,
         position: UVec3,
-        level: u8,
+        level: usize,
         entry: EntryOpts,
         layer: LayerOpts,
     ) -> Option<(Node_Idx, (Layer_Idx, Entry_Idx))> {
@@ -32,11 +32,9 @@ impl RawPlat<'_> {
             layer,
             entry,
             false,
-            &mut |_plat, layer, entry| {
-                if let Some(node_idx) =
-                    self.get_node_direct(position, level, layer as usize, entry as usize)
-                {
-                    return Some((node_idx, (layer as usize, entry as usize)));
+            &mut |_plat, (layer, layer_id), entry| {
+                if let Some(node_idx) = layer.get_node(position, level, entry as usize) {
+                    return Some((node_idx, (layer_id as usize, entry as usize)));
                 }
                 None
             },
@@ -44,9 +42,9 @@ impl RawPlat<'_> {
         // self.get_node_pathed(position, level, entry, layer, &path)
     }
 
-    fn find_path<'a>(&self, mut position: UVec3, to_level: u8) -> &'a [usize] {
+    fn find_path<'a>(&self, mut position: UVec3, to_level: usize) -> &'a [usize] {
         let mut path = [0; 20];
-        let mut current_level = self.depth as u8;
+        let mut current_level = self.depth as usize;
         let mut size = self.size();
 
         while current_level > to_level {
@@ -66,46 +64,13 @@ impl RawPlat<'_> {
     fn get_node_cached(
         &self,
         mut position: UVec3,
-        level: u8,
+        level: usize,
         layer: usize,
         entry: usize,
     ) -> Option<usize> {
         todo!()
     }
 
-    fn get_node_direct(
-        &self,
-        mut position: UVec3,
-        level: u8,
-        layer: usize,
-        entry: usize,
-    ) -> Option<usize> {
-        let mut current_level = self.depth as u8;
-
-        let mut size = self.size();
-        let mut found_idx = None;
-
-        let mut idx = self[layer].entries[entry];
-
-        while current_level > level {
-            let child_index = Node::get_child_index(position, current_level - 1);
-
-            let child_id = self[layer][idx].children[child_index];
-
-            if child_id != 0 {
-                idx = child_id as usize;
-                found_idx = Some(child_id as usize);
-            } else {
-                return None;
-            }
-            {
-                size /= 2;
-                position %= size;
-                current_level -= 1;
-            }
-        }
-        found_idx
-    }
     // TODO: make it return actual block, but not the entry
     pub fn get_voxel(&self, position: UVec3) -> Option<usize> {
         if let Some((.., (.., entry))) = self.get_node(position, 0, EntryOpts::All, LayerOpts::All)
@@ -117,7 +82,7 @@ impl RawPlat<'_> {
 
     /// Is there a voxel or not at given position
     /// Slowest operation you should avoid it as much as possible
-    pub fn at(&self, position: Vec3, level: u8, entry: EntryOpts, layer: LayerOpts) -> bool {
+    pub fn at(&self, position: Vec3, level: usize, entry: EntryOpts, layer: LayerOpts) -> bool {
         // Small optimization
         // With this we should not calculate children indices each run.
         // let path = self.find_path(position: Vec3, 0);
@@ -127,7 +92,13 @@ impl RawPlat<'_> {
     }
 
     // solid_at -> solid_at_specific. Solid at has no more entry and layer
-    pub fn solid_at(&self, position: Vec3, level: u8, entry: EntryOpts, layer: LayerOpts) -> bool {
+    pub fn solid_at(
+        &self,
+        position: Vec3,
+        level: usize,
+        entry: EntryOpts,
+        layer: LayerOpts,
+    ) -> bool {
         todo!()
     }
 }

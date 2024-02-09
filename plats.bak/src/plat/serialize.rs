@@ -18,7 +18,7 @@ use super::{layer::Layer, level::Level};
 //     {
 //         let mut state = s.serialize_struct("Level", 2)?;
 //         state.serialize_field("holder_head", &self.holder_head)?;
-// let encoded: Vec<u8> = bitcode::encode(&self.nodes).unwrap();
+// let encoded: Vec<usize> = bitcode::encode(&self.nodes).unwrap();
 // state.serialize_field("nodes", &encoded)?;
 //         state.end()
 //     }

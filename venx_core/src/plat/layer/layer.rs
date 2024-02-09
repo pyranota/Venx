@@ -3,7 +3,10 @@ use core::ops::{Index, IndexMut};
 use bytemuck::{Pod, Zeroable};
 use spirv_std::glam::UVec3;
 
-use crate::plat::node::Node;
+use crate::{
+    plat::{node::Node, op::traverse::Props},
+    utils::l2s,
+};
 
 #[derive(PartialEq)]
 pub struct Layer<'a> {
@@ -11,7 +14,7 @@ pub struct Layer<'a> {
     /// Can be edited or not
     pub freezed: bool,
     /// Synced depth with RawPlat
-    pub depth: u8,
+    pub depth: usize,
     // Maybe use custom struct Entry instead of usize?
     pub entries: &'a mut [usize],
     // TODO: move to entries[0]
@@ -34,7 +37,7 @@ pub struct Layer<'a> {
 }
 
 impl<'a> Layer<'a> {
-    pub fn new(depth: u8, nodes: &'a mut [Node], entries: &'a mut [usize]) -> Self {
+    pub fn new(depth: usize, nodes: &'a mut [Node], entries: &'a mut [usize]) -> Self {
         // Set leaf node
         nodes[1].flag = 3;
         nodes[1].children = [1; 8];
@@ -63,6 +66,112 @@ impl<'a> Layer<'a> {
             freezed: false,
         }
     }
+
+    /// Specify `entry` just to forward it to callback's props. It is not used elsewhere
+    /// `from_node_position` also just to forward, you can ignore these arguments
+    /// To speed up set position to None, but it wont display any position information
+    pub fn traverse<F>(
+        &self,
+        entry: u32,
+        from_node_idx: usize,
+        from_node_position: Option<UVec3>,
+        from_level: usize,
+        mut callback: &mut F,
+    ) where
+        F: FnMut(Props) -> bool,
+    {
+        assert_ne!(from_node_idx, 0);
+
+        visit_node(
+            self,
+            from_node_idx,
+            0,
+            from_node_position,
+            from_level,
+            entry,
+            &mut callback,
+        );
+        fn visit_node<F>(
+            layer: &Layer,
+            idx: usize,
+            parent_idx: usize,
+            node_position_opt: Option<UVec3>,
+            level: usize,
+            entry: u32,
+            callback: &mut F,
+        ) where
+            F: FnMut(Props) -> bool,
+        {
+            let node = layer[idx];
+
+            if !callback(Props {
+                position: &node_position_opt,
+                parent_idx: &parent_idx,
+                node: &node,
+                entry,
+                level,
+            }) || level == 0
+            {
+                return;
+            }
+            // WATCH: Careful, might be a bug here. Prev: let size = node.size() / 2;
+            let size = l2s(level) / 2;
+
+            // Iterate over all children. Order cannot be changed.
+            for (i, child_id) in node.children.iter().enumerate() {
+                if *child_id != 0 {
+                    // TODO: Profile, it might be slow to handle position this way
+                    let mut local_node_position_opt: Option<UVec3> = node_position_opt;
+                    if let Some(node_position) = &mut local_node_position_opt {
+                        *node_position += Node::get_child_position(i as u32) * size;
+                    }
+
+                    visit_node(
+                        layer,
+                        *child_id as usize,
+                        idx,
+                        local_node_position_opt,
+                        level - 1,
+                        entry,
+                        callback,
+                    );
+                }
+            }
+        }
+    }
+
+    pub(crate) fn get_node(
+        &self,
+        mut position: UVec3,
+        level: usize,
+        entry: usize,
+    ) -> Option<usize> {
+        let mut current_level = self.depth as usize;
+
+        let mut size = l2s(self.depth);
+        let mut found_idx = None;
+
+        let mut idx = self.entries[entry];
+
+        while current_level > level {
+            let child_index = Node::get_child_index(position, current_level - 1);
+
+            let child_id = self[idx].children[child_index];
+
+            if child_id != 0 {
+                idx = child_id as usize;
+                found_idx = Some(child_id as usize);
+            } else {
+                return None;
+            }
+            {
+                size /= 2;
+                position %= size;
+                current_level -= 1;
+            }
+        }
+        found_idx
+    }
     /// Get ref to root of existing subtree, or create new
     pub fn entry(&mut self, idx: usize) -> usize {
         if self.entries[idx] != 0 {
@@ -72,6 +181,14 @@ impl<'a> Layer<'a> {
             self.entries[idx] = new;
             return new;
         }
+    }
+
+    pub fn test_entry_wrapper(&mut self, idx: usize) -> usize {
+        self.entry(idx)
+    }
+
+    pub fn just_method(&mut self) -> usize {
+        self.depth
     }
     /// Allocate node from holder-pool
     pub fn allocate_node(&mut self) -> usize {

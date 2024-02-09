@@ -12,7 +12,7 @@ pub struct Layer {
 }
 
 impl Layer {
-    pub fn new(name: &str, depth: u8) -> Self {
+    pub fn new(name: &str, depth: usize) -> Self {
         let mut levels = vec![
             Level {
                 nodes: vec![
@@ -64,7 +64,7 @@ impl Plat {
     }
 
     fn verify_layer_limit(&self) -> anyhow::Result<()> {
-        if self.layer_limit < self.layers.len() as u8 {
+        if self.layer_limit < self.layers.len() as usize {
             bail!("You can not have more layers than {}", self.layer_limit);
         }
         Ok(())

@@ -23,7 +23,7 @@ pub enum TrProps<'a> {
         node: Idx,
         children: &'a [u32; 8],
         position: &'a UVec3,
-        level: u8,
+        level: usize,
     },
 }
 
@@ -31,14 +31,14 @@ pub struct TrPropsMut<'a> {
     pub position: &'a UVec3,
     pub parent: &'a mut Branch,
     pub node: &'a mut Branch,
-    pub level: u8,
+    pub level: usize,
 }
 
 pub struct Props<'a> {
     pub position: &'a UVec3,
     pub parent_idx: &'a Idx,
     pub node: &'a Branch,
-    pub level: u8,
+    pub level: usize,
 }
 
 impl Graph {
@@ -72,14 +72,14 @@ impl Graph {
 
     /// Traversing each node and calling given closure with args: Node, Index, Position, level
     /// Return false in closure to drop traversing of subtree
-    // pub fn traverse_from_unpositioned_mut<F>(&self, idx: usize, level: u8, mut f: F)
+    // pub fn traverse_from_unpositioned_mut<F>(&self, idx: usize, level: usize, mut f: F)
     // where
     //     F: FnMut(TrPropsMut) -> bool,
     // {
     //     const POSITION: UVec3 = uvec3(0, 0, 0);
     //     visit_node(self, idx, 0, level, &mut f);
 
-    //     fn visit_node<F>(graph: &Graph, idx: Idx, parent: Idx, level: u8, f: &mut F)
+    //     fn visit_node<F>(graph: &Graph, idx: Idx, parent: Idx, level: usize, f: &mut F)
     //     where
     //         F: FnMut(TrPropsMut) -> bool,
     //     {
@@ -128,14 +128,14 @@ impl Graph {
     // }
     /// Traversing each node and calling given closure with args: Node, Index, Position, level
     /// Return false in closure to drop traversing of subtree
-    pub fn traverse_from_unpositioned<F>(levels: &Vec<GLevel>, idx: usize, level: u8, mut f: F)
+    pub fn traverse_from_unpositioned<F>(levels: &Vec<GLevel>, idx: usize, level: usize, mut f: F)
     where
         F: FnMut(TrProps) -> bool,
     {
         const POSITION: UVec3 = uvec3(0, 0, 0);
         visit_node(levels, idx, 0, level, &mut f);
 
-        fn visit_node<F>(levels: &Vec<GLevel>, idx: Idx, parent: Idx, level: u8, f: &mut F)
+        fn visit_node<F>(levels: &Vec<GLevel>, idx: Idx, parent: Idx, level: usize, f: &mut F)
         where
             F: FnMut(TrProps) -> bool,
         {
@@ -180,7 +180,7 @@ impl Graph {
     }
     /// Traversing each node and calling given closure with args: Node, Index, Position, level
     /// Return false in closure to drop traversing of subtree
-    pub fn traverse_from<F>(&self, idx: usize, node_position: UVec3, level: u8, mut f: F)
+    pub fn traverse_from<F>(&self, idx: usize, node_position: UVec3, level: usize, mut f: F)
     where
         F: FnMut(Props) -> bool,
     {
@@ -191,7 +191,7 @@ impl Graph {
             idx: Idx,
             parent: Idx,
             node_position: UVec3,
-            level: u8,
+            level: usize,
             f: &mut F,
         ) where
             F: FnMut(Props) -> bool,

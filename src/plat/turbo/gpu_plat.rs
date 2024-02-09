@@ -153,7 +153,7 @@ impl GpuPlat {
         // Map and copy
 
         // Metadata
-        let depth: Vec<u8> = raw_plat_depth_stb.read_manual().await;
+        let depth: Vec<usize> = raw_plat_depth_stb.read_manual().await;
         raw_plat_depth_stb.unmap();
 
         // Base layer
@@ -192,7 +192,7 @@ impl GpuPlat {
             (canvas_nodes, canvas_entries),
         )
     }
-    pub async fn new_plat(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
+    pub async fn new_plat(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         // TODO: make more flexible
         let base = (vec![Node::default(); 128], vec![0; 10]);
         let (tmp, schem, canvas) = (base.clone(), base.clone(), base.clone());
@@ -201,9 +201,9 @@ impl GpuPlat {
     }
 
     pub(crate) async fn new_from(
-        depth: u8,
-        chunk_level: u8,
-        segment_level: u8,
+        depth: usize,
+        chunk_level: usize,
+        segment_level: usize,
         base: (Vec<Node>, Vec<usize>),
         tmp: (Vec<Node>, Vec<usize>),
         schem: (Vec<Node>, Vec<usize>),

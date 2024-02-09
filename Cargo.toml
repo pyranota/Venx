@@ -61,5 +61,10 @@ mca_converter = ["dep:fastanvil"]
 [profile.release.build-override]
 opt-level = 3
 codegen-units = 16
+incremental = true
+
 [profile.dev.build-override]
 opt-level = 3
+incremental = true
+
+

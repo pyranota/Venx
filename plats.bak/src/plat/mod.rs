@@ -24,8 +24,8 @@ pub struct Plat {
     pub sbc: SmallBlockCollection,
     /// Maximal depth of plat, can be extended and/or shrinked
     /// 2^depth represents maximum world size
-    pub depth: u8,
-    pub layer_limit: u8,
+    pub depth: usize,
+    pub layer_limit: usize,
     /// Each layer is laying on top of layers behind
     /// To provide cross-game exprience, layers specified
     /// Quick tour of layers and its responsobilities:
@@ -50,7 +50,7 @@ impl Plat {
             for (level_id, level) in layer.levels.iter().enumerate() {
                 // let level_stringified: String =
                 //     ron::ser::to_string_pretty(&level, ron::ser::PrettyConfig::default())?;
-                let encoded: Vec<u8> = bitcode::encode(&level).unwrap();
+                let encoded: Vec<usize> = bitcode::encode(&level).unwrap();
 
                 let mut file = File::create(format!("{}/{}-level", layer_path, level_id))?;
                 file.write_all(&encoded)?;
@@ -67,7 +67,7 @@ impl Plat {
         todo!()
     }
 
-    pub fn new(depth: u8) -> anyhow::Result<Self> {
+    pub fn new(depth: usize) -> anyhow::Result<Self> {
         if depth > 25 {
             bail!("You cant create plat with depth {}. You will never ever need world with size 2^{} ({})", depth, depth, 1 << depth)
         }

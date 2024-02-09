@@ -3,7 +3,7 @@ use glam::{uvec3, UVec3};
 use super::cpu::utils::lvl_to_size::lvl_to_size;
 
 pub struct Segment {
-    pub level: u8,
+    pub level: usize,
     pub mtx: Vec<Vec<Vec<u32>>>,
 }
 pub struct SegmentStatic<const SIZE: usize> {
@@ -14,10 +14,10 @@ impl Segment {
     pub fn size(&self) -> u32 {
         lvl_to_size(self.level)
     }
-    pub fn level(&self) -> u8 {
+    pub fn level(&self) -> usize {
         self.level
     }
-    pub fn new(level: u8) -> Self {
+    pub fn new(level: usize) -> Self {
         let mtx_size = 1 << level;
         Segment {
             mtx: vec![vec![vec![0; mtx_size]; mtx_size]; mtx_size],

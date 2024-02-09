@@ -6,7 +6,7 @@ use crate::plat::normal::mesh::Mesh;
 pub trait LoadInterface {
     /// Position in chunk grid
     /// TODO: Make async
-    fn load_chunk(&self, position: UVec3, lod_level: u8) -> Box<Chunk>;
+    fn load_chunk(&self, position: UVec3, lod_level: usize) -> Box<Chunk>;
     fn load_chunks(&self);
     fn overlay_chunk(&self);
     fn overlay_chunks(&self);

@@ -31,14 +31,14 @@ impl Node {
         UVec3::new(i & 1, (i >> 1) & 1, (i >> 2) & 1)
     }
     /// Convert position of node in 3d space coordinate to internal child branch index
-    pub fn get_child_index(pos: UVec3, level: u8) -> usize {
+    pub fn get_child_index(pos: UVec3, level: usize) -> usize {
         let child_size = 1 << level;
-        let x = if pos[0] < child_size { 0 } else { 1 };
-        let y = if pos[1] < child_size { 0 } else { 1 };
-        let z = if pos[2] < child_size { 0 } else { 1 };
+        let x = if pos.x < child_size { 0 } else { 1 };
+        let y = if pos.y < child_size { 0 } else { 1 };
+        let z = if pos.z < child_size { 0 } else { 1 };
         (x + y * 2 + z * 4) as usize
     }
-    pub fn new(level: u8, flag: i32) -> Self {
+    pub fn new(level: usize, flag: i32) -> Self {
         Self {
             flag,
             children: Default::default(),

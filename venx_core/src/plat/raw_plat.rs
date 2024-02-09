@@ -14,7 +14,7 @@ pub struct RawPlat<'a> {
     // pub sbc: SmallBlockCollection,
     /// Maximal depth of plat, can be extended and/or shrinked
     /// 2^depth represents maximum world size
-    pub depth: u8,
+    pub depth: usize,
 
     /// Each layer is laying on top of layers behind
     /// To provide cross-game exprience, layers specified
@@ -32,9 +32,9 @@ pub struct RawPlat<'a> {
 
 impl<'a> RawPlat<'a> {
     pub fn new(
-        depth: u8,
-        chunk_level: u8,
-        segment_level: u8,
+        depth: usize,
+        chunk_level: usize,
+        segment_level: usize,
         base: (&'a mut [Node], &'a mut [usize]),
         tmp: (&'a mut [Node], &'a mut [usize]),
         schem: (&'a mut [Node], &'a mut [usize]),
@@ -53,10 +53,10 @@ impl<'a> RawPlat<'a> {
     }
     pub fn layers(&'a self) -> [(&'a str, &'a Layer<'a>); 4] {
         [
-            ("base", &self[0]),
-            ("tmp", &self[1]),
-            ("schem", &self[2]),
-            ("canvas", &self[3]),
+            ("base", &self.base),
+            ("tmp", &self.tmp),
+            ("schem", &self.schem),
+            ("canvas", &self.canvas),
         ]
     }
     // #[cfg(test)]
@@ -67,9 +67,9 @@ impl<'a> RawPlat<'a> {
     //     const CANVAS_SIZE: usize,
     //     const ENTRIES_SIZE: usize,
     // >(
-    //     depth: u8,
-    //     chunk_level: u8,
-    //     segment_level: u8,
+    //     depth: usize,
+    //     chunk_level: usize,
+    //     segment_level: usize,
     // ) -> (
     //     (
     //         ([Node; BASE_SIZE], [usize; ENTRIES_SIZE]),
@@ -98,15 +98,15 @@ impl<'a> RawPlat<'a> {
     //         },
     //     )
     // }
-    pub fn depth(&self) -> u8 {
-        self.depth as u8
+    pub fn depth(&self) -> usize {
+        self.depth as usize
     }
 
     pub fn size(&self) -> u32 {
         1 << (self.depth())
     }
 }
-
+// #[cfg(not(feature = "gpu"))]
 impl<'a> Index<usize> for RawPlat<'a> {
     type Output = Layer<'a>;
 
@@ -121,6 +121,7 @@ impl<'a> Index<usize> for RawPlat<'a> {
     }
 }
 
+// #[cfg(not(feature = "gpu"))]
 impl<'a> IndexMut<usize> for RawPlat<'a> {
     fn index_mut(&mut self, index_mut: usize) -> &mut Self::Output {
         match index_mut {

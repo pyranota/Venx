@@ -87,7 +87,7 @@ impl CpuPlat {
     // }
     // }
 
-    pub(crate) fn new_plat(depth: u8, chunk_level: u8, segment_level: u8) -> Self {
+    pub(crate) fn new_plat(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         let base = (
             vec![Node::default(); 100 * (l2s(depth) * l2s(depth)) as usize],
             vec![0; 1_200],
@@ -145,9 +145,9 @@ impl CpuPlat {
     }
     // TMP
     pub(crate) fn new_plat_with_length(
-        depth: u8,
-        chunk_level: u8,
-        segment_level: u8,
+        depth: usize,
+        chunk_level: usize,
+        segment_level: usize,
         len: usize,
     ) -> Self {
         let base = (vec![Node::default(); len], vec![0; 10]);
@@ -157,9 +157,9 @@ impl CpuPlat {
     }
     /// Create an empty CpuPlat
     pub(crate) fn new_from(
-        depth: u8,
-        chunk_level: u8,
-        segment_level: u8,
+        depth: usize,
+        chunk_level: usize,
+        segment_level: usize,
         mut base: (Vec<Node>, Vec<usize>),
         mut tmp: (Vec<Node>, Vec<usize>),
         mut schem: (Vec<Node>, Vec<usize>),
@@ -175,9 +175,9 @@ impl CpuPlat {
     }
     /// Create CpuPlat with already filled layer components
     pub(crate) fn from_existing(
-        depth: u8,
-        chunk_level: u8,
-        segment_level: u8,
+        depth: usize,
+        chunk_level: usize,
+        segment_level: usize,
         base: (Vec<Node>, Vec<usize>),
         tmp: (Vec<Node>, Vec<usize>),
         schem: (Vec<Node>, Vec<usize>),
