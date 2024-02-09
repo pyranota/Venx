@@ -268,6 +268,22 @@ impl VenxPlat {
                                 plat.get_normal_unchecked().borrow_raw_plat().get_node(
                                     venx_core::glam::uvec3(x, y, z) * l2s(5),
                                     5,
+                                    // Water is always on 0 level
+                                    EntryOpts::Single(8),
+                                    LayerOpts::All,
+                                )
+                            {
+                                // dbg!("Found node", entry, layer);
+                                //if entry >= 21 {
+                                // dbg!("Found leave", entry);
+                                return 0;
+                                //}
+                            }
+                            if let Some((_idx, (layer, entry))) =
+                                plat.get_normal_unchecked().borrow_raw_plat().get_node(
+                                    venx_core::glam::uvec3(x, y, z) * l2s(5),
+                                    5,
+                                    // Birch logs is always on 0 level
                                     EntryOpts::Single(19),
                                     LayerOpts::All,
                                 )

@@ -24,7 +24,13 @@ impl Chunk {
         let pos: IVec3 = local_block_position.into();
         let sum = pos + dir;
 
-        if sum.min_element() < 0 || sum.max_element() >= chunk_size as i32 {
+        // TODO: Make better
+        // Now its just saying that there is no one on border if chunk lod_level is above 0
+        // It forces to draw every single border
+        // It should do that only on borders with chunks on lover lod_level
+        if self.lod_level() == 0
+            && (sum.min_element() < 0 || sum.max_element() >= chunk_size as i32)
+        {
             if let Some((.., (.., entry))) = plat.get_node(
                 ((self.position() * real_chunk_size).as_ivec3() + sum).as_uvec3(),
                 self.lod_level(),

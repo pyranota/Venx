@@ -8,35 +8,35 @@ use crate::plat::{interfaces::PlatInterface, normal::cpu_plat::CpuPlat};
 
 pub struct GpuPlat {
     // Meta
-    raw_plat_depth: Buffer,
-    raw_plat_bg: BindGroupVenx,
+    pub(crate) raw_plat_depth: Buffer,
+    pub(crate) raw_plat_bg: BindGroupVenx,
     // raw_plat_freezed: Buffer,
     // Base layer
-    base_nodes: Buffer,
-    base_entries: Buffer,
-    base_bg: BindGroupVenx,
+    pub(crate) base_nodes: Buffer,
+    pub(crate) base_entries: Buffer,
+    pub(crate) base_bg: BindGroupVenx,
 
     // Tmp layer
-    tmp_nodes: Buffer,
-    tmp_entries: Buffer,
-    tmp_bg: BindGroupVenx,
+    pub(crate) tmp_nodes: Buffer,
+    pub(crate) tmp_entries: Buffer,
+    pub(crate) tmp_bg: BindGroupVenx,
 
     // Schem layer
-    schem_nodes: Buffer,
-    schem_entries: Buffer,
-    schem_bg: BindGroupVenx,
+    pub(crate) schem_nodes: Buffer,
+    pub(crate) schem_entries: Buffer,
+    pub(crate) schem_bg: BindGroupVenx,
 
     // Canvas layer
-    canvas_nodes: Buffer,
-    canvas_entries: Buffer,
-    canvas_bg: BindGroupVenx,
+    pub(crate) canvas_nodes: Buffer,
+    pub(crate) canvas_entries: Buffer,
+    pub(crate) canvas_bg: BindGroupVenx,
 
     // Easy-compute stuff
-    cs: ComputeServer,
-    module: ShaderModule,
+    pub(crate) cs: ComputeServer,
+    pub(crate) module: ShaderModule,
 
     // Pipelines
-    load_chunk_pl: ComputePipeline,
+    pub(crate) load_chunk_pl: ComputePipeline,
 }
 
 impl PlatInterface for GpuPlat {}
@@ -214,7 +214,7 @@ impl GpuPlat {
         // Allocate buffers
 
         // Metadata layer
-        let raw_plat_depth = cs.new_buffer(bytemuck::cast_slice(&[depth]));
+        let raw_plat_depth = cs.new_buffer(bytemuck::cast_slice(&[depth as usize]));
         let raw_plat_bg = BindGroupBuilder::new()
             .insert(0, false, raw_plat_depth.as_entire_binding())
             .build(&cs);
@@ -257,7 +257,7 @@ impl GpuPlat {
             .unwrap();
 
         // Load pipelines
-        let load_chunk_pl = PipelineBuilder::new(&module, "main")
+        let load_chunk_pl = PipelineBuilder::new(&module, "load_chunk")
             .for_bindgroup(&base_bg)
             .for_bindgroup(&tmp_bg)
             .for_bindgroup(&schem_bg)

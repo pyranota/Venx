@@ -1,16 +1,23 @@
+use core::mem::size_of;
+
+use bytemuck::{Pod, Zeroable};
+use bytes_cast::BytesCast;
 use spirv_std::glam::{uvec3, UVec3};
 
 use crate::utils::l2s;
 
+#[repr(u8)]
+// #[derive(Clone, Pod, Zeroable)]
 pub enum Chunk {
     // X64+ = stackoverflow
     // X64(ChunkBase<64>),
-    X32(ChunkBase<32>),
-    X16(ChunkBase<16>),
-    X8(ChunkBase<8>),
-    X4(ChunkBase<4>),
+    X32(ChunkBase<32>) = 0,
+    X16(ChunkBase<16>) = 1,
+    X8(ChunkBase<8>) = 2,
+    X4(ChunkBase<4>) = 3,
 }
-
+// #[repr(transparent)]
+// #[derive(Clone, Copy, Pod, Zeroable)]
 pub struct ChunkBase<const SIZE: usize> {
     pub mtx: [[[u32; SIZE]; SIZE]; SIZE], // TODO: flatten chunk
     pub position: UVec3,
@@ -51,6 +58,14 @@ impl<const SIZE: usize> ChunkBase<SIZE> {
             chunk_level,
         }
     }
+}
+pub unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
+    ::core::slice::from_raw_parts((p as *const T) as *const u8, ::core::mem::size_of::<T>())
+}
+
+pub unsafe fn u8_slice_as_any<T: Sized>(p: &[u8]) -> &[T] {
+    // ::core::slice::from_raw_parts((p as *const u8) as *const T, ::core::mem::size_of::<T>())
+    todo!()
 }
 
 impl Chunk {
