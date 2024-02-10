@@ -1,9 +1,6 @@
 /target
 target
-/Cargo.lock
 .vscode
-Cargo.lock
-easy_compute/Cargo.lock
 .venx/expr/*
 saves
 assets/mca/49 
