@@ -99,7 +99,7 @@ impl RawPlat<'_> {
                     layer.traverse(
                         entry,
                         region_node_idx,
-                        Some(UVec3::ZERO),
+                        Some(uvec3(0, 0, 0)),
                         region_level,
                         callback,
                     )

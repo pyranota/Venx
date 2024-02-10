@@ -3,7 +3,7 @@ use std::f32::consts::PI;
 use bevy::{math::vec3, prelude::*, render::render_resource::PrimitiveTopology};
 use bevy_panorbit_camera::PanOrbitCamera;
 use pollster::block_on;
-use venx::plat::VenxPlat;
+use venx::plat::{interfaces::layer::LayerInterface, VenxPlat};
 
 fn main() {
     App::new()
@@ -19,13 +19,18 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Its small-sized plat, its slow to convert it from mca each run, it will be saved
-    let plat = VenxPlat::load("mca_small").unwrap_or_else(|e| {
-        warn!("Plat wasnt found on device, creating new and saving ({e})");
-        // Convert from minecraft map
-        let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1)).unwrap();
-        plat.save("mca_small").unwrap();
-        plat
-    });
+    // let plat = VenxPlat::load("mca_small").unwrap_or_else(|e| {
+    //     warn!("Plat wasnt found on device, creating new and saving ({e})");
+    //     // Convert from minecraft map
+    //     let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1)).unwrap();
+    //     plat.save("mca_small").unwrap();
+    //     plat
+    // });
+
+    let mut plat = VenxPlat::new(6, 5, 5);
+
+    plat.set_voxel(0, (0, 0, 0).into(), 1);
+    plat.set_voxel(0, (0, 1, 0).into(), 1);
 
     let plat = block_on(plat.transfer_to_gpu());
 

@@ -6,7 +6,7 @@ use std::{
 };
 
 use anyhow::bail;
-use bytes_cast::BytesCast;
+
 use easy_compute::{
     include_spirv, BindGroupBuilder, BufferRW, ComputePassDescriptor, ComputeServer,
     PipelineBuilder,
@@ -44,7 +44,7 @@ pub struct VenxPlat {
 
 pub(crate) enum Plat {
     Cpu(CpuPlat),
-    #[cfg(feature = "gpu")]
+    #[cfg(feature = "turbo")]
     Gpu(GpuPlat),
 }
 
@@ -300,23 +300,23 @@ impl VenxPlat {
                         }),
                     );
 
-                    let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
+                    // let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
 
-                    let mesh_idx = counter / capacity;
+                    // let mesh_idx = counter / capacity;
 
-                    'mesh: for (pos, color, normal) in vx_mesh.iter() {
-                        // Each returned mesh is static length, so not all attributes in that mesh are used
-                        // To prevent leaking zero attributes into actual mesh, we check it
-                        // Dont create blocks with color Vec4::ZERO, it will break the mesh
-                        if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
-                            break 'mesh;
-                        }
+                    // 'mesh: for (pos, color, normal) in vx_mesh.iter() {
+                    //     // Each returned mesh is static length, so not all attributes in that mesh are used
+                    //     // To prevent leaking zero attributes into actual mesh, we check it
+                    //     // Dont create blocks with color Vec4::ZERO, it will break the mesh
+                    //     if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
+                    //         break 'mesh;
+                    //     }
 
-                        counter += 1;
-                        meshes[mesh_idx].0.push(pos.to_array());
-                        meshes[mesh_idx].1.push(color.to_array());
-                        meshes[mesh_idx].2.push(normal.to_array());
-                    }
+                    //     counter += 1;
+                    //     meshes[mesh_idx].0.push(pos.to_array());
+                    //     meshes[mesh_idx].1.push(color.to_array());
+                    //     meshes[mesh_idx].2.push(normal.to_array());
+                    // }
                 }
             }
         }

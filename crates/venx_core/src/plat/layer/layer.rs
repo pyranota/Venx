@@ -80,7 +80,7 @@ impl<'a> Layer<'a> {
     ) where
         F: FnMut(Props) -> bool,
     {
-        assert_ne!(from_node_idx, 0);
+        // assert_ne!(from_node_idx, 0);
 
         visit_node(
             self,

@@ -262,6 +262,7 @@ impl GpuPlat {
             .for_bindgroup(&tmp_bg)
             .for_bindgroup(&schem_bg)
             .for_bindgroup(&canvas_bg)
+            .for_bindgroup(&raw_plat_bg)
             .build(&cs);
 
         Self {

@@ -21,6 +21,8 @@ impl ComputeServer {
 
         gpu_limits.max_storage_buffer_binding_size = 1 << 30;
 
+        gpu_limits.max_bind_groups = 6;
+
         // `request_adapter` instantiates the general connection to the GPU
         let adapter = instance
             .request_adapter(&wgpu::RequestAdapterOptions::default())

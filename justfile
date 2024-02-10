@@ -6,7 +6,7 @@ help:
 
 # run specified example
 run EXAMPLE:
-    cargo r --release --package bevy_venx --example {{EXAMPLE}}
+    cargo r --package bevy_venx --example {{EXAMPLE}}
 
 # run demo without release flag
 dev:

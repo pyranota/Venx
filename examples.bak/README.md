@@ -1,1 +1,0 @@
-Venx examples using bevy game engine. To run example: `just run EXAMPLE`

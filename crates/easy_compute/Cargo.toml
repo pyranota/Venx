@@ -6,8 +6,8 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[lib]
-crate-type = ["lib", "cdylib"]
+#[lib]
+#crate-type = ["dylib"]
 
 #[workspace]
 
@@ -25,8 +25,8 @@ wgpu = { version = "0.15.1", features = ["naga", "spirv", "vulkan-portability"] 
 # naga_oil = "0.9.0"
 # simple = { path = "./shaders/simple"}
 
-[build-dependencies]
-spirv-builder = { features = [], version = "0.9.0" }
+#[build-dependencies]
+#spirv-builder = { features = [], version = "0.9.0" }
 
 
 # Compile build-dependencies in release mode with
@@ -40,7 +40,7 @@ spirv-builder = { features = [], version = "0.9.0" }
 
 # Enable incremental by default in release mode.
 [profile.release]
-incremental = true
+#incremental = true
 # HACK(eddyb) this is the default but without explicitly specifying it, Cargo
 # will treat the identical settings in `[profile.release.build-override]` below
 # as different sets of `rustc` flags and will not reuse artifacts between them.
@@ -50,5 +50,5 @@ codegen-units = 256
 # as regular dependencies (including the incremental enabled above).
 [profile.release.build-override]
 opt-level = 3
-incremental = true
+#incremental = true
 codegen-units = 256

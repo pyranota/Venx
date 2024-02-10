@@ -9,20 +9,25 @@ edition = "2021"
 name = "bevy"
 path = "bin/temp_bevy_integration/example.rs"
 
+
+
 [dependencies]
-bevy = { version = "0.10"  } # features = ["dynamic_linking"]
+bevy = { version = "0.10", features = ["dynamic_linking"]  } #  
 bevy_panorbit_camera = "0.5.0"
 pollster = "0.3.0"
 venx = { path = "../" }
 glam = "*"
 downcast-rs = "1.2.0"
 
+# [features]
+# build-binary = ["serde", "csv", "crossbeam", "num_cpus"]
+
 [patch.crates-io]
 # gpu-descriptor = "0.2.3"
 ahash = "0.7.7"
 
 [profile.dev]
-incremental = true
+#incremental = true
 
 [profile.release]
-incremental = true
+#incremental = true

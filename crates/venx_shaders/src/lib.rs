@@ -6,23 +6,23 @@ use spirv_std::{
 };
 use venx_core::plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat};
 
-#[spirv(compute(threads(2)))]
+#[spirv(compute(threads(1)))]
 pub fn load_chunk(
     #[spirv(global_invocation_id)] id: UVec3,
     // TODO: Write macro to improve it
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] meta: &mut [usize],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] base_nodes: &mut [Node],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] base_entries: &mut [usize],
 
-    #[spirv(storage_buffer, descriptor_set = 1, binding = 0)] base_nodes: &mut [Node],
-    #[spirv(storage_buffer, descriptor_set = 1, binding = 1)] base_entries: &mut [usize],
+    #[spirv(storage_buffer, descriptor_set = 1, binding = 0)] tmp_nodes: &mut [Node],
+    #[spirv(storage_buffer, descriptor_set = 1, binding = 1)] tmp_entries: &mut [usize],
 
-    #[spirv(storage_buffer, descriptor_set = 2, binding = 0)] tmp_nodes: &mut [Node],
-    #[spirv(storage_buffer, descriptor_set = 2, binding = 1)] tmp_entries: &mut [usize],
+    #[spirv(storage_buffer, descriptor_set = 2, binding = 0)] schem_nodes: &mut [Node],
+    #[spirv(storage_buffer, descriptor_set = 2, binding = 1)] schem_entries: &mut [usize],
 
-    #[spirv(storage_buffer, descriptor_set = 3, binding = 0)] schem_nodes: &mut [Node],
-    #[spirv(storage_buffer, descriptor_set = 3, binding = 1)] schem_entries: &mut [usize],
+    #[spirv(storage_buffer, descriptor_set = 3, binding = 0)] canvas_nodes: &mut [Node],
+    #[spirv(storage_buffer, descriptor_set = 3, binding = 1)] canvas_entries: &mut [usize],
 
-    #[spirv(storage_buffer, descriptor_set = 4, binding = 0)] canvas_nodes: &mut [Node],
-    #[spirv(storage_buffer, descriptor_set = 4, binding = 1)] canvas_entries: &mut [usize],
+    #[spirv(storage_buffer, descriptor_set = 4, binding = 0)] meta: &mut [usize],
 ) {
     let mut plat = RawPlat {
         position: (0, 0, 0),
@@ -54,7 +54,7 @@ pub fn load_chunk(
         },
     };
 
-    plat.load_chunk((0, 0, 0).into(), 0);
+    plat.load_chunk((0, 2, 0).into(), 0);
 
     // let mut layer = Layer {
     //     freezed: false,
