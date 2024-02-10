@@ -96,13 +96,13 @@ impl RawPlat<'_> {
                     region_level,
                     entry as usize,
                 ) {
-                    layer.traverse(
-                        entry,
-                        region_node_idx,
-                        Some(uvec3(0, 0, 0)),
-                        region_level,
-                        callback,
-                    )
+                    // layer.traverse(
+                    //     entry,
+                    //     region_node_idx,
+                    //     Some(uvec3(0, 0, 0)),
+                    //     region_level,
+                    //     callback,
+                    // )
                 }
 
                 None as Option<()>

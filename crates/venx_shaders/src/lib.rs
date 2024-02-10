@@ -1,4 +1,4 @@
-#![no_std]
+#![cfg_attr(target_arch = "spirv", no_std)]
 
 use spirv_std::{
     glam::{uvec3, UVec3},
