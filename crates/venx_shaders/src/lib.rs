@@ -28,30 +28,32 @@ pub fn load_chunk(
         position: (0, 0, 0),
         rotation: (0, 0, 0),
         depth: meta[0] as usize,
-        base: Layer {
-            freezed: false,
-            depth: meta[0] as usize,
-            entries: base_entries,
-            nodes: base_nodes,
-        },
-        tmp: Layer {
-            freezed: false,
-            depth: meta[0] as usize,
-            entries: tmp_entries,
-            nodes: tmp_nodes,
-        },
-        schem: Layer {
-            freezed: false,
-            depth: meta[0] as usize,
-            entries: schem_entries,
-            nodes: schem_nodes,
-        },
-        canvas: Layer {
-            freezed: false,
-            depth: meta[0] as usize,
-            entries: canvas_entries,
-            nodes: canvas_nodes,
-        },
+        layers: [
+            Layer {
+                freezed: false,
+                depth: meta[0] as usize,
+                entries: base_entries,
+                nodes: base_nodes,
+            },
+            Layer {
+                freezed: false,
+                depth: meta[0] as usize,
+                entries: tmp_entries,
+                nodes: tmp_nodes,
+            },
+            Layer {
+                freezed: false,
+                depth: meta[0] as usize,
+                entries: schem_entries,
+                nodes: schem_nodes,
+            },
+            Layer {
+                freezed: false,
+                depth: meta[0] as usize,
+                entries: canvas_entries,
+                nodes: canvas_nodes,
+            },
+        ],
     };
 
     plat.load_chunk((0, 2, 0).into(), 0);

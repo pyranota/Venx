@@ -3,7 +3,14 @@ use std::marker::PhantomPinned;
 use ouroboros::*;
 
 use venx_core::{
-    plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat},
+    plat::{
+        layer::layer::Layer,
+        node::Node,
+        raw_plat::{
+            LayerIndex::{Base, Canvas, Schem, Tmp},
+            RawPlat,
+        },
+    },
     utils::l2s,
 };
 
@@ -203,30 +210,32 @@ impl CpuPlat {
                     position: (0, 0, 0),
                     rotation: (0, 0, 0),
                     depth,
-                    base: Layer {
-                        freezed: false,
-                        depth,
-                        entries: base_entries,
-                        nodes: base_nodes,
-                    },
-                    tmp: Layer {
-                        freezed: false,
-                        depth,
-                        entries: tmp_entries,
-                        nodes: tmp_nodes,
-                    },
-                    schem: Layer {
-                        freezed: false,
-                        depth,
-                        entries: schem_entries,
-                        nodes: schem_nodes,
-                    },
-                    canvas: Layer {
-                        freezed: false,
-                        depth,
-                        entries: canvas_entries,
-                        nodes: canvas_nodes,
-                    },
+                    layers: [
+                        Layer {
+                            freezed: false,
+                            depth,
+                            entries: base_entries,
+                            nodes: base_nodes,
+                        },
+                        Layer {
+                            freezed: false,
+                            depth,
+                            entries: tmp_entries,
+                            nodes: tmp_nodes,
+                        },
+                        Layer {
+                            freezed: false,
+                            depth,
+                            entries: schem_entries,
+                            nodes: schem_nodes,
+                        },
+                        Layer {
+                            freezed: false,
+                            depth,
+                            entries: canvas_entries,
+                            nodes: canvas_nodes,
+                        },
+                    ],
                 }
             },
             base_nodes: base.0,
@@ -251,10 +260,10 @@ impl CpuPlat {
             plat.depth,
             5,
             6,
-            (plat.base.nodes.to_vec(), plat.base.entries.to_vec()),
-            (plat.tmp.nodes.to_vec(), plat.tmp.entries.to_vec()),
-            (plat.schem.nodes.to_vec(), plat.schem.entries.to_vec()),
-            (plat.canvas.nodes.to_vec(), plat.canvas.entries.to_vec()),
+            (plat[Base].nodes.to_vec(), plat[Base].entries.to_vec()),
+            (plat[Tmp].nodes.to_vec(), plat[Tmp].entries.to_vec()),
+            (plat[Schem].nodes.to_vec(), plat[Schem].entries.to_vec()),
+            (plat[Canvas].nodes.to_vec(), plat[Canvas].entries.to_vec()),
         )
         .await
     }

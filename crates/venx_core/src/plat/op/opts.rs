@@ -1,4 +1,4 @@
-use core::ops::Range;
+use core::ops::{Range, RangeInclusive};
 
 use spirv_std::glam::UVec3;
 
@@ -12,39 +12,50 @@ pub enum EntryOpts {
 
 pub type LayerOpts = EntryOpts;
 
-#[macro_export]
-macro_rules! match_layer_idx {
-    ($layer_idx:ident, $plat:ident, $entry_opts:ident, $bottom_up:ident, $callback:tt) => {
-        match $layer_idx {
-            0 => opts_layer!($plat, base, $entry_opts, 0, $bottom_up, $callback),
-            1 => opts_layer!($plat, tmp, $entry_opts, 1, $bottom_up, $callback),
-            2 => opts_layer!($plat, schem, $entry_opts, 2, $bottom_up, $callback),
-            3 => opts_layer!($plat, canvas, $entry_opts, 3, $bottom_up, $callback),
-            _ => panic!("You specified the wrong layer"),
-        };
-    };
+impl LayerOpts {
+    pub fn to_range(self) -> RangeInclusive<usize> {
+        match self {
+            EntryOpts::All => 0..=3,
+            EntryOpts::Single(layer_idx) => (layer_idx as usize)..=(layer_idx as usize),
+        }
+    }
 }
+
+// #[macro_export]
+// macro_rules! match_layer_idx {
+//     ($layer_idx:ident, $plat:ident, $entry_opts:ident, $bottom_up:ident, $callback:tt) => {
+//         match $layer_idx {
+//             0 => opts_layer!($plat, base, $entry_opts, 0, $bottom_up, $callback),
+//             1 => opts_layer!($plat, tmp, $entry_opts, 1, $bottom_up, $callback),
+//             2 => opts_layer!($plat, schem, $entry_opts, 2, $bottom_up, $callback),
+//             3 => opts_layer!($plat, canvas, $entry_opts, 3, $bottom_up, $callback),
+//             _ => panic!("You specified the wrong layer"),
+//         };
+//     };
+// }
 
 #[macro_export]
 macro_rules! opts_layer {
-    ($plat:ident, $name:ident, $entry_opts:ident, $idx:expr, $bottom_up:ident, $callback:tt) => {
+    ($plat:ident, $layer_idx:ident, $entry_opts:ident, $bottom_up:ident, $callback:tt) => {
         match $entry_opts {
             EntryOpts::All => {
-                let entries = &$plat.$name.entries;
+                let entries = &$plat[$layer_idx].entries;
                 if $bottom_up {
                     'entries: for entry in 1..(entries.len()) {
-                        if $plat.$name.entries[entry as usize] == 0 {
+                        if $plat[$layer_idx].entries[entry as usize] == 0 {
                             continue 'entries;
-                        } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32)
+                        } else if let Some(t) =
+                            $callback($plat, (&$plat[$layer_idx], $layer_idx as u32), entry as u32)
                         {
                             return Some(t);
                         }
                     }
                 } else {
                     'entries: for entry in (1..entries.len()).rev() {
-                        if $plat.$name.entries[entry as usize] == 0 {
+                        if $plat[$layer_idx].entries[entry as usize] == 0 {
                             continue 'entries;
-                        } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32)
+                        } else if let Some(t) =
+                            $callback($plat, (&$plat[$layer_idx], $layer_idx as u32), entry as u32)
                         {
                             return Some(t);
                         }
@@ -52,8 +63,10 @@ macro_rules! opts_layer {
                 }
             }
             EntryOpts::Single(entry) => {
-                if $plat.$name.entries[entry as usize] == 0 {
-                } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32) {
+                if $plat[$layer_idx].entries[entry as usize] == 0 {
+                } else if let Some(t) =
+                    $callback($plat, (&$plat[$layer_idx], $layer_idx as u32), entry as u32)
+                {
                     return Some(t);
                 }
             }
@@ -81,14 +94,17 @@ impl RawPlat<'_> {
         callback: &mut C,
     ) -> Option<T> {
         if let LayerOpts::Single(layer_idx) = layer_opts {
-            match_layer_idx!(layer_idx, self, entry_opts, bottom_up, callback)
+            let layer_idx = layer_idx as usize;
+            opts_layer!(self, layer_idx, entry_opts, bottom_up, callback)
         } else if bottom_up {
             for layer_idx in 0..4 {
-                match_layer_idx!(layer_idx, self, entry_opts, bottom_up, callback)
+                let layer_idx = layer_idx as usize;
+                opts_layer!(self, layer_idx, entry_opts, bottom_up, callback)
             }
         } else {
             for layer_idx in (0..4).rev() {
-                match_layer_idx!(layer_idx, self, entry_opts, bottom_up, callback)
+                let layer_idx = layer_idx as usize;
+                opts_layer!(self, layer_idx, entry_opts, bottom_up, callback)
             }
         }
 

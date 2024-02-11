@@ -104,15 +104,15 @@ impl RawPlat<'_> {
         // TODO: uncom assert
         // assert_ne!(self.depth, region_level);
         // TODO: optimize with level
-        for layer_id in 0..4 {
-            // TODO: Use layer.entries(Position) instead
+        for layer_idx in layer_opts.to_range() {
+            let layer = &self[layer_idx];
             for entry in 1..100 {
-                if let Some(region_node_idx) = self.base.get_node(
+                if let Some(region_node_idx) = layer.get_node(
                     region_position * l2s(region_level),
                     region_level,
                     entry as usize,
                 ) {
-                    self.base.traverse(
+                    layer.traverse(
                         entry,
                         region_node_idx,
                         UVec3::ZERO,
@@ -152,7 +152,10 @@ impl Layer<'_> {
     ) where
         F: FnMut(&mut Props),
     {
-        assert_ne!(from_node_idx, 0);
+        if cfg!(feature = "bitcode_support") {
+            assert_ne!(from_node_idx, 0);
+        }
+
         // Emulate stack with max depth 21 (max graph depth)
         // Why? This code should compile to SpirV
         let mut stack: EStack<(
@@ -239,7 +242,7 @@ impl Layer<'_> {
 mod tests {
     extern crate alloc;
     extern crate std;
-
+    use crate::*;
     use std::println;
 
     use alloc::{borrow::ToOwned, vec};
@@ -250,7 +253,7 @@ mod tests {
             chunk::chunk::Chunk,
             node::{Node, NodeAddr},
             op::{EntryOpts, LayerOpts},
-            raw_plat::RawPlat,
+            raw_plat::{LayerIndex, RawPlat},
         },
         utils::l2s,
     };
@@ -270,14 +273,14 @@ mod tests {
         );
 
         // Base
-        plat.base.set(uvec3(14, 14, 14), 1);
-        plat.base.set(uvec3(0, 0, 0), 2);
-        plat.base.set(uvec3(5, 15, 5), 3);
-        plat.base.set(uvec3(0, 10, 0), 1);
+        plat[Base].set(uvec3(14, 14, 14), 1);
+        plat[Base].set(uvec3(0, 0, 0), 2);
+        plat[Base].set(uvec3(5, 15, 5), 3);
+        plat[Base].set(uvec3(0, 10, 0), 1);
 
         // Canvas
-        plat.canvas.set(uvec3(15, 15, 15), 1);
-        plat.canvas.set(uvec3(0, 0, 0), 2);
+        plat[Canvas].set(uvec3(15, 15, 15), 1);
+        plat[Canvas].set(uvec3(0, 0, 0), 2);
         let mut seq = vec![];
 
         plat.traverse_region(
@@ -323,13 +326,13 @@ mod tests {
             (&mut canvas.0, &mut canvas.1),
         );
         // Base
-        plat.base.set(uvec3(7, 20, 5), 1);
+        plat[Base].set(uvec3(7, 20, 5), 1);
 
         let mut seq = vec![];
 
-        plat.base.traverse(
+        plat[Base].traverse(
             1,
-            plat.base.entries[1],
+            plat[Base].entries[1],
             UVec3::ZERO,
             true,
             plat.depth,
@@ -364,14 +367,14 @@ mod tests {
             (&mut canvas.0, &mut canvas.1),
         );
         // Base
-        plat.base.set(uvec3(14, 14, 14), 1);
-        plat.base.set(uvec3(0, 0, 0), 2);
-        plat.base.set(uvec3(5, 15, 5), 3);
-        plat.base.set(uvec3(0, 10, 0), 1);
+        plat[Base].set(uvec3(14, 14, 14), 1);
+        plat[Base].set(uvec3(0, 0, 0), 2);
+        plat[Base].set(uvec3(5, 15, 5), 3);
+        plat[Base].set(uvec3(0, 10, 0), 1);
 
         // Canvas
-        plat.canvas.set(uvec3(15, 15, 15), 1);
-        plat.canvas.set(uvec3(0, 0, 0), 2);
+        plat[Canvas].set(uvec3(15, 15, 15), 1);
+        plat[Canvas].set(uvec3(0, 0, 0), 2);
 
         let mut seq = vec![];
 
@@ -410,13 +413,13 @@ mod tests {
             (&mut canvas.0, &mut canvas.1),
         );
         // Base
-        plat.base.set(uvec3(7, 20, 5), 1);
+        plat[Base].set(uvec3(7, 20, 5), 1);
 
         let mut seq = vec![];
 
-        plat.base.traverse(
+        plat[Base].traverse(
             1,
-            plat.base.entries[1],
+            plat[Base].entries[1],
             UVec3::ZERO,
             true,
             plat.depth,
@@ -446,17 +449,17 @@ mod tests {
             (&mut canvas.0, &mut canvas.1),
         );
         // Base
-        plat.base.set(uvec3(14, 14, 14), 1);
-        plat.base.set(uvec3(0, 0, 0), 1);
-        plat.base.set(uvec3(5, 15, 5), 1);
-        plat.base.set(uvec3(0, 10, 0), 1);
-        plat.base.set(uvec3(15, 15, 15), 1);
+        plat[Base].set(uvec3(14, 14, 14), 1);
+        plat[Base].set(uvec3(0, 0, 0), 1);
+        plat[Base].set(uvec3(5, 15, 5), 1);
+        plat[Base].set(uvec3(0, 10, 0), 1);
+        plat[Base].set(uvec3(15, 15, 15), 1);
 
         let mut seq = vec![];
 
-        plat.base.traverse(
+        plat[Base].traverse(
             1,
-            plat.base.entries[1],
+            plat[Base].entries[1],
             UVec3::ZERO,
             true,
             plat.depth,

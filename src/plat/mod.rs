@@ -20,7 +20,10 @@ use venx_core::{
         layer::{self, layer::Layer},
         node::Node,
         op::{EntryOpts, LayerOpts},
-        raw_plat::RawPlat,
+        raw_plat::{
+            LayerIndex::{Base, Canvas, Schem, Tmp},
+            RawPlat,
+        },
     },
     utils::{l2s, Grid},
 };
@@ -174,10 +177,10 @@ impl VenxPlat {
                 let plat = cpu_plat.borrow_raw_plat();
                 let plat_depth = plat.depth;
 
-                assert_eq!(plat.base.depth, plat_depth);
-                assert_eq!(plat.tmp.depth, plat_depth);
-                assert_eq!(plat.schem.depth, plat_depth);
-                assert_eq!(plat.canvas.depth, plat_depth);
+                assert_eq!(plat[Base].depth, plat_depth);
+                assert_eq!(plat[Tmp].depth, plat_depth);
+                assert_eq!(plat[Schem].depth, plat_depth);
+                assert_eq!(plat[Canvas].depth, plat_depth);
 
                 plat_depth
             }
