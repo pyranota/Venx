@@ -33,52 +33,29 @@ macro_rules! opts_layer {
                 let entries = &$plat.$name.entries;
                 if $bottom_up {
                     'entries: for entry in 1..(entries.len()) {
-                        // let link = entries[entry];
-                        // if link == 0 {
-                        //     continue 'entries;
-                        // }
-
                         if $plat.$name.entries[entry as usize] == 0 {
                             continue 'entries;
                         } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32)
                         {
                             return Some(t);
                         }
-
-                        // else {
-                        //     return None;
-                        // }
                     }
                 } else {
                     'entries: for entry in (1..entries.len()).rev() {
-                        // let link = entries[entry];
-                        // if link == 0 {
-                        //     continue 'entries;
-                        // }
-
                         if $plat.$name.entries[entry as usize] == 0 {
                             continue 'entries;
                         } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32)
                         {
                             return Some(t);
                         }
-                        // else {
-                        //     return None;
-                        // }
                     }
                 }
-
-                //return None;
             }
             EntryOpts::Single(entry) => {
                 if $plat.$name.entries[entry as usize] == 0 {
-                    //return None;
                 } else if let Some(t) = $callback($plat, (&$plat.$name, $idx), entry as u32) {
                     return Some(t);
                 }
-                // else {
-                //     return None;
-                // }
             }
         }
     };
@@ -92,7 +69,7 @@ impl RawPlat<'_> {
     /// If bottom-up is true, than traversing starting from base layer and goes to canvas
     /// In that case there are overlaps.
     /// If bottom-up is false, than traversing from cavas to base. Its faster, but more unsafe. In that case dont forget return Some(()) in time.
-    #[inline]
+    // #[inline]
     pub fn opts<T, C: FnMut(&RawPlat, (&Layer, u32), u32) -> Option<T>>(
         &self,
         // TODO: remove Opt, and use level for indicating instead.

@@ -6,7 +6,7 @@ use spirv_std::glam::{uvec3, UVec3};
 
 use crate::utils::l2s;
 
-const MAX_SIZE: usize = 32 * 32 * 32;
+const MAX_SIZE: usize = 32;
 
 // #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
@@ -107,6 +107,7 @@ impl Chunk {
             lod_level,
             chunk_level,
         }
+        //todo!()
         // match mtx_size {
         //   //  64 => Chunk::X64(ChunkBase::new(position.into(), lod_level, chunk_level)),
         //                 32 => Chunk::X32(ChunkBase::new(position.into(), lod_level, chunk_level)),
@@ -142,8 +143,8 @@ impl Chunk {
         todo!()
     }
     /// Sets local positioned block
-    pub fn set(&mut self, position: impl Into<UVec3>, block: u32) {
-        let position = position.into();
+    pub fn set(&mut self, position: UVec3, block: u32) {
+        // let position = position.into();
         // chunk!(
         //     self,
         //     mtx,
@@ -239,7 +240,7 @@ mod tests {
     #[test]
     fn test_chunk_iter() {
         let mut chunk = Chunk::new((0, 0, 0), 0, 4);
-        chunk.set((4, 4, 0), 4);
+        chunk.set((4, 4, 0).into(), 4);
 
         chunk.iter(|pos, block| {
             if block != 0 {

@@ -15,7 +15,7 @@ impl RawPlat<'_> {
 
         let chunk_lod_scaler = l2s(lod_level);
 
-        // let real_chunk_size = l2s(chunk.level());
+        // // let real_chunk_size = l2s(chunk.level());
 
         self.traverse_region(
             position,
@@ -23,11 +23,11 @@ impl RawPlat<'_> {
             super::EntryOpts::All,
             LayerOpts::All,
             &mut |props| {
+                let props = props;
                 if props.level == lod_level {
-                    chunk.set(props.position.unwrap() / chunk_lod_scaler, props.entry);
-                    return false;
+                    chunk.set(*props.position / chunk_lod_scaler, props.entry);
+                    props.drop_tree = true;
                 }
-                true
             },
         );
 
