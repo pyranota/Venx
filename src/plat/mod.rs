@@ -1,4 +1,5 @@
 use std::{
+    borrow::Borrow,
     fs::{create_dir_all, read, read_to_string, File},
     io::{Read, Write},
     ops::Range,
@@ -380,7 +381,10 @@ impl LayerInterface for VenxPlat {
     }
 
     fn get_voxel(&self, position: glam::UVec3) -> Option<usize> {
-        todo!()
+        match &self.plat {
+            Plat::Cpu(plat) => plat.get_voxel(position),
+            Plat::Gpu(plat) => todo!(),
+        }
     }
 }
 

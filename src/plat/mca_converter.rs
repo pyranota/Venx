@@ -2,7 +2,7 @@ use anyhow::{bail, Result};
 use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
 use pollster::block_on;
-use std::{collections::HashMap, fs, ops::Range, path::PathBuf};
+use std::{collections::HashMap, fs, ops::Range, path::PathBuf, usize};
 use venx_core::utils::s2l;
 
 use super::{interfaces::layer::LayerInterface, Plat, VenxPlat};
@@ -104,6 +104,63 @@ impl VenxPlat {
             //     segment_level,
             // );
             // dbg!("Merged");
+        }
+
+        //   println!("{:?}", hashmap);
+        //   panic!();
+
+        Ok(plat)
+    }
+    pub fn load_mca_untyped<'a>(
+        dir_path: &'a str,
+        region_range: (Range<RegionX>, Range<RegionZ>),
+    ) -> Result<Self> {
+        let rr = region_range.clone();
+        let max_width = i32::max(rr.0.end - rr.0.start, rr.1.end - rr.1.start) * 512;
+
+        let rgs = from_dir(PathBuf::from(dir_path), region_range)?;
+        let mut plat = VenxPlat::new(s2l(max_width as u32), 5, 9);
+
+        let mut last_id = 1;
+        let mut register = HashMap::new();
+
+        for (rg_pos, mut region) in rgs {
+            for ch_x in 0..32 {
+                for ch_z in 0..32 {
+                    if let Ok(Some(data)) = region.read_chunk(ch_x, ch_z) {
+                        let complete_chunk = complete::Chunk::from_bytes(&data).unwrap();
+
+                        for x in 0..16 {
+                            for y in 0..380 {
+                                for z in 0..16 {
+                                    if let Some(block) = complete_chunk.block(x, y - 60, z) {
+                                        if block.name() != "minecraft:air" {
+                                            let block_id;
+
+                                            if let Some(id) = register.get(block.name()) {
+                                                block_id = *id;
+                                            } else {
+                                                register.insert(block.name().to_owned(), last_id);
+                                                block_id = last_id;
+                                                last_id += 1;
+                                            }
+
+                                            plat.set_voxel(
+                                                0,
+                                                uvec3(x as u32, y as u32, z as u32)
+                                                    + uvec3(ch_x as u32, 0, ch_z as u32) * 16
+                                                    + uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32)
+                                                        * 512,
+                                                block_id,
+                                            );
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         //   println!("{:?}", hashmap);

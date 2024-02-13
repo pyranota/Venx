@@ -11,6 +11,9 @@ members = [
     "crates/easy_compute/shaders/*"
     ]
 
+[[bench]]
+name = "compare_get_voxel"
+harness = false
 
 #[lib]
 #crate-type = ["dylib"]
@@ -42,6 +45,9 @@ bytemuck_derive = { version = "1.5.0", optional = true}
 
 [build-dependencies]
 spirv-builder = { version = "0.9" }
+
+[dev-dependencies]
+criterion = { version = "0.4", features = ["html_reports"] }
 
 [patch.crates-io]
 # gpu-descriptor = "0.2.3"
