@@ -140,6 +140,20 @@ impl<'a> Layer<'a> {
             panic!("You are out of holder-nodes");
         }
     }
+    /// Allocate node from pool from given node
+    pub fn allocate_node_from(&mut self, node: Node) -> usize {
+        if self.entries[0] != 0 {
+            // Taking the head of the chain to use
+            let return_idx = self.entries[0];
+            // Changing head to next node in empty chain
+            self.entries[0] = self[return_idx].children[0] as usize;
+            // Clear branch
+            self[return_idx] = node;
+            return_idx
+        } else {
+            panic!("You are out of holder-nodes");
+        }
+    }
     /// Returns slice of sorted by priority voxel types existing in specified region
     /// If position is None, than it returns all entries in layer
     pub fn get_entries_in_region(&'a self, position: Option<UVec3>) -> &'a [usize] {

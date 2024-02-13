@@ -14,49 +14,57 @@ impl Layer<'_> {
     /// ty 0 is reserved for air and will remove voxel if there is any
     /// you can add any ty if there is no already created entry for it
     /// It will create one
-    pub fn set(&mut self, mut pos: UVec3, entry: u32) {
-        if entry == 0 {
+    pub fn set(&mut self, mut position: UVec3, voxel_id: u32) {
+        if voxel_id == 0 {
             return;
         }
 
-        // Identify starting point according to given entry
-        let mut idx = self.entry(entry as usize);
-        // dbg!(idx, entry);
+        // Root is always on 2 idx;
+        let mut idx = 2;
 
         let mut size = l2s(self.depth);
 
         let mut level = self.depth;
 
         // If given position is out of bound
-        if pos.y >= size || pos.x >= size || pos.z >= size {
+        if position.max_element() >= size {
             return;
         }
 
         while level > 1 {
-            let child_index = Node::get_child_index(pos, level - 1);
+            let child_index = Node::get_child_index(position, level - 1);
 
-            let branch = self[idx];
+            idx = Node::set_child(self, idx, voxel_id, child_index, level, 4);
+            // let node = &mut self[idx];
+            // let child_id = node[child_index];
 
-            let child_id = branch.children[child_index];
+            // if child_id == 0 {
+            //     let new_child_id = self.allocate_node();
+            //     // TODO: Remove hardcode
+            //     // 16x16x16 voxel region, where 8 different voxel-id's in avg.
+            //     if level == 4 {
+            //         let fork_id = self.allocate_node();
+            //         let mut fork = self[fork_id];
+            //         fork.flag = -5;
+            //         fork.children[0] = voxel_id;
+            //         fork.children[1] = new_child_id as u32;
+            //     }
 
-            if child_id == 0 {
-                let new_child_id = self.allocate_node();
-
-                self[idx].children[child_index] = new_child_id as u32;
-                idx = new_child_id;
-            } else {
-                idx = self[idx].children[child_index] as usize;
-            }
+            //     self[idx].children[child_index] = new_child_id as u32;
+            //     idx = new_child_id;
+            // } else {
+            //     idx = self[idx].children[child_index] as usize;
+            // }
 
             {
                 size /= 2;
                 level -= 1;
-                pos.x %= size;
-                pos.y %= size;
-                pos.z %= size;
+                position.x %= size;
+                position.y %= size;
+                position.z %= size;
             }
         }
-        let child_index = Node::get_child_index(pos, 0);
+        let child_index = Node::get_child_index(position, 0);
         self[idx].children[child_index] = 1;
     }
 }
