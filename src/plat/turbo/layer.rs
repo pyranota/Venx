@@ -1,4 +1,4 @@
-use venx_core::utils::Grid;
+use venx_core::{plat::op::get::GetNodeResult, utils::Grid};
 
 use crate::plat::interfaces::layer::LayerInterface;
 
@@ -22,7 +22,7 @@ impl LayerInterface for GpuPlat {
         todo!()
     }
 
-    fn get_voxel(&self, position: glam::UVec3) -> Option<usize> {
+    fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
         todo!()
     }
 }

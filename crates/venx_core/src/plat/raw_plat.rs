@@ -40,6 +40,7 @@ impl<'a> RawPlat<'a> {
         schem: (&'a mut [Node], &'a mut [usize]),
         canvas: (&'a mut [Node], &'a mut [usize]),
     ) -> Self {
+        assert!(depth > 4);
         RawPlat {
             //controller: Controller::new(depth, chunk_level, segment_level),
             position: (0, 0, 0),

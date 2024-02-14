@@ -1,4 +1,4 @@
-mod get;
+pub mod get;
 pub mod load;
 pub mod opts;
 mod set;

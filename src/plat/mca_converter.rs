@@ -1,6 +1,7 @@
 use anyhow::{bail, Result};
 use fastanvil::{complete, Chunk, Region};
 use glam::{uvec3, Vec2, Vec3};
+use log::info;
 use pollster::block_on;
 use std::{collections::HashMap, fs, ops::Range, path::PathBuf, usize};
 use venx_core::utils::s2l;
@@ -162,6 +163,8 @@ impl VenxPlat {
                 }
             }
         }
+
+        info!("Amount of voxel_id's : {}", register.len());
 
         //   println!("{:?}", hashmap);
         //   panic!();

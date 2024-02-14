@@ -1,7 +1,7 @@
 use std::sync::Arc;
 
 use glam::UVec3;
-use venx_core::utils::Grid;
+use venx_core::{plat::op::get::GetNodeResult, utils::Grid};
 
 pub trait LayerInterface {
     // fn new_image(&mut self, name: &str) -> usize;
@@ -17,7 +17,7 @@ pub trait LayerInterface {
     fn set_voxel(&mut self, layer: usize, position: UVec3, ty: usize);
     fn compress(&mut self, layer: usize);
 
-    fn get_voxel(&self, position: UVec3) -> Option<usize>;
+    fn get_voxel(&self, position: UVec3) -> Option<GetNodeResult>;
     // fn get_image(&self, handle: usize) -> &Image;
     // fn get_image_mut(&mut self, handle: usize) -> &mut Image;
 

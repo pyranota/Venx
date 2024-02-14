@@ -20,7 +20,7 @@ use venx_core::{
         chunk::chunk::Chunk,
         layer::{self, layer::Layer},
         node::Node,
-        op::{EntryOpts, LayerOpts},
+        op::{get::GetNodeResult, EntryOpts, LayerOpts},
         raw_plat::{
             LayerIndex::{Base, Canvas, Schem, Tmp},
             RawPlat,
@@ -268,30 +268,34 @@ impl VenxPlat {
                         lod.unwrap_or_else(|| {
                             // TODO: Move all these stuff in plat.load_chunk()
                             // 14, 20 ,22
-                            if let Some((_idx, (layer, entry))) =
-                                plat.get_normal_unchecked().borrow_raw_plat().get_node(
-                                    venx_core::glam::uvec3(x, y, z) * l2s(5),
-                                    5,
-                                    // Water is always on 0 level
-                                    EntryOpts::Single(8),
-                                    LayerOpts::All,
-                                )
-                            {
+                            if let GetNodeResult {
+                                voxel_id,
+                                layer_id,
+                                node_idx,
+                            } = plat.get_normal_unchecked().borrow_raw_plat().get_node(
+                                venx_core::glam::uvec3(x, y, z) * l2s(5),
+                                5,
+                                // Water is always on 0 level
+                                // EntryOpts::Single(8),
+                                // LayerOpts::All,
+                            ) {
                                 // dbg!("Found node", entry, layer);
                                 //if entry >= 21 {
                                 // dbg!("Found leave", entry);
                                 return 0;
                                 //}
                             }
-                            if let Some((_idx, (layer, entry))) =
-                                plat.get_normal_unchecked().borrow_raw_plat().get_node(
-                                    venx_core::glam::uvec3(x, y, z) * l2s(5),
-                                    5,
-                                    // Birch logs is always on 0 level
-                                    EntryOpts::Single(19),
-                                    LayerOpts::All,
-                                )
-                            {
+                            if let GetNodeResult {
+                                voxel_id,
+                                layer_id,
+                                node_idx,
+                            } = plat.get_normal_unchecked().borrow_raw_plat().get_node(
+                                venx_core::glam::uvec3(x, y, z) * l2s(5),
+                                5,
+                                // Birch logs is always on 0 level
+                                // EntryOpts::Single(19),
+                                // LayerOpts::All,
+                            ) {
                                 // dbg!("Found node", entry, layer);
                                 //if entry >= 21 {
                                 // dbg!("Found leave", entry);
@@ -380,7 +384,7 @@ impl LayerInterface for VenxPlat {
         todo!()
     }
 
-    fn get_voxel(&self, position: glam::UVec3) -> Option<usize> {
+    fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
         match &self.plat {
             Plat::Cpu(plat) => plat.get_voxel(position),
             Plat::Gpu(plat) => todo!(),

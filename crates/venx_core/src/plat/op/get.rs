@@ -1,6 +1,10 @@
 use spirv_std::glam::{UVec3, Vec3};
 
-use crate::plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat};
+use crate::plat::{
+    layer::layer::Layer,
+    node::{Node, NodeAddr},
+    raw_plat::RawPlat,
+};
 
 use super::{EntryOpts, LayerOpts};
 
@@ -8,18 +12,48 @@ type Entry_Idx = usize;
 type Layer_Idx = Entry_Idx;
 type Node_Idx = Layer_Idx;
 
+#[derive(PartialEq, Eq, Hash)]
+pub struct GetNodeResult {
+    /// If 0 its none
+    pub voxel_id: usize,
+    pub layer_id: usize,
+    pub node_idx: usize,
+}
+
+impl GetNodeResult {
+    #[inline]
+    pub fn is_some(&self) -> bool {
+        self.node_idx != 0 || self.voxel_id != 0
+    }
+    #[inline]
+    pub fn is_none(&self) -> bool {
+        !self.is_some()
+    }
+    #[allow(non_snake_case)]
+    pub fn Some(voxel_id: usize, layer_id: usize, node_idx: usize) -> Self {
+        Self {
+            voxel_id,
+            layer_id,
+            node_idx,
+        }
+    }
+
+    #[allow(non_snake_case)]
+    pub fn None() -> Self {
+        Self {
+            voxel_id: 0,
+            layer_id: 0,
+            node_idx: 0,
+        }
+    }
+}
+
 impl RawPlat<'_> {
     /// If Entry is Entry::All, than it will return the most valuable (by voxel-collection) block
     /// Same goes for Layer, if it is Layer::All, it will return the most higher layer
     /// Return (Node_Idx, (Layer, Entry))
     ///  position is global!
-    pub fn get_node(
-        &self,
-        position: UVec3,
-        level: usize,
-        entry: EntryOpts,
-        layer: LayerOpts,
-    ) -> Option<(Node_Idx, (Layer_Idx, Entry_Idx))> {
+    pub fn get_node(&self, position: UVec3, level: usize) -> GetNodeResult {
         // TODO make binary (take u64 and divide by 3 bits)
         // Small optimization
         // With this we should not calculate children indices each run.
@@ -27,18 +61,30 @@ impl RawPlat<'_> {
         //todo!()
         //let path = [];
 
-        self.opts(
-            Some(position),
-            layer,
-            entry,
-            false,
-            &mut |_plat, (layer, layer_id), entry| {
-                if let Some(node_idx) = layer.get_node(position, level, entry as usize) {
-                    return Some((node_idx, (layer_id as usize, entry as usize)));
-                }
-                None
-            },
-        )
+        let addr = NodeAddr::from_position(position, self.depth, level);
+
+        for layer_idx in (0..4).rev() {
+            let res = self[layer_idx].get_node_with_addr(&addr, level, None);
+
+            if res.is_some() {
+                return res;
+            }
+        }
+
+        GetNodeResult::None()
+
+        // self.opts(
+        //     Some(position),
+        //     layer,
+        //     entry,
+        //     false,
+        //     &mut |_plat, (layer, layer_id), entry| {
+        //         if let Some(node_idx) = layer.get_node(position, level, entry as usize) {
+        //             return Some((node_idx, (layer_id as usize, entry as usize)));
+        //         }
+        //         None
+        //     },
+        // )
         // self.get_node_pathed(position, level, entry, layer, &path)
     }
 
@@ -72,12 +118,8 @@ impl RawPlat<'_> {
     }
 
     // TODO: make it return actual block, but not the entry
-    pub fn get_voxel(&self, position: UVec3) -> Option<usize> {
-        if let Some((.., (.., entry))) = self.get_node(position, 0, EntryOpts::All, LayerOpts::All)
-        {
-            return Some(entry);
-        }
-        None
+    pub fn get_voxel(&self, position: UVec3) -> GetNodeResult {
+        self.get_node(position, 0)
     }
 
     /// Is there a voxel or not at given position
@@ -125,7 +167,35 @@ mod tests {
         let mut base = ([Node::default(); 128], [0; 10]);
         let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
         let mut plat = RawPlat::new(
+            5,
             3,
+            3,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
+        plat[1].set(uvec3(0, 1, 0), 1);
+        plat[1].set(uvec3(0, 0, 0), 2);
+        plat[1].set(uvec3(4, 4, 1), 3);
+        plat[1].set(uvec3(1, 6, 5), 666);
+
+        // let nodes = unsafe { &*plat[1].nodes };
+        // std::println!("{:?}", plat[1]);
+        // std::println!("{:?}", nodes);
+
+        assert!(plat.get_node(uvec3(0, 1, 0), 0,).voxel_id == 1);
+        assert!(plat.get_node(uvec3(0, 0, 0), 0,).voxel_id == 2);
+        assert!(plat.get_node(uvec3(1, 6, 5), 0,).voxel_id == 666);
+        assert!(plat.get_node(uvec3(4, 4, 1), 0,).voxel_id == 3);
+    }
+
+    #[test]
+    fn get_node_above_fork_level() {
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            7,
             3,
             3,
             (&mut base.0, &mut base.1),
@@ -137,71 +207,106 @@ mod tests {
         plat[1].set(uvec3(0, 0, 0), 2);
         plat[1].set(uvec3(4, 4, 1), 3);
         plat[1].set(uvec3(1, 6, 5), 4);
+        plat[1].set(uvec3(9, 1, 3), 1);
+        plat[1].set(uvec3(15, 0, 14), 2);
+        plat[1].set(uvec3(8, 4, 18), 3);
+        plat[1].set(uvec3(12, 6, 20), 4);
 
         // let nodes = unsafe { &*plat[1].nodes };
         // std::println!("{:?}", plat[1]);
         // std::println!("{:?}", nodes);
 
-        assert!(plat
-            .get_node(
-                uvec3(0, 1, 0),
-                0,
-                EntryOpts::Single(1),
-                LayerOpts::Single(1),
-            )
-            .is_some());
+        assert!(plat.get_node(uvec3(0, 0, 0), 5,).is_some());
+        assert!(plat.get_node(uvec3(0, 0, 0), 6,).is_some());
 
-        assert!(plat
-            .get_node(
-                uvec3(0, 0, 0),
-                0,
-                EntryOpts::Single(1),
-                LayerOpts::Single(1),
-            )
-            .is_none());
+        assert!(plat.get_node(uvec3(32, 32, 32), 5,).is_none());
+        assert!(plat.get_node(uvec3(64, 64, 64), 5,).is_none());
+    }
+    #[test]
+    fn get_node_positions_only() {
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            5,
+            3,
+            3,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
+        plat[1].set(uvec3(0, 1, 0), 1);
+        plat[1].set(uvec3(0, 0, 0), 2);
+        plat[1].set(uvec3(4, 4, 1), 3);
+        plat[1].set(uvec3(1, 6, 5), 4);
+        plat[1].set(uvec3(9, 1, 3), 1);
+        plat[1].set(uvec3(15, 0, 14), 2);
+        plat[1].set(uvec3(8, 4, 18), 3);
+        plat[1].set(uvec3(12, 6, 20), 4);
 
-        assert!(plat
-            .get_node(
-                uvec3(0, 0, 0),
-                0,
-                EntryOpts::Single(2),
-                LayerOpts::Single(1),
-            )
-            .is_some());
+        // let nodes = unsafe { &*plat[1].nodes };
+        // std::println!("{:?}", plat[1]);
+        // std::println!("{:?}", nodes);
 
-        assert!(plat
-            .get_node(
-                uvec3(0, 0, 0),
-                0,
-                EntryOpts::Single(1),
-                LayerOpts::Single(0),
-            )
-            .is_none());
-        assert!(plat
-            .get_node(
-                uvec3(1, 2, 3),
-                0,
-                EntryOpts::Single(1),
-                LayerOpts::Single(2),
-            )
-            .is_none());
+        assert!(plat.get_node(uvec3(0, 1, 0), 0,).is_some());
 
-        assert!(plat
-            .get_node(
-                uvec3(4, 4, 1),
-                0,
-                EntryOpts::Single(3),
-                LayerOpts::Single(1),
-            )
-            .is_some());
+        assert!(plat.get_node(uvec3(0, 0, 0), 0,).is_some());
+
+        assert!(plat.get_node(uvec3(1, 6, 5), 0,).is_some());
+
+        assert!(plat.get_node(uvec3(9, 1, 3), 0,).is_some());
+        assert!(plat.get_node(uvec3(1, 2, 3), 0,).is_none());
+
+        assert!(plat.get_node(uvec3(4, 4, 1), 0,).is_some());
+        assert!(plat.get_node(uvec3(12, 6, 20), 0,).is_some());
+    }
+
+    #[test]
+    fn get_node_check_non_existing() {
+        let mut base = ([Node::default(); 128], [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            5,
+            3,
+            3,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        );
+        plat[1].set(uvec3(0, 1, 0), 1);
+        plat[1].set(uvec3(0, 0, 0), 2);
+        plat[1].set(uvec3(4, 4, 1), 3);
+        plat[1].set(uvec3(1, 6, 5), 4);
+        plat[1].set(uvec3(9, 1, 3), 1);
+        plat[1].set(uvec3(15, 0, 14), 2);
+        plat[1].set(uvec3(8, 4, 18), 3);
+        plat[1].set(uvec3(12, 6, 20), 4);
+
+        // let nodes = unsafe { &*plat[1].nodes };
+        // std::println!("{:?}", plat[1]);
+        // std::println!("{:?}", nodes);
+
+        assert!(plat.get_node(uvec3(1, 1, 0), 0,).is_none());
+
+        assert!(plat.get_node(uvec3(14, 0, 0), 0,).is_none());
+
+        assert!(plat.get_node(uvec3(11, 16, 15), 0,).is_none());
+
+        assert!(plat.get_node(uvec3(19, 2, 30), 0,).is_none());
+        assert!(plat.get_node(uvec3(11, 22, 31), 0,).is_none());
+
+        assert!(plat.get_node(uvec3(14, 4, 21), 0,).is_none());
+        assert!(plat.get_node(uvec3(2, 2, 2), 0,).is_none());
     }
 
     #[test]
     fn get_voxel() {
+        use crate::*;
         let mut base = ([Node::default(); 128], [0; 10]);
         let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
         let mut plat = RawPlat::new(
-            3,
+            5,
             3,
             3,
             (&mut base.0, &mut base.1),
@@ -214,21 +319,18 @@ mod tests {
         plat[0].set(uvec3(0, 1, 0), 1);
         plat[0].set(uvec3(0, 2, 0), 1);
 
-        // Overlapping (Canvas)
+        // Overlapping (tmp)
         plat[1].set(uvec3(0, 0, 0), 1);
         plat[1].set(uvec3(0, 1, 0), 1);
         plat[1].set(uvec3(0, 2, 0), 1);
 
-        // Overlapping above canvas
-        plat[1].set(uvec3(0, 0, 0), 2);
-        plat[1].set(uvec3(0, 1, 0), 2);
-        plat[1].set(uvec3(0, 2, 0), 2);
+        // Overlapping (Canvas)
+        plat[Canvas].set(uvec3(0, 0, 0), 2);
+        plat[Canvas].set(uvec3(0, 1, 0), 2);
+        plat[Canvas].set(uvec3(0, 2, 0), 2);
 
-        // Even more
-        plat[1].set(uvec3(0, 1, 0), 3);
-
-        assert_eq!(plat.get_voxel((0, 0, 0).into()).unwrap(), 2);
-        assert_eq!(plat.get_voxel((0, 1, 0).into()).unwrap(), 3);
-        assert_eq!(plat.get_voxel((0, 2, 0).into()).unwrap(), 2);
+        assert_eq!(plat.get_voxel((0, 0, 0).into()).voxel_id, 2);
+        assert_eq!(plat.get_voxel((0, 1, 0).into()).voxel_id, 2);
+        assert_eq!(plat.get_voxel((0, 2, 0).into()).voxel_id, 2);
     }
 }

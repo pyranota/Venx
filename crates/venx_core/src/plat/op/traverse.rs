@@ -107,20 +107,21 @@ impl RawPlat<'_> {
         for layer_idx in layer_opts.to_range() {
             let layer = &self[layer_idx];
             for entry in 1..100 {
-                if let Some(region_node_idx) = layer.get_node(
-                    region_position * l2s(region_level),
-                    region_level,
-                    entry as usize,
-                ) {
-                    layer.traverse(
-                        entry,
-                        region_node_idx,
-                        UVec3::ZERO,
-                        true,
-                        region_level,
-                        callback,
-                    )
-                }
+                todo!()
+                // if let Some(region_node_idx) = layer.get_node(
+                //     region_position * l2s(region_level),
+                //     region_level,
+                //     Some(entry as usize),
+                // ) {
+                //     layer.traverse(
+                //         entry,
+                //         region_node_idx,
+                //         UVec3::ZERO,
+                //         true,
+                //         region_level,
+                //         callback,
+                //     )
+                // }
             }
         }
 
@@ -343,7 +344,7 @@ mod tests {
 
         // println!("{seq:?}");
 
-        let addr = NodeAddr::from_position(uvec3(7, 20, 5), 5);
+        //let addr = NodeAddr::from_position(uvec3(7, 20, 5), 5);
 
         // // let mut right
         // for level in (0..=5).rev() {

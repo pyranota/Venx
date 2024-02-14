@@ -4,7 +4,12 @@ use spirv_std::{
     glam::{uvec3, UVec3},
     spirv,
 };
-use venx_core::plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat};
+use venx_core::plat::{
+    layer::layer::Layer,
+    node::Node,
+    op::{EntryOpts, LayerOpts},
+    raw_plat::RawPlat,
+};
 
 #[spirv(compute(threads(1)))]
 pub fn load_chunk(
@@ -56,8 +61,10 @@ pub fn load_chunk(
         ],
     };
 
-    plat.load_chunk((0, 2, 0).into(), 0);
+    //plat.load_chunk((0, 2, 0).into(), 0);
+    // plat[0].set((0, 0, 0).into(), 55);
 
+    //plat.get_node((0, 0, 0).into(), 0);
     // let mut layer = Layer {
     //     freezed: false,
     //     depth: meta[0] as usize,

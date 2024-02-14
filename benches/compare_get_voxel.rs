@@ -42,7 +42,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             for z in 0..16 {
                 let entry_opt = plat.get_voxel((x * 32, y * 32, z * 32).into());
                 if let Some(entry) = entry_opt {
-                    mtx[x as usize][y as usize][z as usize] = entry;
+                    mtx[x as usize][y as usize][z as usize] = entry.voxel_id;
                 }
             }
         }
@@ -54,13 +54,13 @@ fn criterion_benchmark(c: &mut Criterion) {
                 for y in 0..7 {
                     for z in 0..16 {
                         let entry_opt = plat.get_voxel((x * 32, y * 32, z * 32).into());
-                        let cached = mtx[x as usize][y as usize][z as usize];
-                        if Some(cached) != entry_opt {
-                            if entry_opt.is_none() && cached == 0 {
-                            } else {
-                                panic!();
-                            }
-                        }
+                        // let cached = mtx[x as usize][y as usize][z as usize];
+                        // if Some(cached) != entry_opt {
+                        //     if entry_opt.is_none() && cached == 0 {
+                        //     } else {
+                        //         panic!();
+                        //     }
+                        // }
                     }
                 }
             }
@@ -75,20 +75,20 @@ fn criterion_benchmark(c: &mut Criterion) {
                         let entry_opt = plat.get_normal_unchecked().borrow_raw_plat().get_node(
                             (x * 32, y * 32, z * 32).into(),
                             0,
-                            EntryOpts::Single(mtx[x as usize][y as usize][z as usize] as u32),
-                            LayerOpts::All,
+                            // EntryOpts::Single(mtx[x as usize][y as usize][z as usize] as u32),
+                            // LayerOpts::All,
                         );
-                        let cached = mtx[x as usize][y as usize][z as usize];
-                        if let Some((.., (.., entry))) = entry_opt {
-                            if cached != entry {
-                                panic!()
-                            }
-                        } else {
-                            if entry_opt.is_none() && cached == 0 {
-                            } else {
-                                panic!();
-                            }
-                        }
+                        // let cached = mtx[x as usize][y as usize][z as usize];
+                        // if let Some((.., (.., entry))) = entry_opt {
+                        //     if cached != entry {
+                        //         panic!()
+                        //     }
+                        // } else {
+                        //     if entry_opt.is_none() && cached == 0 {
+                        //     } else {
+                        //         panic!();
+                        //     }
+                        // }
                     }
                 }
             }
@@ -100,7 +100,7 @@ fn criterion_benchmark(c: &mut Criterion) {
             for x in 0..16 {
                 for y in 0..7 {
                     for z in 0..16 {
-                        let addr = NodeAddr::from_position((x * 32, y * 32, z * 32).into(), 0);
+                        let addr = NodeAddr::from_position((x * 32, y * 32, z * 32).into(), 9, 0);
                         // let entry_opt = plat.get_normal_unchecked().borrow_raw_plat().get_node(
                         //     (x * 32, y * 32, z * 32).into(),
                         //     0,

@@ -1,6 +1,6 @@
 use std::borrow::BorrowMut;
 
-use venx_core::utils::Grid;
+use venx_core::{plat::op::get::GetNodeResult, utils::Grid};
 
 use crate::plat::interfaces::layer::LayerInterface;
 
@@ -24,7 +24,13 @@ impl LayerInterface for CpuPlat {
         todo!()
     }
 
-    fn get_voxel(&self, position: glam::UVec3) -> Option<usize> {
-        self.borrow_raw_plat().get_voxel(position.to_array().into())
+    fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
+        let res = self.borrow_raw_plat().get_voxel(position.to_array().into());
+
+        if res.is_some() {
+            return Some(res);
+        } else {
+            return None;
+        }
     }
 }
