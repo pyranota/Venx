@@ -37,25 +37,28 @@ impl RawPlat<'_> {
     where
         F: FnMut(&mut Props),
     {
+        for layer_idx in 0..4 {
+            self[layer_idx].traverse(
+                0,
+                // TODO: do something about this unsafe cringe
+                2,
+                UVec3::ZERO,
+                true,
+                self.depth,
+                callback,
+            );
+        }
         // Iterate over all layers and nodes
-        self.opts(
-            None,
-            layer_opts,
-            entry_opts,
-            true,
-            &mut |plat, (layer, layer_id), entry| {
-                layer.traverse(
-                    entry,
-                    // TODO: do something about this unsafe cringe
-                    layer.entries[entry as usize],
-                    UVec3::ZERO,
-                    true,
-                    self.depth,
-                    callback,
-                );
-                return None as Option<()>;
-            },
-        );
+        // self.opts(
+        //     None,
+        //     layer_opts,
+        //     entry_opts,
+        //     true,
+        //     &mut |plat, (layer, layer_id), entry| {
+        //         layer
+        //         return None as Option<()>;
+        //     },
+        // );
     }
 
     pub fn traverse_unpositioned<F>(
@@ -110,7 +113,7 @@ impl RawPlat<'_> {
             let res = layer.get_node(region_position * l2s(region_level), region_level, None);
 
             if res.is_some() {
-                layer.traverse(0, 2, UVec3::ZERO, true, region_level, callback)
+                layer.traverse(0, res.node_idx, UVec3::ZERO, true, region_level, callback)
             }
         }
 
@@ -157,13 +160,15 @@ impl Layer<'_> {
             UVec3,
             /* level */
             usize,
+            /* voxel_id */
+            usize,
             /* index (progress of iterator in specific node) */
             usize,
-        )> = EStack::new((from_node_idx, 0, from_node_position, from_level, 0));
+        )> = EStack::new((from_node_idx, 0, from_node_position, from_level, 0, 0));
 
         loop {
             // Read without pulling it
-            let (node_idx, parent_idx, mut position, level, index) = stack.read();
+            let (node_idx, parent_idx, mut position, level, voxel_id, index) = stack.read();
             // Exit
             if *index > 7 && *level == from_level {
                 break;
@@ -182,11 +187,6 @@ impl Layer<'_> {
             let node = &self[*node_idx];
 
             if node.is_fork() {
-                // Deadend
-                if *index == 1 {
-                    stack.pop();
-                    continue;
-                }
                 // Out of bound
                 if *index == 8 {
                     let flag = node.flag;
@@ -197,9 +197,14 @@ impl Layer<'_> {
                         *index = 0;
 
                         continue;
+                    } else if flag == -3 {
+                        stack.pop();
+                        continue;
+                    } else {
+                        panic!()
                     }
                 }
-
+                let voxel_id = &node.children[*index];
                 let child_id = &node.children[*index + 1];
 
                 *index += 2;
@@ -207,12 +212,20 @@ impl Layer<'_> {
                 if *child_id != 0 {
                     let (node_idx, level) = (node_idx.clone(), level.clone());
 
-                    stack.push((*child_id as usize, node_idx, position.clone(), level - 1, 0));
+                    stack.push((
+                        *child_id as usize,
+                        node_idx,
+                        position.clone(),
+                        level,
+                        *voxel_id as usize,
+                        0,
+                    ));
 
                     continue;
                 } else {
-                    // Indicate that we should exit this traversal
-                    *index = 1;
+                    // Exit fork chain
+                    stack.pop();
+                    continue;
                 }
             }
 
@@ -225,7 +238,7 @@ impl Layer<'_> {
                     positioned,
                     parent_idx: &parent_idx,
                     node: &node,
-                    entry: entry,
+                    entry: *voxel_id as u32,
                     level: *level,
                     drop_tree: false,
                 };
@@ -255,9 +268,17 @@ impl Layer<'_> {
                 }
 
                 // TODO: Do we need this cache?
-                let (node_idx, level) = (node_idx.clone(), level.clone());
+                let (node_idx, level, voxel_id) =
+                    (node_idx.clone(), level.clone(), voxel_id.clone());
 
-                stack.push((*child_id as usize, node_idx, position.clone(), level - 1, 0));
+                stack.push((
+                    *child_id as usize,
+                    node_idx,
+                    position.clone(),
+                    level - 1,
+                    voxel_id,
+                    0,
+                ));
             }
         }
     }
@@ -270,7 +291,8 @@ mod tests {
     use crate::*;
     use std::println;
 
-    use alloc::{borrow::ToOwned, vec};
+    use alloc::{borrow::ToOwned, boxed::Box, vec};
+    use rand::Rng;
     use spirv_std::glam::{uvec3, UVec3};
 
     use crate::{
@@ -333,50 +355,135 @@ mod tests {
     }
 
     #[test]
-    fn test_drop_tree() {
-        todo!()
+    fn traverse_layer_full() {
+        let mut base = (Box::new([Node::default(); 23_000]), [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            7,
+            5,
+            5,
+            (&mut *base.0, &mut base.1),
+            (&mut *tmp.0, &mut tmp.1),
+            (&mut *schem.0, &mut schem.1),
+            (&mut *canvas.0, &mut canvas.1),
+        );
+
+        let mut rng = rand::thread_rng();
+
+        let mtx: [[[u16; 16]; 16]; 16] = rng.gen();
+
+        for x in 0..16 {
+            for y in 0..16 {
+                for z in 0..16 {
+                    let voxel_id = mtx[x][y][z] as u32 + 1;
+                    plat[0].set(uvec3(x as u32, y as u32, z as u32), voxel_id);
+                }
+            }
+        }
+        //let mut seq = vec![];
+
+        plat[0].traverse(0, 2, UVec3::ZERO, true, plat.depth, &mut |p| {
+            if p.level == 0 {
+                assert_eq!(
+                    p.entry,
+                    mtx[p.position.x as usize][p.position.y as usize][p.position.z as usize] as u32
+                        + 1
+                );
+            }
+        });
     }
 
     #[test]
-    fn check_parent_nodes() {
-        let mut base = ([Node::default(); 128], [0; 10]);
+    fn traverse_region_full() {
+        let mut base = (Box::new([Node::default(); 23_000]), [0; 10]);
         let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
         let mut plat = RawPlat::new(
+            7,
             5,
             5,
-            5,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
+            (&mut *base.0, &mut base.1),
+            (&mut *tmp.0, &mut tmp.1),
+            (&mut *schem.0, &mut schem.1),
+            (&mut *canvas.0, &mut canvas.1),
         );
-        // Base
-        plat[Base].set(uvec3(7, 20, 5), 1);
 
-        let mut seq = vec![];
+        let mut rng = rand::thread_rng();
 
-        plat[Base].traverse(
-            1,
-            plat[Base].entries[1],
+        let mtx: [[[u16; 16]; 16]; 16] = rng.gen();
+
+        for x in 0..16 {
+            for y in 0..16 {
+                for z in 0..16 {
+                    let voxel_id = mtx[x][y][z] as u32 + 1;
+                    plat[0].set(uvec3(x as u32, y as u32, z as u32), voxel_id);
+                }
+            }
+        }
+        //let mut seq = vec![];
+
+        plat.traverse_region(
             UVec3::ZERO,
-            true,
-            plat.depth,
-            &mut |props| {
-                seq.push(props.parent_idx.clone());
+            5,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    assert_eq!(
+                        p.entry,
+                        mtx[p.position.x as usize][p.position.y as usize][p.position.z as usize]
+                            as u32
+                            + 1
+                    );
+                }
             },
         );
-
-        // println!("{seq:?}");
-
-        //let addr = NodeAddr::from_position(uvec3(7, 20, 5), 5);
-
-        // // let mut right
-        // for level in (0..=5).rev() {
-        //     plat.base[addr.get_idx(level)];
-        // }
-        todo!()
-        // assert_eq!(seq, vec![]);
     }
+
+    // #[test]
+    // fn test_drop_tree() {
+    //     todo!()
+    // }
+
+    // #[test]
+    // fn check_parent_nodes() {
+    //     let mut base = ([Node::default(); 128], [0; 10]);
+    //     let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+    //     let mut plat = RawPlat::new(
+    //         5,
+    //         5,
+    //         5,
+    //         (&mut base.0, &mut base.1),
+    //         (&mut tmp.0, &mut tmp.1),
+    //         (&mut schem.0, &mut schem.1),
+    //         (&mut canvas.0, &mut canvas.1),
+    //     );
+    //     // Base
+    //     plat[Base].set(uvec3(7, 20, 5), 1);
+
+    //     let mut seq = vec![];
+
+    //     plat[Base].traverse(
+    //         1,
+    //         plat[Base].entries[1],
+    //         UVec3::ZERO,
+    //         true,
+    //         plat.depth,
+    //         &mut |props| {
+    //             seq.push(props.parent_idx.clone());
+    //         },
+    //     );
+
+    //     // println!("{seq:?}");
+
+    //     //let addr = NodeAddr::from_position(uvec3(7, 20, 5), 5);
+
+    //     // // let mut right
+    //     // for level in (0..=5).rev() {
+    //     //     plat.base[addr.get_idx(level)];
+    //     // }
+    //     todo!()
+    //     // assert_eq!(seq, vec![]);
+    // }
 
     #[test]
     fn traverse() {
@@ -442,18 +549,11 @@ mod tests {
 
         let mut seq = vec![];
 
-        plat[Base].traverse(
-            1,
-            plat[Base].entries[1],
-            UVec3::ZERO,
-            true,
-            plat.depth,
-            &mut |props| {
-                if props.level == 0 {
-                    seq.push(props.position.clone());
-                }
-            },
-        );
+        plat[Base].traverse(1, 2, UVec3::ZERO, true, plat.depth, &mut |props| {
+            if props.level == 0 {
+                seq.push(props.position.clone());
+            }
+        });
 
         // println!("{seq:?}");
 
@@ -482,18 +582,11 @@ mod tests {
 
         let mut seq = vec![];
 
-        plat[Base].traverse(
-            1,
-            plat[Base].entries[1],
-            UVec3::ZERO,
-            true,
-            plat.depth,
-            &mut |props| {
-                if props.level == 0 {
-                    seq.push(props.position.clone());
-                }
-            },
-        );
+        plat[Base].traverse(1, 2, UVec3::ZERO, true, plat.depth, &mut |props| {
+            if props.level == 0 {
+                seq.push(props.position.clone());
+            }
+        });
 
         // println!("{seq:?}");
 
