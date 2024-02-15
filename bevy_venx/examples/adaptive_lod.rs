@@ -31,7 +31,7 @@ fn setup(
         plat.save("ALOD").unwrap();
         plat
     });
-    for mesh in plat.static_mesh(3..16, 3..7, 3..16, None) {
+    for mesh in plat.static_mesh(8..12, 3..7, 8..12, Some(0)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
@@ -48,8 +48,7 @@ fn setup(
             }),
             ..default()
         })
-        //.insert(Wireframe)
-        ;
+        .insert(Wireframe);
     }
 
     // ambient light

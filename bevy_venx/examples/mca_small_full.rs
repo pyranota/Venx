@@ -17,16 +17,15 @@ fn setup(
     mut bevy_meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // Its mid-sized plat, its slow to convert it from mca each run, it will be saved
-    let plat = VenxPlat::load("mca_mid").unwrap_or_else(|e| {
+    // Its small-sized plat, its slow to convert it from mca each run, it will be saved
+    let plat = VenxPlat::load("mca_small_full").unwrap_or_else(|e| {
         warn!("Plat wasnt found on device, creating new and saving ({e})");
         // Convert from minecraft map
-        let plat = VenxPlat::load_mca("./assets/mca/4/", (0..2, 0..2)).unwrap();
-        plat.save("mca_mid").unwrap();
+        let plat = VenxPlat::load_mca_untyped("./assets/mca/1/", (0..1, 0..1)).unwrap();
+        plat.save("mca_small_full").unwrap();
         plat
     });
-
-    for mesh in plat.static_mesh(0..32, 3..6, 0..32, Some(0)) {
+    for mesh in plat.static_mesh(0..16, 0..6, 0..16, Some(0)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());

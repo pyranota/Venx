@@ -17,7 +17,7 @@ impl Chunk {
         local_block_position: impl Into<IVec3>,
         neighbor_direction: impl Into<IVec3>,
     ) -> Option<u32> {
-        let real_chunk_size = l2s(self.level());
+        let real_chunk_size = l2s(self.chunk_level());
         let chunk_size = self.size();
 
         let dir: IVec3 = neighbor_direction.into();
@@ -31,15 +31,14 @@ impl Chunk {
         if self.lod_level() == 0
             && (sum.min_element() < 0 || sum.max_element() >= chunk_size as i32)
         {
-            todo!();
-            // if let Some((.., (.., entry))) = plat.get_node(
-            //     ((self.position() * real_chunk_size).as_ivec3() + sum).as_uvec3(),
-            //     self.lod_level(),
-            //     EntryOpts::All,
-            //     LayerOpts::All,
-            // ) {
-            //     return Some(entry as u32);
-            // }
+            let res = plat.get_node(
+                ((self.position() * real_chunk_size).as_ivec3() + sum).as_uvec3(),
+                self.lod_level(),
+            );
+
+            if res.is_some() {
+                return Some(res.voxel_id as u32);
+            }
 
             None
         } else {

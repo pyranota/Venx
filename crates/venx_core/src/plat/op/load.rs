@@ -17,19 +17,34 @@ impl RawPlat<'_> {
 
         // // let real_chunk_size = l2s(chunk.level());
 
-        self.traverse_region(
-            position,
-            chunk_level,
-            super::EntryOpts::All,
-            LayerOpts::All,
-            &mut |props| {
-                let props = props;
-                if props.level == lod_level {
-                    chunk.set(*props.position / chunk_lod_scaler, props.entry);
-                    props.drop_tree = true;
+        for x in 0..32 {
+            for y in 0..32 {
+                for z in 0..32 {
+                    let res = self.get_voxel(uvec3(
+                        x + position.x * 32,
+                        y + position.y * 32,
+                        z + position.z * 32,
+                    ));
+
+                    if res.is_some() {
+                        chunk.set(uvec3(x, y, z), res.voxel_id as u32);
+                    }
                 }
-            },
-        );
+            }
+        }
+
+        // self.traverse_region(
+        //     position,
+        //     chunk_level,
+        //     super::EntryOpts::All,
+        //     LayerOpts::All,
+        //     &mut |props| {
+        //         if props.level == lod_level {
+        //             chunk.set(*props.position / chunk_lod_scaler, props.entry);
+        //             props.drop_tree = true;
+        //         }
+        //     },
+        // );
 
         chunk
     }

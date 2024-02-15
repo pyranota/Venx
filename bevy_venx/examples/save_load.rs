@@ -22,13 +22,14 @@ fn setup(
         let mut plat = VenxPlat::new(6, 5, 5);
 
         plat.set_voxel(0, (0, 0, 0).into(), 1);
+        plat.set_voxel(0, (0, 1, 0).into(), 2);
 
         plat.save("my_save").unwrap();
 
         plat
     });
 
-    for mesh in plat.static_mesh(0..16, 0..6, 0..16, None) {
+    for mesh in plat.static_mesh(0..16, 0..6, 0..16, Some(0)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());

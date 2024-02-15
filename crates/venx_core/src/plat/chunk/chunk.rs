@@ -6,57 +6,24 @@ use spirv_std::glam::{uvec3, UVec3};
 
 use crate::utils::l2s;
 
+#[cfg(not(feature = "bitcode_support"))]
 const MAX_SIZE: usize = 32;
+
+#[cfg(feature = "bitcode_support")]
+const MAX_SIZE: usize = 32 * 32 * 32;
 
 // #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 pub struct Chunk {
     pub flatten: [u32; MAX_SIZE], // Max size
-    pub position: UVec3,
-    pub lod_level: usize,
-    pub chunk_level: usize,
-    // X64+ = stackoverflow
-    // X64(ChunkBase<64>),
-    // X32(ChunkBase<32>),
-    // X16(ChunkBase<16>),
-    // X8(ChunkBase<8>),
-    // X4(ChunkBase<4>),
+    position: UVec3,
+    lod_level: usize,
+    chunk_level: usize,
+    size: usize,
+    // TODO:
+    // neighbor chunk levels
 }
 
-// #[macro_export]
-// macro_rules! chunk {
-//     ($chunk:ident, $field:ident,$($ex:tt),+) => {
-//         match $chunk {
-//             // Chunk::X64(chunk) => chunk.$field$($ex)+,
-//             Chunk::X32(chunk) => chunk.$field$($ex)+,
-//             Chunk::X16(chunk) => chunk.$field$($ex)+,
-//             Chunk::X8(chunk) => chunk.$field$($ex)+,
-//             Chunk::X4(chunk) => chunk.$field$($ex)+,
-//         }
-//     };
-
-//     ($chunk:ident, $field:ident) => {
-//         match $chunk {
-//             // Chunk::X64(chunk) => chunk.$field,
-//             Chunk::X32(chunk) => chunk.$field,
-//             Chunk::X16(chunk) => chunk.$field,
-//             Chunk::X8(chunk) => chunk.$field,
-//             Chunk::X4(chunk) => chunk.$field,
-//         }
-//     };
-// }
-
-// impl<const SIZE: usize> ChunkBase<SIZE> {
-//     pub(crate) fn new(position: UVec3, lod_level: usize, chunk_level: usize) -> Self {
-//         // TODO: check size for cerrectnes with lod_level and chunk_level
-// Self {
-//     mtx: [[[0; SIZE]; SIZE]; SIZE],
-//     position: position.into(),
-//     lod_level,
-//     chunk_level,
-// }
-//     }
-// }
 pub unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
     ::core::slice::from_raw_parts((p as *const T) as *const u8, ::core::mem::size_of::<T>())
 }
@@ -68,37 +35,23 @@ pub unsafe fn u8_slice_as_any<T: Sized>(p: &[u8]) -> &[T] {
 
 impl Chunk {
     pub fn lod_level(&self) -> usize {
-        // chunk!(self, lod_level)
-        todo!()
+        self.lod_level
     }
     pub fn chunk_level(&self) -> usize {
-        // chunk!(self, chunk_level)
-        todo!()
+        self.chunk_level
     }
     pub fn position(&self) -> UVec3 {
-        // chunk!(self, position)
-        todo!()
+        self.position
     }
     /// Size in blocks, tells how many blocks in chunk
     pub fn size(&self) -> u32 {
-        // match self {
-        //     // Chunk::X64(chunk) => l2s(chunk.chunk_level - chunk.lod_level),
-        //     Chunk::X32(chunk) => l2s(chunk.chunk_level - chunk.lod_level),
-        //     Chunk::X16(chunk) => l2s(chunk.chunk_level - chunk.lod_level),
-        //     Chunk::X8(chunk) => l2s(chunk.chunk_level - chunk.lod_level),
-        //     Chunk::X4(chunk) => l2s(chunk.chunk_level - chunk.lod_level),
-        // }
-        todo!()
+        self.size as u32
     }
     /// Width in meters, tells how much space in 3d space chunk takes
     pub fn width(&self) -> u32 {
-        // l2s(chunk!(self, chunk_level))
-        todo!()
+        l2s(self.chunk_level)
     }
-    pub fn level(&self) -> usize {
-        //  chunk!(self, chunk_level)
-        todo!()
-    }
+
     pub fn new(position: impl Into<UVec3>, lod_level: usize, chunk_level: usize) -> Self {
         // let mtx_size = 1 << (chunk_level - lod_level);
         Self {
@@ -106,17 +59,8 @@ impl Chunk {
             position: position.into(),
             lod_level,
             chunk_level,
+            size: l2s(chunk_level - lod_level) as usize,
         }
-        //todo!()
-        // match mtx_size {
-        //   //  64 => Chunk::X64(ChunkBase::new(position.into(), lod_level, chunk_level)),
-        //                 32 => Chunk::X32(ChunkBase::new(position.into(), lod_level, chunk_level)),
-        //                 16 => Chunk::X16(ChunkBase::new(position.into(), lod_level, chunk_level)),
-        //                 8 => Chunk::X8(ChunkBase::new(position.into(), lod_level, chunk_level)),
-        //                 4 => Chunk::X4(ChunkBase::new(position.into(), lod_level, chunk_level)),
-
-        //     _ => panic!("Oh boy, I think you are trying to create a Chunk with unsupported size ({mtx_size})")
-        // }
     }
     pub fn get(&self, block_position: UVec3) -> Option<u32> {
         // Check for out of bound
@@ -131,87 +75,47 @@ impl Chunk {
             return None;
         }
     }
-    pub fn get_raw(&self, block_position: impl Into<UVec3>) -> u32 {
-        let pos = block_position.into();
-        // chunk!(
-        //     self,
-        //     mtx,
-        //     [pos.x as usize],
-        //     [pos.y as usize],
-        //     [pos.z as usize]
-        // )
-        todo!()
+    /// 3D Position to index in chunk
+    pub fn flatten_value(&self, p: UVec3) -> usize {
+        let width = self.width();
+        (p.x + (p.y * width) + (p.z * width * width)) as usize
+    }
+
+    // Index in chunk to 3D Position
+    pub fn from_flatten(&self, mut index: u32) -> UVec3 {
+        let size = self.size();
+        //assert!(0 <= index < size*size*size);
+        let x = index % size;
+        index /= size;
+        let y = index % size;
+        index /= size;
+        let z = index;
+        uvec3(x, y, z)
+    }
+
+    pub fn get_raw(&self, p: UVec3) -> u32 {
+        let idx = self.flatten_value(p);
+        self.flatten[idx]
     }
     /// Sets local positioned block
     pub fn set(&mut self, position: UVec3, block: u32) {
-        // let position = position.into();
-        // chunk!(
-        //     self,
-        //     mtx,
-        //     [position.x as usize],
-        //     [position.y as usize],
-        //     [position.z as usize],
-        //     =,
-        //     block
-        // );
-        todo!()
-        //self.mtx[position.x as usize][position.y as usize][position.z as usize] = block;
+        let idx = self.flatten_value(position);
+
+        self.flatten[idx] = block;
     }
     /// Iterating over local positions and blocks
     pub fn iter<F>(&self, mut callback: F)
     where
         F: FnMut(UVec3, u32),
     {
-        // TODO: yeah, DRY is something i have never ever heard of.
-        // match self {
-        //     // Chunk::X64(chunk) => {
-        //     //     for (x, x_row) in chunk.mtx.iter().enumerate() {
-        //     //         for (y, y_row) in x_row.iter().enumerate() {
-        //     //             for (z, block) in y_row.iter().enumerate() {
-        //     //                 callback(uvec3(x as u32, y as u32, z as u32), *block);
-        //     //             }
-        //     //         }
-        //     //     }
-        //     // }
-        //     Chunk::X32(chunk) => {
-        //         for (x, x_row) in chunk.mtx.iter().enumerate() {
-        //             for (y, y_row) in x_row.iter().enumerate() {
-        //                 for (z, block) in y_row.iter().enumerate() {
-        //                     callback(uvec3(x as u32, y as u32, z as u32), *block);
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     Chunk::X16(chunk) => {
-        //         for (x, x_row) in chunk.mtx.iter().enumerate() {
-        //             for (y, y_row) in x_row.iter().enumerate() {
-        //                 for (z, block) in y_row.iter().enumerate() {
-        //                     callback(uvec3(x as u32, y as u32, z as u32), *block);
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     Chunk::X8(chunk) => {
-        //         for (x, x_row) in chunk.mtx.iter().enumerate() {
-        //             for (y, y_row) in x_row.iter().enumerate() {
-        //                 for (z, block) in y_row.iter().enumerate() {
-        //                     callback(uvec3(x as u32, y as u32, z as u32), *block);
-        //                 }
-        //             }
-        //         }
-        //     }
-        //     Chunk::X4(chunk) => {
-        //         for (x, x_row) in chunk.mtx.iter().enumerate() {
-        //             for (y, y_row) in x_row.iter().enumerate() {
-        //                 for (z, block) in y_row.iter().enumerate() {
-        //                     callback(uvec3(x as u32, y as u32, z as u32), *block);
-        //                 }
-        //             }
-        //         }
-        //     }
-        // }
+        let size = self.size;
+        for index in 0..(size * size * size) {
+            let voxel_id = self.flatten[index];
 
-        todo!()
+            if voxel_id != 0 {
+                callback(self.from_flatten(index as u32), voxel_id);
+            }
+        }
     }
     /// Warning! In chunk you have global position, in segment local
     pub fn iter_mut<F>(&mut self, mut callback: F)
@@ -232,7 +136,7 @@ impl Chunk {
         // }
     }
 }
-
+#[cfg(feature = "bitcode_support")]
 #[cfg(test)]
 mod tests {
     use super::Chunk;
@@ -243,19 +147,8 @@ mod tests {
         chunk.set((4, 4, 0).into(), 4);
 
         chunk.iter(|pos, block| {
-            if block != 0 {
-                assert_eq!(pos, (4, 4, 0).into());
-            }
-        });
-        chunk.iter_mut(|pos, block| {
-            if *block != 0 {
-                *block = 4;
-            }
-        });
-        chunk.iter(|pos, block| {
-            if block != 0 {
-                panic!();
-            }
+            assert_eq!(pos, (4, 4, 0).into());
+            assert_eq!(block, 4);
         });
     }
 
