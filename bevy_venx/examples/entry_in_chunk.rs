@@ -92,11 +92,11 @@ fn setup(
         plat
     });
     let mut map = HashMap::new();
-    for cx in 18..32 {
-        for cz in 18..32 {
-            for cy in 5..14 {
+    for cy in 0..32 {
+        for cz in 0..32 {
+            for cx in 0..32 {
                 let mut set = HashSet::new();
-                info!("Iterating over chunk ({cx},{cy},{cz})");
+                info!("Iterating over chunk (y: {cy}, x: {cx}, z: {cz})");
                 for bx in 0..16 {
                     for bz in 0..16 {
                         for by in 0..16 {

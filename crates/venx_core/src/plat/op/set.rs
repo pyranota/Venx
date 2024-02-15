@@ -52,6 +52,7 @@ impl Layer<'_> {
     }
 }
 
+#[cfg(feature = "bitcode_support")]
 #[cfg(test)]
 
 mod tests {

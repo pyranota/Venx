@@ -172,8 +172,8 @@ impl VenxPlat {
         VenxPlat { plat: plat }
     }
     /// Get depth and verify that its synced
-    pub fn depth(&mut self) -> usize {
-        match &mut self.plat {
+    pub fn depth(&self) -> usize {
+        match &self.plat {
             Plat::Cpu(cpu_plat) => {
                 let plat = cpu_plat.borrow_raw_plat();
                 let plat_depth = plat.depth;

@@ -34,7 +34,7 @@ impl RawPlat<'_> {
         chunk
     }
 }
-
+#[cfg(feature = "bitcode_support")]
 #[cfg(test)]
 mod tests {
     use std::println;

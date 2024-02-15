@@ -101,27 +101,16 @@ impl RawPlat<'_> {
     ) where
         F: FnMut(&mut Props),
     {
-        // TODO: uncom assert
-        // assert_ne!(self.depth, region_level);
-        // TODO: optimize with level
-        for layer_idx in layer_opts.to_range() {
+        let fork_level = 4;
+        assert!(region_level > fork_level);
+
+        for layer_idx in 0..4 {
             let layer = &self[layer_idx];
-            for entry in 1..100 {
-                todo!()
-                // if let Some(region_node_idx) = layer.get_node(
-                //     region_position * l2s(region_level),
-                //     region_level,
-                //     Some(entry as usize),
-                // ) {
-                //     layer.traverse(
-                //         entry,
-                //         region_node_idx,
-                //         UVec3::ZERO,
-                //         true,
-                //         region_level,
-                //         callback,
-                //     )
-                // }
+
+            let res = layer.get_node(region_position * l2s(region_level), region_level, None);
+
+            if res.is_some() {
+                layer.traverse(0, 2, UVec3::ZERO, true, region_level, callback)
             }
         }
 
@@ -192,6 +181,41 @@ impl Layer<'_> {
             // Some cache going on here
             let node = &self[*node_idx];
 
+            if node.is_fork() {
+                // Deadend
+                if *index == 1 {
+                    stack.pop();
+                    continue;
+                }
+                // Out of bound
+                if *index == 8 {
+                    let flag = node.flag;
+                    if flag > 0 {
+                        // Switch to next fork in chain
+                        *node_idx = flag as usize;
+                        // Reset index
+                        *index = 0;
+
+                        continue;
+                    }
+                }
+
+                let child_id = &node.children[*index + 1];
+
+                *index += 2;
+
+                if *child_id != 0 {
+                    let (node_idx, level) = (node_idx.clone(), level.clone());
+
+                    stack.push((*child_id as usize, node_idx, position.clone(), level - 1, 0));
+
+                    continue;
+                } else {
+                    // Indicate that we should exit this traversal
+                    *index = 1;
+                }
+            }
+
             // Call for each enter once
             // If remove, it will call this callback 7 extra times
             if *index == 0 {
@@ -238,7 +262,7 @@ impl Layer<'_> {
         }
     }
 }
-
+#[cfg(feature = "bitcode_support")]
 #[cfg(test)]
 mod tests {
     extern crate alloc;

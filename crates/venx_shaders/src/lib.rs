@@ -61,7 +61,7 @@ pub fn load_chunk(
         ],
     };
 
-    //plat.load_chunk((0, 2, 0).into(), 0);
+    plat.load_chunk((0, 2, 0).into(), 0);
     // plat[0].set((0, 0, 0).into(), 55);
 
     //plat.get_node((0, 0, 0).into(), 0);

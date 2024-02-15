@@ -112,6 +112,7 @@ impl RawPlat<'_> {
     }
 }
 
+#[cfg(feature = "bitcode_support")]
 #[cfg(test)]
 mod tests {
     extern crate alloc;

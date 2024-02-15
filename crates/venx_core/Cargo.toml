@@ -12,12 +12,13 @@ spirv-std = "0.9.0"
 bytes-cast = "0.3.0"
 serde = { version = "1.0.195", features = ["serde_derive", "derive"], optional = true }
 bitcode = {version = "0.5.0", optional = true }
+rand =  {version = "0.8.4", optional = true }
 
 
 [features]
 default = []
 gpu = []
-bitcode_support = ["dep:bitcode", "dep:serde"]
+bitcode_support = ["dep:bitcode", "dep:serde", "dep:rand"]
 
 [profile.dev]
 incremental = true

@@ -41,9 +41,9 @@ pub struct Layer<'a> {
 }
 
 pub struct ForkIterProps {
-    drop: bool,
-    voxel_id: usize,
-    node_idx: usize,
+    pub drop: bool,
+    pub voxel_id: usize,
+    pub node_idx: usize,
 }
 
 impl<'a> Layer<'a> {
@@ -75,12 +75,14 @@ impl<'a> Layer<'a> {
         }
     }
 
-    pub(crate) fn get_node(
+    pub fn get_node(
         &self,
         mut position: UVec3,
         level: usize,
         voxel_id_opt: Option<usize>,
     ) -> GetNodeResult {
+        // let addr = &NodeAddr::from_position(position, self.depth, level);
+        // self.get_node_with_addr(addr, level, voxel_id_opt)
         let mut current_level = self.depth as usize;
 
         let mut size = l2s(self.depth);
@@ -116,11 +118,13 @@ impl<'a> Layer<'a> {
         }
 
         self.iter_fork(idx as usize, &mut |props| {
-            // if let Some(needed_voxel_id) = voxel_id_opt {
-            //     if voxel_id != needed_voxel_id {
-
-            //     }
-            // }
+            if let Some(needed_voxel_id) = voxel_id_opt {
+                if props.voxel_id == needed_voxel_id {
+                    props.drop = true;
+                } else {
+                    return;
+                }
+            }
 
             let mut size = size;
             let mut position = position.clone();
@@ -159,7 +163,7 @@ impl<'a> Layer<'a> {
         found_idx
     }
 
-    pub(crate) fn get_node_with_addr(
+    pub fn get_node_with_addr(
         &self,
         addr: &NodeAddr,
         level: usize,
@@ -197,11 +201,13 @@ impl<'a> Layer<'a> {
         }
 
         self.iter_fork(idx as usize, &mut |props| {
-            // if let Some(needed_voxel_id) = voxel_id_opt {
-            //     if voxel_id != needed_voxel_id {
-
-            //     }
-            // }
+            if let Some(needed_voxel_id) = voxel_id_opt {
+                if props.voxel_id == needed_voxel_id {
+                    props.drop = true;
+                } else {
+                    return;
+                }
+            }
 
             let mut current_level = current_level;
             let mut idx = props.node_idx;

@@ -61,10 +61,10 @@ impl RawPlat<'_> {
         //todo!()
         //let path = [];
 
-        let addr = NodeAddr::from_position(position, self.depth, level);
+        //let addr = NodeAddr::from_position(position, self.depth, level);
 
         for layer_idx in (0..4).rev() {
-            let res = self[layer_idx].get_node_with_addr(&addr, level, None);
+            let res = self[layer_idx].get_node(position, level, None);
 
             if res.is_some() {
                 return res;
@@ -144,15 +144,16 @@ impl RawPlat<'_> {
         todo!()
     }
 }
-
+#[cfg(feature = "bitcode_support")]
 #[cfg(test)]
 mod tests {
     extern crate alloc;
     extern crate std;
 
-    use std::println;
+    use std::{dbg, println};
 
-    use alloc::vec;
+    use alloc::{boxed::Box, vec};
+    use rand::Rng;
     use spirv_std::glam::uvec3;
 
     use crate::plat::{
@@ -188,6 +189,95 @@ mod tests {
         assert!(plat.get_node(uvec3(0, 0, 0), 0,).voxel_id == 2);
         assert!(plat.get_node(uvec3(1, 6, 5), 0,).voxel_id == 666);
         assert!(plat.get_node(uvec3(4, 4, 1), 0,).voxel_id == 3);
+    }
+
+    #[test]
+    fn full_matrix() {
+        let mut base = (Box::new([Node::default(); 23_000]), [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            5,
+            3,
+            3,
+            (&mut *base.0, &mut base.1),
+            (&mut *tmp.0, &mut tmp.1),
+            (&mut *schem.0, &mut schem.1),
+            (&mut *canvas.0, &mut canvas.1),
+        );
+
+        let mut rng = rand::thread_rng();
+
+        let mtx: [[[u16; 16]; 16]; 16] = rng.gen();
+
+        for x in 0..16 {
+            for y in 0..16 {
+                for z in 0..16 {
+                    let voxel_id = mtx[x][y][z] as u32 + 1;
+                    plat[0].set(uvec3(x as u32, y as u32, z as u32), voxel_id);
+                }
+            }
+        }
+
+        for x in 0..16 {
+            for y in 0..16 {
+                for z in 0..16 {
+                    let voxel_id = mtx[x][y][z] as u32 + 1;
+
+                    assert!(
+                        plat.get_node(uvec3(x as u32, y as u32, z as u32), 0,)
+                            .voxel_id
+                            == voxel_id as usize
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn get_node_known_voxel_id() {
+        let mut base = (Box::new([Node::default(); 23_000]), [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            5,
+            3,
+            3,
+            (&mut *base.0, &mut base.1),
+            (&mut *tmp.0, &mut tmp.1),
+            (&mut *schem.0, &mut schem.1),
+            (&mut *canvas.0, &mut canvas.1),
+        );
+
+        let mut rng = rand::thread_rng();
+
+        let mtx: [[[u16; 16]; 16]; 16] = rng.gen();
+
+        for x in 0..16 {
+            for y in 0..16 {
+                for z in 0..16 {
+                    let voxel_id = mtx[x][y][z] as u32 + 1;
+                    plat[0].set(uvec3(x as u32, y as u32, z as u32), voxel_id);
+                }
+            }
+        }
+
+        for x in 0..16 {
+            for y in 0..16 {
+                for z in 0..16 {
+                    let voxel_id = mtx[x][y][z] as u32 + 1;
+
+                    assert!(
+                        plat[0]
+                            .get_node(
+                                uvec3(x as u32, y as u32, z as u32),
+                                0,
+                                Some(voxel_id as usize)
+                            )
+                            .voxel_id
+                            == voxel_id as usize
+                    );
+                }
+            }
+        }
     }
 
     #[test]
