@@ -30,8 +30,7 @@ pub fn load_chunk_2(
 
     #[spirv(storage_buffer, descriptor_set = 4, binding = 0)] meta: &mut [usize],
 
-    #[spirv(storage_buffer, descriptor_set = 5, binding = 0)] chunk_meta: &mut [ChunkMeta],
-    #[spirv(storage_buffer, descriptor_set = 5, binding = 1)] chunk_flatten: &mut [u32],
+    #[spirv(storage_buffer, descriptor_set = 5, binding = 0)] chunks: &mut [Chunk],
 ) {
     let mut plat = RawPlat {
         position: (0, 0, 0),
@@ -66,8 +65,11 @@ pub fn load_chunk_2(
     };
 
     //plat[Base].set((0, 5, 0).into(), 7);
-
-    plat.load_chunk_gpu(chunk_flatten, (0, 0, 0).into(), 0);
+    // chunks[0].set((0, 0, 0).into(), 1);
+    // chunks[0].set((0, 1, 0).into(), 2);
+    // chunks[0].set((1, 0, 0).into(), 3);
+    // chunks[0].set((0, 0, 1).into(), 4);
+    plat.load_chunk_gpu(&mut chunks[id.x as usize]);
 
     // {
     //     // plat[0].set(uvec3(0, 2, 2), 222);

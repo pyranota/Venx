@@ -343,10 +343,6 @@ impl LoadInterface for VenxPlat {
         }
     }
 
-    fn load_chunks(&self) {
-        todo!()
-    }
-
     fn overlay_chunk(&self) {
         todo!()
     }
@@ -359,6 +355,13 @@ impl LoadInterface for VenxPlat {
         match &self.plat {
             Plat::Cpu(plat) => plat.compute_mesh_from_chunk(chunk),
             Plat::Gpu(plat) => plat.compute_mesh_from_chunk(chunk),
+        }
+    }
+
+    fn load_chunks(&self, blank_chunks: Box<Vec<Chunk>>) -> Box<Vec<Chunk>> {
+        match &self.plat {
+            Plat::Cpu(plat) => todo!(),
+            Plat::Gpu(plat) => plat.load_chunks(blank_chunks),
         }
     }
 }

@@ -17,14 +17,12 @@ impl RawPlat<'_> {
     pub fn load_chunk_gpu(
         &self,
         //chunk_meta: ChunkMeta,
-        chunk_flatten: &mut [u32],
-        position: UVec3,
-        lod_level: usize,
+        chunk: &mut Chunk,
     ) {
         // TODO change
         let chunk_level = 5;
 
-        let chunk_lod_scaler = l2s(lod_level);
+        // let chunk_lod_scaler = l2s(lod_level);
 
         // // let real_chunk_size = l2s(chunk.level());
 
@@ -42,9 +40,9 @@ impl RawPlat<'_> {
                     // );
                     let voxel_id = self[0].get_node_gpu(
                         uvec3(
-                            x + position.x * 32,
-                            y + position.y * 32,
-                            z + position.z * 32,
+                            x + chunk.position().x * 32,
+                            y + chunk.position().y * 32,
+                            z + chunk.position().z * 32,
                         ),
                         0,
                         None,
@@ -53,8 +51,7 @@ impl RawPlat<'_> {
                     // let res = self.get_voxel();
 
                     if voxel_id != 0 {
-                        let idx = (x + (y * 32) + (z * 32 * 32)) as usize;
-                        chunk_flatten[idx] = voxel_id as u32;
+                        chunk.set((x, y, z).into(), voxel_id as u32);
                         //chunk[0].set(uvec3(x, y, z), res.voxel_id as u32);
                     }
                 }

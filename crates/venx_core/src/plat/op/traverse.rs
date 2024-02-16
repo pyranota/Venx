@@ -289,9 +289,13 @@ mod tests {
     extern crate alloc;
     extern crate std;
     use crate::*;
-    use std::println;
+    use std::{dbg, println};
 
-    use alloc::{borrow::ToOwned, boxed::Box, vec};
+    use alloc::{
+        borrow::ToOwned,
+        boxed::Box,
+        vec::{self, Vec},
+    };
     use rand::Rng;
     use spirv_std::glam::{uvec3, UVec3};
 
@@ -328,7 +332,7 @@ mod tests {
         // Canvas
         plat[Canvas].set(uvec3(15, 15, 15), 1);
         plat[Canvas].set(uvec3(0, 0, 0), 2);
-        let mut seq = vec![];
+        let mut seq = alloc::vec![];
 
         plat.traverse_region(
             UVec3::ZERO,
@@ -394,7 +398,7 @@ mod tests {
     }
 
     #[test]
-    fn traverse_region_full() {
+    fn partial_traverse_region() {
         let mut base = (Box::new([Node::default(); 23_000]), [0; 10]);
         let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
         let mut plat = RawPlat::new(
@@ -439,6 +443,77 @@ mod tests {
         );
     }
 
+    #[test]
+    fn deep_traverse_region_full() {
+        let mut base = (Box::new([Node::default(); 203_000]), [0; 10]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut plat = RawPlat::new(
+            8,
+            5,
+            5,
+            (&mut *base.0, &mut base.1),
+            (&mut *tmp.0, &mut tmp.1),
+            (&mut *schem.0, &mut schem.1),
+            (&mut *canvas.0, &mut canvas.1),
+        );
+
+        let mtx = gen_rand_mtx::<256>(50);
+
+        for x in 0..256 {
+            for y in 0..256 {
+                for z in 0..256 {
+                    let voxel_id = mtx[x][y][z];
+                    plat[0].set(uvec3(x as u32, y as u32, z as u32), voxel_id);
+                }
+            }
+        }
+        //let mut seq = vec![];
+
+        plat.traverse_region(
+            UVec3::ZERO,
+            6,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    assert_eq!(
+                        p.entry,
+                        mtx[p.position.x as usize][p.position.y as usize][p.position.z as usize]
+                    );
+                }
+            },
+        );
+    }
+
+    #[test]
+    fn test_gen_rand_mtx() {
+        let _ = gen_rand_mtx::<2>(50);
+        let _ = gen_rand_mtx::<4>(0);
+        let _ = gen_rand_mtx::<8>(100);
+        let _ = gen_rand_mtx::<16>(50);
+        let _ = gen_rand_mtx::<32>(50);
+        let _ = gen_rand_mtx::<64>(50);
+        let _ = gen_rand_mtx::<128>(50);
+        let _ = gen_rand_mtx::<256>(50);
+    }
+
+    fn gen_rand_mtx<const SIZE: usize>(empty_probability: u8) -> Box<Vec<Vec<Vec<u32>>>> {
+        let mut rng = rand::thread_rng();
+        let mut mtx = Box::new(alloc::vec![alloc::vec![alloc::vec![0; SIZE]; SIZE]; SIZE]);
+
+        for x in 0..SIZE {
+            for y in 0..SIZE {
+                for z in 0..SIZE {
+                    if !rng.gen_ratio(empty_probability as u32, 100) {
+                        let voxel_id: u16 = rng.gen();
+                        // To prevent 0
+                        mtx[x][y][z] = voxel_id as u32 + 1;
+                    }
+                }
+            }
+        }
+        mtx
+    }
     // #[test]
     // fn test_drop_tree() {
     //     todo!()
@@ -508,7 +583,7 @@ mod tests {
         plat[Canvas].set(uvec3(15, 15, 15), 1);
         plat[Canvas].set(uvec3(0, 0, 0), 2);
 
-        let mut seq = vec![];
+        let mut seq = alloc::vec![];
 
         plat.traverse(LayerOpts::All, EntryOpts::All, &mut |props| {
             if props.level == 0 {
@@ -547,7 +622,7 @@ mod tests {
         // Base
         plat[Base].set(uvec3(7, 20, 5), 1);
 
-        let mut seq = vec![];
+        let mut seq = alloc::vec![];
 
         plat[Base].traverse(1, 2, UVec3::ZERO, true, plat.depth, &mut |props| {
             if props.level == 0 {
@@ -580,7 +655,7 @@ mod tests {
         plat[Base].set(uvec3(0, 10, 0), 1);
         plat[Base].set(uvec3(15, 15, 15), 1);
 
-        let mut seq = vec![];
+        let mut seq = alloc::vec![];
 
         plat[Base].traverse(1, 2, UVec3::ZERO, true, plat.depth, &mut |props| {
             if props.level == 0 {

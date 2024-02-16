@@ -14,13 +14,26 @@ use crate::utils::l2s;
 const MAX_SIZE: usize = 32 * 32 * 32;
 
 #[derive(Clone, Copy)]
-#[repr(C)]
+#[repr(transparent)]
 pub struct Chunk {
-    pub flatten: [u32; MAX_SIZE],
-    position: UVec3,
-    lod_level: usize,
-    chunk_level: usize,
-    size: usize,
+    /// 0 - x
+    ///
+    /// 1 - y
+    ///
+    /// 2 - z
+    ///
+    /// 3 - lod_level
+    ///
+    /// 4 - chunk_level
+    ///
+    /// 5 - size
+    ///
+    /// Rest - flatten chunk
+    data: [u32; MAX_SIZE + 6],
+    // position: UVec3,
+    // lod_level: usize,
+    // chunk_level: usize,
+    // size: usize,
     // TODO:
     // neighbor chunk levels
 }
@@ -54,56 +67,57 @@ pub unsafe fn u8_slice_as_any<T: Sized>(p: &[u8]) -> &[T] {
 
 impl Chunk {
     pub fn lod_level(&self) -> usize {
-        self.lod_level
+        self.data[3] as usize
     }
     pub fn chunk_level(&self) -> usize {
-        self.chunk_level
+        self.data[4] as usize
     }
     pub fn position(&self) -> UVec3 {
-        self.position
+        uvec3(self.data[0], self.data[1], self.data[2])
     }
     /// Size in blocks, tells how many blocks in chunk
     pub fn size(&self) -> u32 {
-        self.size as u32
+        self.data[5]
     }
     /// Width in meters, tells how much space in 3d space chunk takes
     pub fn width(&self) -> u32 {
-        l2s(self.chunk_level)
+        l2s(self.chunk_level())
     }
 
-    pub fn to_send(self) -> ([u32; MAX_SIZE], ChunkMeta) {
-        (
-            self.flatten,
-            ChunkMeta {
-                x: self.position.x as usize,
-                y: self.position.y as usize,
-                z: self.position.z as usize,
-                lod_level: self.lod_level,
-                chunk_level: self.chunk_level,
-                size: self.size,
-            },
-        )
-    }
+    // pub fn to_send(self) -> ([u32; MAX_SIZE], ChunkMeta) {
+    //     (
+    //         self.flatten,
+    //         ChunkMeta {
+    //             x: self.position.x as usize,
+    //             y: self.position.y as usize,
+    //             z: self.position.z as usize,
+    //             lod_level: self.lod_level,
+    //             chunk_level: self.chunk_level,
+    //             size: self.size,
+    //         },
+    //     )
+    // }
 
-    pub fn receive(flatten: [u32; MAX_SIZE], meta: ChunkMeta) -> Self {
-        Self {
-            flatten,
-            position: uvec3(meta.x as u32, meta.y as u32, meta.z as u32),
-            lod_level: meta.lod_level,
-            chunk_level: meta.chunk_level,
-            size: meta.size,
-        }
-    }
+    // pub fn receive(flatten: [u32; MAX_SIZE], meta: ChunkMeta) -> Self {
+    //     Self {
+    //         flatten,
+    //         position: uvec3(meta.x as u32, meta.y as u32, meta.z as u32),
+    //         lod_level: meta.lod_level,
+    //         chunk_level: meta.chunk_level,
+    //         size: meta.size,
+    //     }
+    // }
 
     pub fn new(position: impl Into<UVec3>, lod_level: usize, chunk_level: usize) -> Self {
-        // let mtx_size = 1 << (chunk_level - lod_level);
-        Self {
-            flatten: [0; MAX_SIZE],
-            position: position.into(),
-            lod_level,
-            chunk_level,
-            size: l2s(chunk_level - lod_level) as usize,
-        }
+        let mut data = [0; MAX_SIZE + 6];
+        let p = position.into();
+        data[0] = p.x;
+        data[1] = p.y;
+        data[2] = p.z;
+        data[3] = lod_level as u32;
+        data[4] = chunk_level as u32;
+        data[5] = l2s(chunk_level - lod_level);
+        Self { data }
     }
     pub fn get(&self, block_position: UVec3) -> Option<u32> {
         // Check for out of bound
@@ -121,11 +135,12 @@ impl Chunk {
     /// 3D Position to index in chunk
     pub fn flatten_value(&self, p: UVec3) -> usize {
         let width = self.width();
-        (p.x + (p.y * width) + (p.z * width * width)) as usize
+        (p.x + (p.y * width) + (p.z * width * width)) as usize + 6
     }
 
     // Index in chunk to 3D Position
     pub fn from_flatten(&self, mut index: u32) -> UVec3 {
+        index -= 6;
         let size = self.size();
         //assert!(0 <= index < size*size*size);
         let x = index % size;
@@ -138,22 +153,22 @@ impl Chunk {
 
     pub fn get_raw(&self, p: UVec3) -> u32 {
         let idx = self.flatten_value(p);
-        self.flatten[idx]
+        self.data[idx]
     }
     /// Sets local positioned block
     pub fn set(&mut self, position: UVec3, block: u32) {
         let idx = self.flatten_value(position);
 
-        self.flatten[idx] = block;
+        self.data[idx] = block;
     }
     /// Iterating over local positions and blocks
     pub fn iter<F>(&self, mut callback: F)
     where
         F: FnMut(UVec3, u32),
     {
-        let size = self.size;
-        for index in 0..(size * size * size) {
-            let voxel_id = self.flatten[index];
+        let size = self.size();
+        for index in 6..(size * size * size + 6) {
+            let voxel_id = self.data[index as usize];
 
             if voxel_id != 0 {
                 callback(self.from_flatten(index as u32), voxel_id);

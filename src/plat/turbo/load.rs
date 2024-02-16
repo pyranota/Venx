@@ -14,18 +14,16 @@ impl LoadInterface for GpuPlat {
     fn load_chunk(&self, position: glam::UVec3, lod_level: usize) -> Box<Chunk> {
         block_on(async {
             // TODO: Make use of push constants for position and lod_level
-            let (flatten, chunk_meta) = Chunk::new(position.to_array(), lod_level, 5).to_send();
-            let chunk_meta_buffer = self.cs.new_buffer(bytemuck::cast_slice(&[chunk_meta]));
-            let chunk_flatten_buffer = self.cs.new_buffer(bytemuck::cast_slice(&flatten));
+            let chunk = Chunk::new(position.to_array(), lod_level, 5);
+            // let (flatten, chunk_meta) = .to_send();
+            let chunk_buffer = self.cs.new_buffer(bytemuck::cast_slice(&[chunk]));
+            // let chunk_flatten_buffer = self.cs.new_buffer(bytemuck::cast_slice(&flatten));
 
             let chunk_bg = BindGroupBuilder::new()
-                .insert(0, false, chunk_meta_buffer.as_entire_binding())
-                .insert(1, false, chunk_flatten_buffer.as_entire_binding())
+                .insert(0, false, chunk_buffer.as_entire_binding())
                 .build(&self.cs);
 
-            let output_buffer = self
-                .cs
-                .new_staging_buffer(chunk_flatten_buffer.size(), true);
+            let output_buffer = self.cs.new_staging_buffer(chunk_buffer.size(), true);
 
             // Load pipelines
             let load_chunk_pl = PipelineBuilder::new(&self.module, "load_chunk_2")
@@ -55,7 +53,7 @@ impl LoadInterface for GpuPlat {
                     }
                     //
                     encoder.copy_buffer_to_buffer(
-                        &chunk_flatten_buffer,
+                        &chunk_buffer,
                         0,
                         &output_buffer,
                         0,
@@ -63,19 +61,12 @@ impl LoadInterface for GpuPlat {
                     );
                 })
                 .await;
-            let output_flatten: Vec<u32> = output_buffer.read_manual().await;
+            let output: Vec<Chunk> = output_buffer.read_manual().await;
 
             output_buffer.unmap();
 
-            Box::new(Chunk::receive(
-                output_flatten.try_into().unwrap(),
-                chunk_meta,
-            ))
+            Box::new(output[0])
         })
-    }
-
-    fn load_chunks(&self) {
-        todo!()
     }
 
     fn overlay_chunk(&self) {
@@ -88,5 +79,61 @@ impl LoadInterface for GpuPlat {
 
     fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> crate::plat::normal::mesh::Mesh {
         todo!()
+    }
+
+    fn load_chunks(&self, blank_chunks: Box<Vec<Chunk>>) -> Box<Vec<Chunk>> {
+        block_on(async {
+            // let (flatten, chunk_meta) = .to_send();
+            let chunk_buffer = self.cs.new_buffer(bytemuck::cast_slice(&blank_chunks));
+            // let chunk_flatten_buffer = self.cs.new_buffer(bytemuck::cast_slice(&flatten));
+
+            let chunk_bg = BindGroupBuilder::new()
+                .insert(0, false, chunk_buffer.as_entire_binding())
+                .build(&self.cs);
+
+            let output_buffer = self.cs.new_staging_buffer(chunk_buffer.size(), true);
+
+            // Load pipelines
+            let load_chunk_pl = PipelineBuilder::new(&self.module, "load_chunk_2")
+                .for_bindgroup(&self.base_bg)
+                .for_bindgroup(&self.tmp_bg)
+                .for_bindgroup(&self.schem_bg)
+                .for_bindgroup(&self.canvas_bg)
+                .for_bindgroup(&self.raw_plat_bg)
+                .for_bindgroup(&chunk_bg)
+                .build(&self.cs);
+
+            self.cs
+                .eval(|encoder| {
+                    {
+                        let mut cpass =
+                            encoder.begin_compute_pass(&ComputePassDescriptor { label: None });
+                        cpass.set_pipeline(&load_chunk_pl);
+
+                        cpass.set_bind_group(0, &self.base_bg.bindgroup, &[]);
+                        cpass.set_bind_group(1, &self.tmp_bg.bindgroup, &[]);
+                        cpass.set_bind_group(2, &self.schem_bg.bindgroup, &[]);
+                        cpass.set_bind_group(3, &self.canvas_bg.bindgroup, &[]);
+                        cpass.set_bind_group(4, &self.raw_plat_bg.bindgroup, &[]);
+                        cpass.set_bind_group(5, &chunk_bg.bindgroup, &[]);
+
+                        cpass.dispatch_workgroups(blank_chunks.len() as u32, 1, 1);
+                    }
+                    //
+                    encoder.copy_buffer_to_buffer(
+                        &chunk_buffer,
+                        0,
+                        &output_buffer,
+                        0,
+                        output_buffer.size(),
+                    );
+                })
+                .await;
+            let output: Vec<Chunk> = output_buffer.read_manual().await;
+
+            output_buffer.unmap();
+
+            Box::new(output)
+        })
     }
 }
