@@ -8,7 +8,7 @@ impl Debug for Layer<'_> {
         //     return write!(f, "Empty layer \n");
         // }
         write!(f, " \n ----------- \n Layer \n ----------- \n")?;
-        write!(f, " Entries: {:?} \n ----------- \n", self.entries)?;
+        // write!(f, " Entries: {:?} \n ----------- \n", self.entries)?;
         for (i, node) in self.nodes.iter().enumerate() {
             if node.flag == 0 {
                 write!(f, " {i} Branch: {:?} \n", node.children)?;

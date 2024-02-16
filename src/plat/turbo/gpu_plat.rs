@@ -47,7 +47,6 @@ impl GpuPlat {
 
         // Metadata
         let raw_plat_depth_stb = self.cs.new_staging_buffer(self.raw_plat_depth.size(), true);
-
         // Base layer
         let base_nodes_stb = self.cs.new_staging_buffer(self.base_nodes.size(), true);
         let base_entries_stb = self.cs.new_staging_buffer(self.base_entries.size(), true);
@@ -83,7 +82,7 @@ impl GpuPlat {
                     0,
                     &base_nodes_stb,
                     0,
-                    base_nodes_stb.size(),
+                    self.base_nodes.size(),
                 );
                 // Entries
                 encoder.copy_buffer_to_buffer(
@@ -182,7 +181,7 @@ impl GpuPlat {
 
         // Create CpuPlat from copied
         // WARNING! Hardcoded values
-        CpuPlat::new_from(
+        CpuPlat::from_existing(
             depth[0],
             5,
             6,
@@ -191,6 +190,15 @@ impl GpuPlat {
             (schem_nodes, schem_entries),
             (canvas_nodes, canvas_entries),
         )
+        // CpuPlat::new_from(
+        //     depth[0],
+        //     5,
+        //     6,
+        //     (base_nodes, base_entries),
+        //     (tmp_nodes, tmp_entries),
+        //     (schem_nodes, schem_entries),
+        //     (canvas_nodes, canvas_entries),
+        // )
     }
     pub async fn new_plat(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         // TODO: make more flexible

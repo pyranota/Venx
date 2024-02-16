@@ -53,6 +53,7 @@ impl RawPlat<'_> {
     /// Same goes for Layer, if it is Layer::All, it will return the most higher layer
     /// Return (Node_Idx, (Layer, Entry))
     ///  position is global!
+    #[inline]
     pub fn get_node(&self, position: UVec3, level: usize) -> GetNodeResult {
         // TODO make binary (take u64 and divide by 3 bits)
         // Small optimization
@@ -116,7 +117,7 @@ impl RawPlat<'_> {
     ) -> Option<usize> {
         todo!()
     }
-
+    #[inline]
     // TODO: make it return actual block, but not the entry
     pub fn get_voxel(&self, position: UVec3) -> GetNodeResult {
         self.get_node(position, 0)

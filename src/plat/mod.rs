@@ -401,14 +401,14 @@ mod tests {
         // Create 2 identical plats
 
         // First
-        let mut normal_plat_1 = VenxPlat::new(12, 5, 9);
+        let mut normal_plat_1 = VenxPlat::new(6, 5, 9);
         // Build something
         normal_plat_1.set_voxel(0, (4, 4, 4).into(), 1);
         normal_plat_1.set_voxel(0, (4, 5, 4).into(), 1);
         normal_plat_1.set_voxel(0, (5, 5, 5).into(), 2);
 
         // Second
-        let mut normal_plat_2 = VenxPlat::new(12, 5, 9);
+        let mut normal_plat_2 = VenxPlat::new(6, 5, 9);
         // Build something
         normal_plat_2.set_voxel(0, (4, 4, 4).into(), 1);
         normal_plat_2.set_voxel(0, (4, 5, 4).into(), 1);

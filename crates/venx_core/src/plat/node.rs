@@ -76,8 +76,8 @@ impl IndexMut<usize> for Node {
     }
 }
 
-// TODO: implement From<u64>
-pub struct NodeAddr(u64);
+// TODO: use u64
+pub struct NodeAddr(u32);
 
 impl NodeAddr {
     pub fn from_position(mut position: UVec3, depth: usize, until_level: usize) -> Self {
@@ -108,14 +108,14 @@ impl NodeAddr {
     /// Get child idx on given level
     pub fn get_idx(&self, level: usize) -> usize {
         assert!(level <= 21);
-        ((&self.0 >> (level * 3)) & 0o7u64) as usize
+        ((&self.0 >> (level * 3)) & 0o7) as usize
     }
     /// Set child idx on given level
     /// Idx is 0-7
     pub fn set_idx(&mut self, level: usize, idx: usize) {
         assert!(level <= 21);
         assert!(idx < 8);
-        self.0 |= (idx as u64) << level * 3;
+        self.0 |= (idx as u32) << level * 3;
     }
 }
 

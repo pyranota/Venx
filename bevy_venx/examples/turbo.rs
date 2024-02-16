@@ -1,9 +1,14 @@
 use std::f32::consts::PI;
 
-use bevy::{math::vec3, prelude::*, render::render_resource::PrimitiveTopology};
+use bevy::{
+    math::vec3, pbr::wireframe::Wireframe, prelude::*, render::render_resource::PrimitiveTopology,
+};
 use bevy_panorbit_camera::PanOrbitCamera;
 use pollster::block_on;
-use venx::plat::{interfaces::layer::LayerInterface, VenxPlat};
+use venx::plat::{
+    interfaces::{layer::LayerInterface, load::LoadInterface},
+    VenxPlat,
+};
 
 fn main() {
     App::new()
@@ -27,33 +32,68 @@ fn setup(
     //     plat
     // });
 
+    // let plat_2 = VenxPlat::load("mca_small").unwrap_or_else(|e| {
+    //     warn!("Plat wasnt found on device, creating new and saving ({e})");
+    //     // Convert from minecraft map
+    //     let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1)).unwrap();
+    //     plat.save("mca_small").unwrap();
+    //     plat
+    // });
+
     let mut plat = VenxPlat::new(6, 5, 5);
 
-    plat.set_voxel(0, (0, 0, 0).into(), 1);
-    plat.set_voxel(0, (0, 1, 0).into(), 1);
+    plat.set_voxel(0, (0, 0, 0).into(), 4);
+    plat.set_voxel(0, (0, 1, 0).into(), 9);
 
+    plat.set_voxel(0, (0, 5, 0).into(), 9);
+    info!("Transfer to gpu");
     let plat = block_on(plat.transfer_to_gpu());
 
-    for mesh in plat.static_mesh(0..16, 0..6, 0..16, Some(0)) {
-        let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    info!("Loading chunk");
+    let chunk = plat.load_chunk((0, 0, 0).into(), 0);
 
-        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
-        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, mesh.1.clone());
-        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, mesh.2.clone());
+    info!("Transfer from gpu");
+    let plat = block_on(plat.transfer_from_gpu());
 
-        cmd.spawn(PbrBundle {
-            mesh: bevy_meshes.add(bevy_mesh),
-            material: materials.add(StandardMaterial {
-                reflectance: 0.1,
-                base_color: Color::rgb(1., 1., 1.),
-                // alpha_mode: AlphaMode::Blend,
-                ..default()
-            }),
-            ..default()
-        })
-        //.insert(Wireframe)
-        ;
+    // assert_eq!(
+    //     plat.get_normal_unchecked().borrow_raw_plat().depth,
+    //     plat_2.get_normal_unchecked().borrow_raw_plat().depth
+    // );
+
+    // assert!(chunk.get((0, 0, 0).into()).is_some());
+    // assert!(chunk.get((0, 1, 0).into()).is_some());
+    let mesh = plat.compute_mesh_from_chunk(&chunk);
+    //assert!(chunk.get((0, 2, 0).into()).is_some());
+
+    let mut vertices: Vec<[f32; 3]> = vec![];
+    let mut colors: Vec<[f32; 4]> = vec![];
+    let mut normals: Vec<[f32; 3]> = vec![];
+
+    for (position, color, normal) in mesh.iter() {
+        if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
+            break;
+        }
+
+        vertices.push(position.to_array());
+        colors.push(color.to_array());
+        normals.push(normal.to_array());
     }
+    let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
+    bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
+    bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+
+    cmd.spawn(PbrBundle {
+        mesh: bevy_meshes.add(bevy_mesh),
+        material: materials.add(StandardMaterial {
+            reflectance: 0.1,
+            base_color: Color::rgb(1., 1., 1.),
+            // alpha_mode: AlphaMode::Blend,
+            ..default()
+        }),
+        ..default()
+    })
+    .insert(Wireframe);
 
     // ambient light
     cmd.insert_resource(AmbientLight {

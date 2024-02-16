@@ -1,22 +1,40 @@
-use core::mem::size_of;
-
 use bytemuck::{Pod, Zeroable};
 use bytes_cast::BytesCast;
-use spirv_std::glam::{uvec3, UVec3};
+use spirv_std::{
+    glam::{uvec3, UVec3},
+    num_traits::Zero,
+};
 
 use crate::utils::l2s;
 
-#[cfg(not(feature = "bitcode_support"))]
-const MAX_SIZE: usize = 32;
+// #[cfg(not(feature = "bitcode_support"))]
+// const MAX_SIZE: usize = 32;
 
-#[cfg(feature = "bitcode_support")]
+// #[cfg(feature = "bitcode_support")]
 const MAX_SIZE: usize = 32 * 32 * 32;
 
-// #[derive(Clone, Copy, Pod, Zeroable)]
+#[derive(Clone, Copy)]
 #[repr(C)]
 pub struct Chunk {
-    pub flatten: [u32; MAX_SIZE], // Max size
+    pub flatten: [u32; MAX_SIZE],
     position: UVec3,
+    lod_level: usize,
+    chunk_level: usize,
+    size: usize,
+    // TODO:
+    // neighbor chunk levels
+}
+
+unsafe impl Pod for Chunk {}
+
+unsafe impl Zeroable for Chunk {}
+
+#[derive(Clone, Copy, Pod, Zeroable)]
+#[repr(C)]
+pub struct ChunkMeta {
+    x: usize,
+    y: usize,
+    z: usize,
     lod_level: usize,
     chunk_level: usize,
     size: usize,
@@ -30,6 +48,7 @@ pub unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
 
 pub unsafe fn u8_slice_as_any<T: Sized>(p: &[u8]) -> &[T] {
     // ::core::slice::from_raw_parts((p as *const u8) as *const T, ::core::mem::size_of::<T>())
+
     todo!()
 }
 
@@ -50,6 +69,30 @@ impl Chunk {
     /// Width in meters, tells how much space in 3d space chunk takes
     pub fn width(&self) -> u32 {
         l2s(self.chunk_level)
+    }
+
+    pub fn to_send(self) -> ([u32; MAX_SIZE], ChunkMeta) {
+        (
+            self.flatten,
+            ChunkMeta {
+                x: self.position.x as usize,
+                y: self.position.y as usize,
+                z: self.position.z as usize,
+                lod_level: self.lod_level,
+                chunk_level: self.chunk_level,
+                size: self.size,
+            },
+        )
+    }
+
+    pub fn receive(flatten: [u32; MAX_SIZE], meta: ChunkMeta) -> Self {
+        Self {
+            flatten,
+            position: uvec3(meta.x as u32, meta.y as u32, meta.z as u32),
+            lod_level: meta.lod_level,
+            chunk_level: meta.chunk_level,
+            size: meta.size,
+        }
     }
 
     pub fn new(position: impl Into<UVec3>, lod_level: usize, chunk_level: usize) -> Self {
