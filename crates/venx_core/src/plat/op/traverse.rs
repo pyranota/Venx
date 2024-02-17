@@ -19,6 +19,8 @@ pub struct Props<'a> {
     pub parent_idx: &'a usize,
     /// Actual Node data
     pub node: &'a Node,
+    /// Node idx
+    pub node_idx: usize,
     /// Level of node
     pub level: usize,
     /// Forwarded entry index
@@ -110,10 +112,11 @@ impl RawPlat<'_> {
         for layer_idx in 0..4 {
             let layer = &self[layer_idx];
 
-            let res = layer.get_node(region_position * l2s(region_level), region_level, None);
+            let node_idx =
+                layer.get_node_idx_gpu(region_position * l2s(region_level), region_level, None);
 
-            if res.is_some() {
-                layer.traverse(0, res.node_idx, UVec3::ZERO, true, region_level, callback)
+            if node_idx != 0 {
+                layer.traverse(0, node_idx, UVec3::ZERO, true, region_level, callback)
             }
         }
 
@@ -145,6 +148,7 @@ impl Layer<'_> {
     ) where
         F: FnMut(&mut Props),
     {
+        // TODO: use assert!
         if cfg!(feature = "bitcode_support") {
             assert_ne!(from_node_idx, 0);
         }
@@ -173,20 +177,15 @@ impl Layer<'_> {
             if *index > 7 && *level == from_level {
                 break;
             }
-            // Hit bottom and iterated over all children
-            if *level == 0 && *index > 7 {
-                stack.pop();
-                continue;
-            }
-            // Iterated over all children
-            if *index > 7 {
-                stack.pop();
-                continue;
-            }
+
             // Some cache going on here
             let node = &self[*node_idx];
 
             if node.is_fork() {
+                if *index % 2 != 0 {
+                    panic!()
+                }
+
                 // Out of bound
                 if *index == 8 {
                     let flag = node.flag;
@@ -210,6 +209,9 @@ impl Layer<'_> {
                 *index += 2;
 
                 if *child_id != 0 {
+                    // if *index == 4 {
+                    //     panic!();
+                    // }
                     let (node_idx, level) = (node_idx.clone(), level.clone());
 
                     stack.push((
@@ -229,6 +231,12 @@ impl Layer<'_> {
                 }
             }
 
+            // Iterated over all children
+            if *index > 7 {
+                stack.pop();
+                continue;
+            }
+
             // Call for each enter once
             // If remove, it will call this callback 7 extra times
             if *index == 0 {
@@ -238,6 +246,7 @@ impl Layer<'_> {
                     positioned,
                     parent_idx: &parent_idx,
                     node: &node,
+                    node_idx: *node_idx,
                     entry: *voxel_id as u32,
                     level: *level,
                     drop_tree: false,
@@ -247,7 +256,7 @@ impl Layer<'_> {
                 callback(&mut props);
 
                 // Drop subtree traversal
-                if props.drop_tree {
+                if props.drop_tree || *level == 0 {
                     stack.pop();
                     continue;
                 }
@@ -289,6 +298,7 @@ mod tests {
     extern crate alloc;
     extern crate std;
     use crate::*;
+    use core::borrow::{Borrow, BorrowMut};
     use std::{dbg, println};
 
     use alloc::{
@@ -359,42 +369,307 @@ mod tests {
     }
 
     #[test]
+    fn traverse_check_props_node_idx() {
+        quick_raw_plat!(plat, depth 6, len 1_000);
+
+        plat[0].set((0, 12, 8).into(), 22);
+        plat[0].set((1, 12, 8).into(), 32);
+        plat[0].set((2, 12, 8).into(), 52);
+        plat[0].set((5, 12, 4).into(), 12);
+        plat[0].set((1, 2, 11).into(), 2);
+
+        // plat.traverse(super::EntryOpts::All, LayerOpts::All, &mut |p| {
+        //     assert_eq!(
+        //         plat[0].get_node_idx_gpu(*p.position, p.level, Some(p.entry as usize)),
+        //         p.node_idx
+        //     )
+        // });
+    }
+
+    #[test]
+    fn traverse_check_props_node() {
+        quick_raw_plat!(plat, depth 6, len 1_000);
+
+        plat[0].set((0, 12, 8).into(), 22);
+        plat[0].set((1, 12, 8).into(), 32);
+        plat[0].set((2, 12, 8).into(), 52);
+        plat[0].set((5, 12, 4).into(), 12);
+        plat[0].set((1, 2, 11).into(), 2);
+
+        // plat.traverse(super::EntryOpts::All, LayerOpts::All, &mut |p| {
+        //     assert_eq!(
+        //         &plat[0].nodes[plat[0].get_node_idx_gpu(*p.position, p.level, None)],
+        //         p.node
+        //     )
+        // });
+    }
+
+    #[test]
+    fn traverse_check_props_parent_idx() {
+        quick_raw_plat!(plat, depth 6, len 100);
+
+        plat[0].set((0, 12, 8).into(), 2);
+        plat[0].set((1, 12, 8).into(), 2);
+        plat[0].set((2, 12, 8).into(), 2);
+        plat[0].set((5, 12, 4).into(), 2);
+        plat[0].set((1, 2, 11).into(), 2);
+
+        let mut seq = alloc::vec![];
+        let mut parent_helper = [UVec3::ZERO; 8];
+
+        plat.traverse(super::EntryOpts::All, LayerOpts::All, &mut |p| {
+            parent_helper[p.level] = *p.position;
+
+            seq.push((*p.parent_idx, (p.level), p.node_idx));
+
+            // if p.level < 4 {
+            //     dbg!(p.level);
+            //     assert_eq!(
+            //         &plat[0].get_node_idx_gpu(
+            //             parent_helper[p.level + 1],
+            //             p.level + 1,
+            //             Some(p.entry as usize)
+            //         ),
+            //         p.parent_idx
+            //     )
+            // }
+        });
+
+        // assert_eq!(seq, alloc::vec![])
+    }
+
+    #[test]
     fn traverse_layer_full() {
-        let mut base = (Box::new([Node::default(); 23_000]), [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            7,
-            5,
-            5,
-            (&mut *base.0, &mut base.1),
-            (&mut *tmp.0, &mut tmp.1),
-            (&mut *schem.0, &mut schem.1),
-            (&mut *canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 6, len 1_000);
 
-        let mut rng = rand::thread_rng();
+        // 0 0 0
+        plat[0].set((0, 12, 8).into(), 22);
+        plat[0].set((1, 12, 8).into(), 32);
+        plat[0].set((2, 12, 8).into(), 52);
+        plat[0].set((5, 12, 4).into(), 12);
+        plat[0].set((1, 2, 11).into(), 2);
 
-        let mtx: [[[u16; 16]; 16]; 16] = rng.gen();
+        // 1 1 0
+        plat[0].set((34, 34, 8).into(), 32);
+        plat[0].set((35, 32, 8).into(), 22);
+        plat[0].set((50, 50, 4).into(), 12);
+        plat[0].set((55, 60, 4).into(), 2);
 
-        for x in 0..16 {
-            for y in 0..16 {
-                for z in 0..16 {
-                    let voxel_id = mtx[x][y][z] as u32 + 1;
-                    plat[0].set(uvec3(x as u32, y as u32, z as u32), voxel_id);
-                }
-            }
-        }
-        //let mut seq = vec![];
+        // 1 0 1
+        plat[0].set((56, 2, 60).into(), 22);
+        plat[0].set((57, 2, 60).into(), 32);
+        plat[0].set((58, 2, 60).into(), 52);
+        plat[0].set((59, 2, 60).into(), 12);
+        plat[0].set((60, 2, 60).into(), 11);
 
-        plat[0].traverse(0, 2, UVec3::ZERO, true, plat.depth, &mut |p| {
+        // 0 0 1
+        plat[0].set((2, 16, 60).into(), 52);
+
+        let mut seq = alloc::vec![];
+
+        plat.traverse(super::EntryOpts::All, LayerOpts::All, &mut |p| {
             if p.level == 0 {
-                assert_eq!(
-                    p.entry,
-                    mtx[p.position.x as usize][p.position.y as usize][p.position.z as usize] as u32
-                        + 1
-                );
+                seq.push(*p.position);
             }
         });
+
+        assert_eq!(
+            &seq,
+            &alloc::vec![
+                uvec3(0, 12, 8),
+                uvec3(1, 12, 8),
+                uvec3(2, 12, 8),
+                uvec3(5, 12, 4),
+                uvec3(1, 2, 11),
+                //
+                uvec3(34, 34, 8),
+                uvec3(35, 32, 8),
+                uvec3(50, 50, 4),
+                uvec3(55, 60, 4),
+                //
+                uvec3(2, 16, 60),
+                //
+                uvec3(56, 2, 60),
+                uvec3(57, 2, 60),
+                uvec3(58, 2, 60),
+                uvec3(59, 2, 60),
+                uvec3(60, 2, 60)
+            ]
+        );
+    }
+
+    #[test]
+    fn traverse_levels_and_check_ids() {
+        quick_raw_plat!(plat, depth 6, len 1_000);
+
+        plat[0].set((0, 12, 8).into(), 22);
+        plat[0].set((1, 12, 8).into(), 32);
+        plat[0].set((2, 12, 8).into(), 52);
+        plat[0].set((5, 12, 4).into(), 12);
+        plat[0].set((1, 2, 11).into(), 2);
+
+        let mut seq = alloc::vec![];
+
+        plat.traverse(super::EntryOpts::All, LayerOpts::All, &mut |p| {
+            seq.push(p.entry);
+        });
+
+        assert_eq!(
+            &seq,
+            &alloc::vec![
+                0, 0, 22, 22, 22, 22, 22, 32, 32, 32, 32, 32, 52, 52, 52, 52, 52, 12, 12, 12, 12,
+                12, 2, 2, 2, 2, 2, 0, 0, 0
+            ]
+        );
+
+        plat.traverse(super::EntryOpts::All, LayerOpts::All, &mut |p| {
+            // dbg!(p.level);
+            if p.level != 4 {
+                assert_eq!(
+                    plat[0]
+                        .get_node(*p.position, p.level, Some(p.entry as usize))
+                        .voxel_id,
+                    p.entry as usize
+                )
+            }
+        });
+    }
+
+    #[test]
+    fn traverse_check_path() {
+        quick_raw_plat!(plat, depth 6, len 10);
+
+        plat[0].set((7, 20, 5).into(), 52);
+
+        let mut seq = alloc::vec![];
+
+        let mut invocation_amount = 0;
+
+        plat[0].traverse(0, 2, UVec3::ZERO, false, 6, &mut |p| {
+            seq.push((*p.parent_idx, p.node_idx, plat[0][p.node_idx]));
+            invocation_amount += 1;
+        });
+        dbg!(&plat[0]);
+        assert_eq!(&seq, &alloc::vec![]);
+        assert_eq!(invocation_amount, 7);
+    }
+
+    #[test]
+    fn test_traverse_region_positions() {
+        quick_raw_plat!(plat, depth 6, len 1_000);
+
+        // 0 0 0
+        plat[0].set((0, 12, 8).into(), 22);
+        plat[0].set((1, 12, 8).into(), 32);
+        plat[0].set((2, 12, 8).into(), 52);
+        plat[0].set((5, 12, 4).into(), 12);
+        plat[0].set((1, 2, 11).into(), 2);
+
+        // 1 1 0
+        plat[0].set((34, 34, 8).into(), 32);
+        plat[0].set((35, 32, 8).into(), 22);
+        plat[0].set((50, 50, 4).into(), 12);
+        plat[0].set((55, 60, 4).into(), 2);
+
+        // 1 0 1
+        plat[0].set((56, 2, 60).into(), 22);
+        plat[0].set((57, 2, 60).into(), 32);
+        plat[0].set((58, 2, 60).into(), 52);
+        plat[0].set((59, 2, 60).into(), 12);
+        plat[0].set((60, 2, 60).into(), 12);
+
+        // 0 0 1
+        plat[0].set((2, 16, 60).into(), 52);
+
+        let mut seq = alloc::vec![];
+
+        plat.traverse_region(
+            uvec3(0, 0, 0),
+            5,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    seq.push(*p.position);
+                }
+            },
+        );
+
+        assert_eq!(
+            &seq,
+            &alloc::vec![
+                uvec3(0, 12, 8),
+                uvec3(1, 12, 8),
+                uvec3(2, 12, 8),
+                uvec3(5, 12, 4),
+                uvec3(1, 2, 11)
+            ]
+        );
+
+        let mut seq = alloc::vec![];
+
+        plat.traverse_region(
+            uvec3(1, 1, 0),
+            5,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    seq.push(*p.position);
+                }
+            },
+        );
+
+        assert_eq!(
+            &seq,
+            &alloc::vec![
+                uvec3(2, 2, 8),
+                uvec3(3, 0, 8),
+                uvec3(18, 18, 4),
+                uvec3(23, 28, 4),
+            ]
+        );
+
+        let mut seq = alloc::vec![];
+
+        plat.traverse_region(
+            uvec3(1, 0, 1),
+            5,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    seq.push(*p.position);
+                }
+            },
+        );
+
+        assert_eq!(
+            &seq,
+            &alloc::vec![
+                uvec3(24, 2, 28),
+                uvec3(25, 2, 28),
+                uvec3(26, 2, 28),
+                uvec3(27, 2, 28),
+                uvec3(28, 2, 28)
+            ]
+        );
+
+        let mut seq = alloc::vec![];
+
+        plat.traverse_region(
+            uvec3(0, 0, 1),
+            5,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    seq.push(*p.position);
+                }
+            },
+        );
+
+        assert_eq!(&seq, &alloc::vec![uvec3(2, 16, 28)]);
     }
 
     #[test]
@@ -445,23 +720,13 @@ mod tests {
 
     #[test]
     fn deep_traverse_region_full() {
-        let mut base = (Box::new([Node::default(); 203_000]), [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            8,
-            5,
-            5,
-            (&mut *base.0, &mut base.1),
-            (&mut *tmp.0, &mut tmp.1),
-            (&mut *schem.0, &mut schem.1),
-            (&mut *canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 7, len 100_000_000);
 
-        let mtx = gen_rand_mtx::<256>(50);
+        let mtx = gen_rand_mtx::<128>(50);
 
-        for x in 0..256 {
-            for y in 0..256 {
-                for z in 0..256 {
+        for x in 0..128 {
+            for y in 0..128 {
+                for z in 0..128 {
                     let voxel_id = mtx[x][y][z];
                     plat[0].set(uvec3(x as u32, y as u32, z as u32), voxel_id);
                 }
@@ -479,6 +744,112 @@ mod tests {
                     assert_eq!(
                         p.entry,
                         mtx[p.position.x as usize][p.position.y as usize][p.position.z as usize]
+                    );
+
+                    assert_eq!(p.entry, plat.get_voxel(*p.position).voxel_id as u32);
+                }
+            },
+        );
+
+        plat.traverse_region(
+            uvec3(0, 1, 0),
+            6,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    assert_eq!(
+                        p.entry,
+                        mtx[p.position.x as usize][p.position.y as usize + 64]
+                            [p.position.z as usize]
+                    );
+
+                    assert_eq!(
+                        p.entry,
+                        plat.get_voxel(*p.position + uvec3(0, 1, 0) * 64).voxel_id as u32
+                    );
+                }
+            },
+        );
+
+        plat.traverse_region(
+            uvec3(1, 1, 1),
+            6,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    assert_eq!(
+                        p.entry,
+                        mtx[p.position.x as usize + 64][p.position.y as usize + 64]
+                            [p.position.z as usize + 64]
+                    );
+
+                    assert_eq!(
+                        p.entry,
+                        plat.get_voxel(*p.position + uvec3(1, 1, 1) * 64).voxel_id as u32
+                    );
+                }
+            },
+        );
+
+        plat.traverse_region(
+            uvec3(1, 1, 1),
+            5,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    assert_eq!(
+                        p.entry,
+                        mtx[p.position.x as usize + 32][p.position.y as usize + 32]
+                            [p.position.z as usize + 32]
+                    );
+
+                    assert_eq!(
+                        p.entry,
+                        plat.get_voxel(*p.position + uvec3(1, 1, 1) * 32).voxel_id as u32
+                    );
+                }
+            },
+        );
+
+        plat.traverse_region(
+            uvec3(2, 2, 2),
+            5,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    assert_eq!(
+                        p.entry,
+                        mtx[p.position.x as usize + 64][p.position.y as usize + 64]
+                            [p.position.z as usize + 64]
+                    );
+
+                    assert_eq!(
+                        p.entry,
+                        plat.get_voxel(*p.position + uvec3(2, 2, 2) * 32).voxel_id as u32
+                    );
+                }
+            },
+        );
+        plat.traverse_region(
+            uvec3(3, 2, 1),
+            5,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |p| {
+                if p.level == 0 {
+                    assert_eq!(
+                        p.entry,
+                        mtx[p.position.x as usize + 64 + 32][p.position.y as usize + 64]
+                            [p.position.z as usize + 32]
+                    );
+
+                    assert_eq!(
+                        p.entry,
+                        plat.get_voxel(*p.position + uvec3(3, 2, 1) * 32).voxel_id as u32
                     );
                 }
             },
