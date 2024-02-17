@@ -4,7 +4,7 @@ use glam::{uvec3, Vec2, Vec3};
 use log::info;
 use pollster::block_on;
 use std::{collections::HashMap, fs, ops::Range, path::PathBuf, usize};
-use venx_core::utils::s2l;
+use venx_core::{plat::node::Node, utils::s2l};
 
 use super::{interfaces::layer::LayerInterface, Plat, VenxPlat};
 
@@ -22,8 +22,11 @@ impl VenxPlat {
         let rgs = from_dir(PathBuf::from(dir_path), region_range)?;
         let mut plat = VenxPlat::new(s2l(max_width as u32), 5, 9);
 
+        let mut lookup_tables: Vec<HashMap<Node, usize>> = vec![HashMap::new(); 15];
+
         for (rg_pos, mut region) in rgs {
             //let mut segment = Segment::new(9);
+            info!("{rg_pos:?}");
             for ch_x in 0..32 {
                 for ch_z in 0..32 {
                     if let Ok(Some(data)) = region.read_chunk(ch_x, ch_z) {
@@ -88,7 +91,16 @@ impl VenxPlat {
                         }
                     }
                 }
+                if ch_x % 8 == 0 {
+                    plat.compress(
+                        0,
+                        uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
+                        9,
+                        &mut lookup_tables,
+                    );
+                }
             }
+
             // let segment_level = segment.level;
             // dbg!("Set Segment");
             // plat.controller.get_voxel_mut().set_segment(
@@ -121,6 +133,8 @@ impl VenxPlat {
 
         let rgs = from_dir(PathBuf::from(dir_path), region_range)?;
         let mut plat = VenxPlat::new(s2l(max_width as u32), 5, 9);
+
+        let mut lookup_tables: Vec<HashMap<Node, usize>> = vec![HashMap::new(); 15];
 
         let mut last_id = 1;
         let mut register = HashMap::new();
@@ -160,6 +174,14 @@ impl VenxPlat {
                             }
                         }
                     }
+                }
+                if ch_x % 8 == 0 {
+                    plat.compress(
+                        0,
+                        uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
+                        9,
+                        &mut lookup_tables,
+                    );
                 }
             }
         }

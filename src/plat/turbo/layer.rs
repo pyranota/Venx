@@ -1,3 +1,4 @@
+use glam::UVec3;
 use venx_core::{plat::op::get::GetNodeResult, utils::Grid};
 
 use crate::plat::interfaces::layer::LayerInterface;
@@ -18,11 +19,17 @@ impl LayerInterface for GpuPlat {
         todo!()
     }
 
-    fn compress(&mut self, layer: usize) {
+    fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
         todo!()
     }
 
-    fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
+    fn compress(
+        &mut self,
+        layer: usize,
+        position: UVec3,
+        level: u32,
+        lookup_tables: &mut Vec<std::collections::HashMap<venx_core::plat::node::Node, usize>>,
+    ) {
         todo!()
     }
 }

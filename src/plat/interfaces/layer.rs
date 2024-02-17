@@ -1,7 +1,10 @@
-use std::sync::Arc;
+use std::{collections::HashMap, sync::Arc};
 
 use glam::UVec3;
-use venx_core::{plat::op::get::GetNodeResult, utils::Grid};
+use venx_core::{
+    plat::{node::Node, op::get::GetNodeResult},
+    utils::Grid,
+};
 
 pub trait LayerInterface {
     // fn new_image(&mut self, name: &str) -> usize;
@@ -15,7 +18,13 @@ pub trait LayerInterface {
         position: UVec3,
     );
     fn set_voxel(&mut self, layer: usize, position: UVec3, ty: usize);
-    fn compress(&mut self, layer: usize);
+    fn compress(
+        &mut self,
+        layer: usize,
+        position: UVec3,
+        level: u32,
+        lookup_tables: &mut Vec<HashMap<Node, usize>>,
+    );
 
     fn get_voxel(&self, position: UVec3) -> Option<GetNodeResult>;
     // fn get_image(&self, handle: usize) -> &Image;
