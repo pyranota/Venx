@@ -4,13 +4,13 @@ use venx_core::{glam::*, plat::chunk::chunk::Chunk, utils::l2s};
 
 use super::cpu_plat::CpuPlat;
 
-const MESH_SIZE: usize = 25_000;
+const MESH_SIZE: usize = 36_000;
 
-pub type Mesh = Box<[(Vec3, Vec4, Vec3); MESH_SIZE]>; // Position, Color, Normal
+pub type Mesh = Box<Vec<(Vec3, Vec4, Vec3)>>; // Position, Color, Normal
 
 impl CpuPlat {
     pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
-        let mut mesh_box = Box::new([(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); MESH_SIZE]);
+        let mut mesh_box = Box::new(vec![(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); MESH_SIZE]);
         let mut mesh_idx = 0;
         let mesh = &mut *mesh_box;
 
