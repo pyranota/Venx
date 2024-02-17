@@ -56,7 +56,6 @@ impl<'a> Layer<'a> {
         nodes[0].children[0] = 3;
         // Chain holders
         // First 2 nodes are not holders, the rest is holders
-        // TODO: Make last holder reference 0 instaed of non-existing node
         // TODO: Decouple chaining holders and validating/creating layer
         // TODO: clear every node up
         for (i, free) in nodes.iter_mut().enumerate().skip(3) {
@@ -65,6 +64,8 @@ impl<'a> Layer<'a> {
             // Set link to next holder
             free.children[0] = i as u32 + 1;
         }
+
+        nodes.last_mut().unwrap()[0] = 0;
 
         Layer {
             depth,
@@ -75,14 +76,28 @@ impl<'a> Layer<'a> {
         }
     }
 
+    pub fn free(&self) -> usize {
+        let mut idx = 0;
+        let mut free = 0;
+        loop {
+            free += 1;
+            idx = self[idx][0] as usize;
+            if idx == 0 {
+                break;
+            }
+            assert!(free < self.nodes.len())
+        }
+
+        free
+    }
+
     pub fn get_node(
         &self,
         mut position: UVec3,
         level: usize,
         voxel_id_opt: Option<usize>,
     ) -> GetNodeResult {
-        // let addr = &NodeAddr::from_position(position, self.depth, level);
-        // self.get_node_with_addr(addr, level, voxel_id_opt)
+        // TODO: Handle cases with 4th level
         let mut current_level = self.depth as usize;
 
         let mut size = l2s(self.depth);
@@ -250,12 +265,101 @@ impl<'a> Layer<'a> {
         found_idx.voxel_id
     }
 
+    pub fn get_node_idx_gpu(
+        &self,
+        mut position: UVec3,
+        level: usize,
+        voxel_id_opt: Option<usize>,
+    ) -> usize {
+        // let addr = &NodeAddr::from_position(position, self.depth, level);
+        // self.get_node_with_addr(addr, level, voxel_id_opt)
+        let mut current_level = self.depth as usize;
+
+        let mut size = l2s(self.depth);
+        let mut found_idx = GetNodeResult::None();
+        let fork_level = 4;
+        let mut idx = 2;
+
+        while current_level > fork_level {
+            let child_index = Node::get_child_index(position, current_level - 1);
+
+            let below_node_idx = self[idx].children[child_index];
+
+            if below_node_idx != 0 {
+                idx = below_node_idx as usize;
+
+                if current_level == level + 1 {
+                    let res = GetNodeResult::Some(
+                        0,
+                        // TODO: Let layer store its id
+                        0,
+                        below_node_idx as usize,
+                    );
+                    return below_node_idx as usize;
+                }
+            } else {
+                return 0;
+            }
+            {
+                size /= 2;
+                position %= size;
+                current_level -= 1;
+            }
+        }
+
+        self.iter_fork(idx as usize, &mut |props| {
+            if let Some(needed_voxel_id) = voxel_id_opt {
+                if props.voxel_id == needed_voxel_id {
+                    props.drop = true;
+                } else {
+                    return;
+                }
+            }
+
+            let mut size = size;
+            let mut position = position.clone();
+            let mut current_level = current_level;
+            let mut idx = props.node_idx;
+
+            while current_level > level {
+                let child_index = Node::get_child_index(position, current_level - 1);
+
+                let below_node_idx = self[idx].children[child_index];
+
+                if below_node_idx != 0 {
+                    idx = below_node_idx as usize;
+                    if current_level == level + 1 {
+                        found_idx = GetNodeResult::Some(
+                            props.voxel_id as usize,
+                            // TODO: Let layer store its id
+                            0,
+                            below_node_idx as usize,
+                        );
+                        //found_idx = Some(below_node_idx as usize);
+                    }
+                } else {
+                    return;
+                }
+                {
+                    size /= 2;
+                    position %= size;
+                    current_level -= 1;
+                }
+            }
+
+            props.drop = true;
+        });
+
+        found_idx.node_idx
+    }
+
     pub fn get_node_with_addr(
         &self,
         addr: &NodeAddr,
         level: usize,
         voxel_id_opt: Option<usize>,
     ) -> (usize) {
+        todo!();
         let mut current_level = self.depth as usize;
 
         let mut found_idx = GetNodeResult::None();
@@ -342,6 +446,16 @@ impl<'a> Layer<'a> {
         }
     }
 
+    /// Deallocate node with holder-pool
+    pub fn deallocate_node(&mut self, node_idx: usize) {
+        // Append empty linked list
+        self[node_idx].flag = -1;
+        self[node_idx].children[0] = self.nodes[0].children[0];
+
+        // Change the actual head to new one
+        self[0].children[0] = node_idx as u32;
+    }
+
     /// Allocate node from holder-pool
     pub fn allocate_node(&mut self) -> usize {
         self.allocate_node_from(Node::default())
@@ -349,13 +463,16 @@ impl<'a> Layer<'a> {
     /// Allocate node from pool from given node
     pub fn allocate_node_from(&mut self, node: Node) -> usize {
         if self.nodes[0].children[0] != 0 {
-            // Taking the head of the chain to use
-            let return_idx = self.nodes[0].children[0] as usize;
-            // Changing head to next node in empty chain
-            self.nodes[0].children[0] = self[return_idx].children[0];
-            // Clear branch
-            self[return_idx] = node;
-            return_idx
+            // Taking node linked by head
+            let allocated_idx = self[0][0] as usize;
+            let allocated_node = &mut self[allocated_idx];
+            // Safety check
+            assert_eq!(allocated_node.flag, -1);
+            // Setting link from allocated_idx to head
+            self[0][0] = allocated_node[0];
+            // Set
+            self[allocated_idx] = node;
+            allocated_idx
         } else {
             panic!("You are out of holder-nodes");
         }
