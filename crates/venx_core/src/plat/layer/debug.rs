@@ -12,16 +12,15 @@ impl Debug for Layer<'_> {
         for (i, node) in self.nodes.iter().enumerate() {
             if node.flag == 0 {
                 write!(f, " {i} Branch: {:?} \n", node.children)?;
-            }
-            if node.flag == 3 {
+            } else if node.flag == -2 {
                 write!(f, " {i} Leaf \n")?;
+            } else if node.flag == -1 {
+                write!(f, " {i} Free -> {} \n", node.children[0])?;
+            } else if node.flag == -3 {
+                write!(f, " {i} Fork:   {:?}  \n", node.children)?;
+            } else {
+                write!(f, " {i} Linked Fork: {:?}  \n", node.children)?;
             }
-            if node.flag == 9 {
-                write!(f, " {i} Reserved \n")?;
-            }
-            // if node.flag == -1 {
-            //     write!(f, ".")?;
-            // }
         }
         write!(f, "\n ----------- \n \n")
     }
