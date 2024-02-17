@@ -1,7 +1,12 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    math::vec3, pbr::DirectionalLightShadowMap, prelude::*,
+    math::vec3,
+    pbr::{
+        CascadeShadowConfigBuilder, DirectionalLightShadowMap, NotShadowCaster,
+        ScreenSpaceAmbientOcclusionBundle,
+    },
+    prelude::*,
     render::render_resource::PrimitiveTopology,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
@@ -12,7 +17,7 @@ fn main() {
         .add_plugins((DefaultPlugins, bevy_panorbit_camera::PanOrbitCameraPlugin))
         .add_systems(Startup, setup)
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)))
-        .insert_resource(DirectionalLightShadowMap { size: 2048 })
+        .insert_resource(DirectionalLightShadowMap { size: 512 })
         .run();
 }
 fn setup(
@@ -28,7 +33,7 @@ fn setup(
         plat.save("mca_small").unwrap();
         plat
     });
-    for mesh in plat.static_mesh(0..16, 0..6, 0..16, Some(1)) {
+    for mesh in plat.static_mesh(0..16, 3..6, 0..16, Some(1)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
@@ -52,63 +57,137 @@ fn setup(
     // ambient light
     cmd.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 0.13,
+        brightness: 0.15,
     });
     // // light
-    cmd.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 4000.0,
-            shadows_enabled: true,
-            range: 400.,
-            radius: 200.,
-            ..default()
-        },
-        transform: Transform::from_xyz(0.0, 15.0, 0.0),
-        ..default()
-    });
+    // cmd.spawn(PointLightBundle {
+    //     point_light: PointLight {
+    //         intensity: 5000000.0,
+    //         shadows_enabled: true,
+    //         range: 4000.,
+    //         radius: 2000.,
+    //         color: Color::YELLOW,
+    //         ..Default::default()
+    //     },
+    //     transform: Transform {
+    //         translation: Vec3::new(-10.0, 500.0, -10.0),
+    //         rotation: Quat::from_rotation_x(-PI / 3.87),
+    //         ..default()
+    //     },
+    //     ..default()
+    // });
+
+    // // // light
+    // cmd.spawn(PointLightBundle {
+    //     point_light: PointLight {
+    //         intensity: 5000000.0,
+    //         shadows_enabled: true,
+    //         range: 4000.,
+    //         radius: 2000.,
+    //         color: Color::WHITE,
+    //         ..default()
+    //     },
+    //     transform: Transform {
+    //         translation: Vec3::new(300.0, 500.0, -10.0),
+    //         rotation: Quat::from_rotation_x(-PI / 3.87),
+    //         ..default()
+    //     },
+    //     ..default()
+    // });
     // directional 'sun' light
+    // cmd.spawn(DirectionalLightBundle {
+    //     directional_light: DirectionalLight {
+    //         shadows_enabled: true,
+    //         illuminance: 35_000.,
+    //         ..Default::default()
+    //     },
+    //     transform: Transform {
+    //         translation: Vec3::new(1000.0, -1000.0, 1000.0),
+    //         // rotation: Quat::from_rotation_x(-PI / 3.87),
+    //         ..default()
+    //     },
+    //     // The default cascade config is designed to handle large scenes.
+    //     // As this example has a much smaller world, we can tighten the shadow
+    //     // bounds for better visual quality.
+    //     cascade_shadow_config: CascadeShadowConfigBuilder {
+    //         first_cascade_far_bound: 200.0,
+    //         maximum_distance: 5000.0,
+    //         ..default()
+    //     }
+    //     .into(),
+    //     ..default()
+    // });
+    let cascade_shadow_config = CascadeShadowConfigBuilder {
+        first_cascade_far_bound: 0.3,
+        maximum_distance: 3.0,
+        ..default()
+    }
+    .build();
+
+    // Sun
     cmd.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
+            color: Color::rgb(0.98, 0.95, 0.82),
             shadows_enabled: true,
             ..default()
         },
-        transform: Transform {
-            translation: Vec3::new(-10.0, 300.0, -10.0),
-            rotation: Quat::from_rotation_x(-PI / 3.87),
-            ..default()
-        },
-        // The default cascade config is designed to handle large scenes.
-        // As this example has a much smaller world, we can tighten the shadow
-        // bounds for better visual quality.
-        // cascade_shadow_config: CascadeShadowConfigBuilder {
-        //     first_cascade_far_bound: 4.0,
-        //     maximum_distance: 10.0,
-        //     ..default()
-        // }
-        // .into(),
+        transform: Transform::from_xyz(300.0, 300.0, 300.0)
+            .looking_at(Vec3::new(-0.15, -0.05, -0.25), Vec3::Y),
+        cascade_shadow_config,
         ..default()
     });
+    // Sky
+    cmd.spawn((
+        PbrBundle {
+            mesh: bevy_meshes.add(Mesh::from(shape::Box::default())),
+            material: materials.add(StandardMaterial {
+                base_color: Color::hex("888888").unwrap(),
+                unlit: true,
+                cull_mode: None,
+                ..default()
+            }),
+            transform: Transform::from_scale(Vec3::splat(1900.0)),
+            ..default()
+        },
+        NotShadowCaster,
+    ));
 
     // camera
     cmd.spawn((
         Camera3dBundle {
             camera: Camera {
-                // hdr: true,
+                hdr: true,
                 ..default()
             },
-            transform: Transform::from_xyz(28.0, 50., 28.0).looking_at(vec3(0., 0., 0.), Vec3::Y),
+            transform: Transform::from_xyz(28.0, 200., 28.0)
+                .looking_at(Vec3::new(-0.15, -0.05, -0.25), Vec3::Y),
             ..default()
         },
         // ScreenSpaceAmbientOcclusionBundle::default(),
         // TemporalAntiAliasBundle::default(),
         // FogSettings {
         //     color: Color::rgb(0.52, 0.80, 0.92),
-        //     falloff: FogFalloff::Linear {
-        //         start: 200.0,
-        //         end: 5000.0,
-        //     },
+        //     // falloff: FogFalloff::Atmospheric { extinction: (), inscattering: () } {
+        //     //     start: 200.0,
+        //     //     end: 5000.0,
+        //     // },
+        //     falloff: FogFalloff::from_visibility(3050.0),
         //     ..Default::default()
         // },
-        PanOrbitCamera::default(),
+        FogSettings {
+            color: Color::rgba(0.35, 0.48, 0.66, 1.0),
+            directional_light_color: Color::rgba(1.0, 0.95, 0.85, 0.5),
+            directional_light_exponent: 30.0,
+            falloff: FogFalloff::from_visibility_colors(
+                300.0, // distance in world units up to which objects retain visibility (>= 5% contrast)
+                Color::rgb(0.35, 0.5, 0.66), // atmospheric extinction color (after light is lost due to absorption by atmospheric particles)
+                Color::rgb(0.8, 0.844, 1.0), // atmospheric inscattering color (light gained due to scattering from the sun)
+            ),
+        },
+        PanOrbitCamera {
+            // Set focal point (what the camera should look at)
+            focus: Vec3::new(280.0, 228., 280.0),
+            ..Default::default()
+        },
     ));
 }

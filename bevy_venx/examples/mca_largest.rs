@@ -1,6 +1,9 @@
 use std::f32::consts::PI;
 
-use bevy::{math::vec3, prelude::*, render::render_resource::PrimitiveTopology};
+use bevy::{
+    math::vec3, pbr::DirectionalLightShadowMap, prelude::*,
+    render::render_resource::PrimitiveTopology,
+};
 use bevy_panorbit_camera::PanOrbitCamera;
 use venx::plat::VenxPlat;
 
@@ -8,7 +11,8 @@ fn main() {
     App::new()
         .add_plugins((DefaultPlugins, bevy_panorbit_camera::PanOrbitCameraPlugin))
         .add_systems(Startup, setup)
-        .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)))
+        .insert_resource(ClearColor(Color::hex("888888").unwrap()))
+        .insert_resource(DirectionalLightShadowMap { size: 2048 })
         .run();
 }
 fn setup(
@@ -49,48 +53,72 @@ fn setup(
     // ambient light
     cmd.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 0.53,
+        brightness: 0.15,
     });
     // // light
-    // cmd.spawn(PointLightBundle {
-    //     point_light: PointLight {
-    //         intensity: 4000.0,
-    //         shadows_enabled: true,
-    //         range: 400.,
-    //         radius: 200.,
-    //         ..default()
-    //     },
-    //     transform: Transform::from_xyz(0.0, 15.0, 0.0),
-    //     ..default()
-    // });
-    // directional 'sun' light
-    cmd.spawn(DirectionalLightBundle {
-        directional_light: DirectionalLight {
+    cmd.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 5000000.0,
             shadows_enabled: true,
-            ..default()
+            range: 4000.,
+            radius: 2000.,
+            color: Color::YELLOW,
+            ..Default::default()
         },
         transform: Transform {
-            translation: Vec3::new(-10.0, 300.0, -10.0),
+            translation: Vec3::new(-10.0, 500.0, -10.0),
             rotation: Quat::from_rotation_x(-PI / 3.87),
             ..default()
         },
-        // The default cascade config is designed to handle large scenes.
-        // As this example has a much smaller world, we can tighten the shadow
-        // bounds for better visual quality.
-        // cascade_shadow_config: CascadeShadowConfigBuilder {
-        //     first_cascade_far_bound: 4.0,
-        //     maximum_distance: 10.0,
-        //     ..default()
-        // }
-        // .into(),
         ..default()
     });
+
+    // // light
+    cmd.spawn(PointLightBundle {
+        point_light: PointLight {
+            intensity: 5000000.0,
+            shadows_enabled: true,
+            range: 4000.,
+            radius: 2000.,
+            color: Color::WHITE,
+            ..default()
+        },
+        transform: Transform {
+            translation: Vec3::new(300.0, 500.0, -10.0),
+            rotation: Quat::from_rotation_x(-PI / 3.87),
+            ..default()
+        },
+        ..default()
+    });
+
+    // // directional 'sun' light
+    // cmd.spawn(DirectionalLightBundle {
+    //     directional_light: DirectionalLight {
+    //         shadows_enabled: true,
+    //         ..default()
+    //     },
+    //     transform: Transform {
+    //         translation: Vec3::new(-10.0, 300.0, -10.0),
+    //         rotation: Quat::from_rotation_x(-PI / 3.87),
+    //         ..default()
+    //     },
+    //     // The default cascade config is designed to handle large scenes.
+    //     // As this example has a much smaller world, we can tighten the shadow
+    //     // bounds for better visual quality.
+    //     // cascade_shadow_config: CascadeShadowConfigBuilder {
+    //     //     first_cascade_far_bound: 4.0,
+    //     //     maximum_distance: 10.0,
+    //     //     ..default()
+    //     // }
+    //     // .into(),
+    //     ..default()
+    // });
 
     // camera
     cmd.spawn((
         Camera3dBundle {
             camera: Camera {
-                // hdr: true,
+                hdr: true,
                 ..default()
             },
             transform: Transform::from_xyz(28.0, 50., 28.0).looking_at(vec3(0., 0., 0.), Vec3::Y),
@@ -98,14 +126,14 @@ fn setup(
         },
         // ScreenSpaceAmbientOcclusionBundle::default(),
         // TemporalAntiAliasBundle::default(),
-        // FogSettings {
-        //     color: Color::rgb(0.52, 0.80, 0.92),
-        //     falloff: FogFalloff::Linear {
-        //         start: 200.0,
-        //         end: 5000.0,
-        //     },
-        //     ..Default::default()
-        // },
+        FogSettings {
+            color: Color::hex("888888").unwrap(),
+            falloff: FogFalloff::Linear {
+                start: 300.0,
+                end: 5000.0,
+            },
+            ..Default::default()
+        },
         PanOrbitCamera::default(),
     ));
 }
