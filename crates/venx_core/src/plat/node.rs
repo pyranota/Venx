@@ -11,12 +11,12 @@ use crate::utils::l2s;
 use super::layer::layer::Layer;
 
 #[repr(C)]
-#[derive(Copy, Debug, Clone, Default, PartialEq, PartialOrd, Pod, Zeroable)]
+#[derive(Copy, Debug, Clone, Default, PartialEq, PartialOrd, Pod, Zeroable, Hash, Eq)]
 #[cfg_attr(feature = "bitcode_support", derive(bitcode::Encode, bitcode::Decode))]
 pub struct Node {
     /// ` 0` - branch
     ///
-    /// `-1` - holder-nodes head
+    /// `-1` - free node
     ///
     /// `-2` - leaf
     ///
