@@ -2,7 +2,7 @@
 
 
 _GTX1060 x i5-7400 (60FPS)_:
-<img src="assets/Screenshot.png" alt="Scene" />
+<img src="assets/Screenshot_new.png" alt="Scene" />
 
 
 ## Introduction
