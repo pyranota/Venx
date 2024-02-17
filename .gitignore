@@ -3,7 +3,7 @@ target
 .vscode
 .venx/expr/*
 saves
-assets/mca
+assets/mca/*
 .cache/*
 
 # Added by cargo
