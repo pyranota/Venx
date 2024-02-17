@@ -6,7 +6,7 @@ pub struct BevyVenx;
 
 impl Plugin for BevyVenx {
     fn build(&self, app: &mut App) {
-        app.add_event::<MountPlatEv>();
+        // app.add_event::<MountPlatEv>();
     }
 }
 

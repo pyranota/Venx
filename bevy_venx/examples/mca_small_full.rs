@@ -6,9 +6,8 @@ use venx::plat::VenxPlat;
 
 fn main() {
     App::new()
-        .add_plugins(DefaultPlugins)
-        .add_plugin(bevy_panorbit_camera::PanOrbitCameraPlugin)
-        .add_startup_system(setup)
+        .add_plugins((DefaultPlugins, bevy_panorbit_camera::PanOrbitCameraPlugin))
+        .add_systems(Startup, setup)
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)))
         .run();
 }

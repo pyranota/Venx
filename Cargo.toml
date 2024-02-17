@@ -45,17 +45,18 @@ bytemuck_derive = { version = "1.5.0", optional = true}
 rand = "0.8.5"
 
 [build-dependencies]
-spirv-builder = { version = "0.9" }
+spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu.git", package = "spirv-builder" }
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
 
 [patch.crates-io]
+# bevy_ui = "0.12.1"
 # gpu-descriptor = "0.2.3"
 # ahash = "0.7.7"
 
 [features]
-default = ["mca_converter", "turbo"]
+default = [ "turbo", "mca_converter"]
 turbo = ["dep:easy_compute", "dep:bytemuck", "dep:bytemuck_derive"]
 mca_converter = ["dep:fastanvil"]
 

@@ -24,16 +24,17 @@ pub struct Venx;
 impl Plugin for Venx {
     fn build(&self, app: &mut App) {
         dbg!("Add Venx");
-        app.add_plugin(
+        app.add_plugins(
             // bevy_panorbit_camera::PanOrbitCameraPlugin,
             // WireframePlugin,
-            FrameTimeDiagnosticsPlugin::default(),
-            // TemporalAntiAliasPlugin,
-            // MaterialPlugin::<CustomMaterial>::default(),
+            (
+                FrameTimeDiagnosticsPlugin::default(),
+                bevy_panorbit_camera::PanOrbitCameraPlugin,
+                WireframePlugin,
+            ), // TemporalAntiAliasPlugin,
+               // MaterialPlugin::<CustomMaterial>::default(),
         )
-        .add_plugin(bevy_panorbit_camera::PanOrbitCameraPlugin)
-        .add_plugin(WireframePlugin)
-        .add_startup_system(setup)
+        .add_systems(Startup, setup)
         // .add_systems((fps_text_update_system, fps_counter_showhide))
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)));
     }
