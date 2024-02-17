@@ -3,6 +3,7 @@ use std::intrinsics::size_of;
 use bytemuck::{cast, cast_ref, cast_slice};
 use easy_compute::{BindGroupBuilder, BufferRW, ComputePassDescriptor, PipelineBuilder};
 use glam::uvec3;
+use log::info;
 use pollster::block_on;
 use venx_core::{plat::chunk::chunk::Chunk, utils::Grid};
 
@@ -83,6 +84,7 @@ impl LoadInterface for GpuPlat {
 
     fn load_chunks(&self, blank_chunks: Box<Vec<Chunk>>) -> Box<Vec<Chunk>> {
         block_on(async {
+            info!("Prepering buffers and pipeline");
             // let (flatten, chunk_meta) = .to_send();
             let chunk_buffer = self.cs.new_buffer(bytemuck::cast_slice(&blank_chunks));
             // let chunk_flatten_buffer = self.cs.new_buffer(bytemuck::cast_slice(&flatten));
@@ -129,9 +131,11 @@ impl LoadInterface for GpuPlat {
                     );
                 })
                 .await;
+            info!("Queue submited");
             let output: Vec<Chunk> = output_buffer.read_manual().await;
 
             output_buffer.unmap();
+            info!("Chunks are copied");
 
             Box::new(output)
         })
