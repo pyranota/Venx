@@ -33,6 +33,11 @@ impl LayerInterface for CpuPlat {
         level: u32,
         lookup_tables: &mut Vec<HashMap<Node, usize>>,
     ) {
+        info!(
+            "Free space on layer: {}",
+            self.borrow_raw_plat()[layer].free()
+        );
+
         for lvl in 1..(4) {
             let mut to_change = vec![];
 

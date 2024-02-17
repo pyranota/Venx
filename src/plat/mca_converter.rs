@@ -33,7 +33,7 @@ impl VenxPlat {
                         let complete_chunk = complete::Chunk::from_bytes(&data).unwrap();
 
                         for x in 0..16 {
-                            for y in 0..380 {
+                            for y in 120..380 {
                                 for z in 0..16 {
                                     if let Some(block) = complete_chunk.block(x, y - 60, z) {
                                         // if let Some(amount) = hashmap.get_mut(block.name()) {
@@ -44,6 +44,8 @@ impl VenxPlat {
 
                                         if block.name() != "minecraft:air"
                                             && block.name() != "minecraft:grass"
+                                            && block.name() != "minecraft:water"
+                                        //&& block.name() != "minecraft:grass"
                                         // && block.name() == "minecraft:stone"
                                         {
                                             // dbg!(block.name());

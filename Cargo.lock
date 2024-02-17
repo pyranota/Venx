@@ -1121,10 +1121,21 @@ version = "0.1.0"
 dependencies = [
  "bevy",
  "bevy_panorbit_camera",
+ "bevy_water",
  "downcast-rs",
  "glam 0.25.0",
  "pollster",
  "venx",
+]
+
+[[package]]
+name = "bevy_water"
+version = "0.12.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b2daf7e2c389bede0a60f7ef979c60b7544da381eb1be795472219c10a22e983"
+dependencies = [
+ "anyhow",
+ "bevy",
 ]
 
 [[package]]
