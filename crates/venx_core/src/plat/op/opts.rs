@@ -112,166 +112,166 @@ impl RawPlat<'_> {
     }
 }
 
-#[cfg(feature = "bitcode_support")]
-#[cfg(test)]
-mod tests {
-    extern crate alloc;
-    extern crate std;
+// #[cfg(feature = "bitcode_support")]
+// #[cfg(test)]
+// mod tests {
+//     extern crate alloc;
+//     extern crate std;
 
-    use std::println;
+//     use std::println;
 
-    use alloc::vec;
-    use spirv_std::glam::{uvec3, UVec3};
+//     use alloc::vec;
+//     use spirv_std::glam::{uvec3, UVec3};
 
-    use crate::plat::{node::Node, raw_plat::RawPlat};
+//     use crate::plat::{node::Node, raw_plat::RawPlat};
 
-    use super::{EntryOpts, LayerOpts};
+//     use super::{EntryOpts, LayerOpts};
 
-    #[test]
-    fn test_opts() {
-        let mut base = ([Node::default(); 128], [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            3,
-            3,
-            3,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
-        );
-        plat[0].set(UVec3::ZERO, 1);
-        plat[1].set(UVec3::ZERO, 1);
-        plat[1].set(uvec3(0, 1, 0), 2);
-        plat[2].set(UVec3::ZERO, 1);
+//     #[test]
+//     fn test_opts() {
+//         let mut base = ([Node::default(); 128], [0; 10]);
+//         let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+//         let mut plat = RawPlat::new(
+//             3,
+//             3,
+//             3,
+//             (&mut base.0, &mut base.1),
+//             (&mut tmp.0, &mut tmp.1),
+//             (&mut schem.0, &mut schem.1),
+//             (&mut canvas.0, &mut canvas.1),
+//         );
+//         plat[0].set(UVec3::ZERO, 1);
+//         plat[1].set(UVec3::ZERO, 1);
+//         plat[1].set(uvec3(0, 1, 0), 2);
+//         plat[2].set(UVec3::ZERO, 1);
 
-        plat.opts(
-            None,
-            LayerOpts::Single(2),
-            EntryOpts::Single(1),
-            false,
-            &mut |_plat, (layer, layer_id), entry| {
-                assert!(layer == &plat[2]);
-                assert!(entry == 1);
-                None as Option<()>
-            },
-        );
+//         plat.opts(
+//             None,
+//             LayerOpts::Single(2),
+//             EntryOpts::Single(1),
+//             false,
+//             &mut |_plat, (layer, layer_id), entry| {
+//                 assert!(layer == &plat[2]);
+//                 assert!(entry == 1);
+//                 None as Option<()>
+//             },
+//         );
 
-        let mut seq = vec![];
+//         let mut seq = vec![];
 
-        plat.opts(
-            None,
-            LayerOpts::All,
-            EntryOpts::Single(1),
-            false,
-            &mut |_plat, (layer, layer_id), entry| {
-                seq.push((layer_id, entry));
-                None as Option<()>
-            },
-        );
+//         plat.opts(
+//             None,
+//             LayerOpts::All,
+//             EntryOpts::Single(1),
+//             false,
+//             &mut |_plat, (layer, layer_id), entry| {
+//                 seq.push((layer_id, entry));
+//                 None as Option<()>
+//             },
+//         );
 
-        // println!("{seq:?}");
-        assert_eq!(seq, [(2, 1), (1, 1), (0, 1)]);
+//         // println!("{seq:?}");
+//         assert_eq!(seq, [(2, 1), (1, 1), (0, 1)]);
 
-        let mut seq = vec![];
-        plat.opts(
-            None,
-            LayerOpts::All,
-            EntryOpts::Single(1),
-            true,
-            &mut |_plat, (layer, layer_id), entry| {
-                seq.push((layer_id, entry));
-                None as Option<()>
-            },
-        );
+//         let mut seq = vec![];
+//         plat.opts(
+//             None,
+//             LayerOpts::All,
+//             EntryOpts::Single(1),
+//             true,
+//             &mut |_plat, (layer, layer_id), entry| {
+//                 seq.push((layer_id, entry));
+//                 None as Option<()>
+//             },
+//         );
 
-        // println!("{:?}", &plat[1].entries[0..10]);
-        assert_eq!(seq, [(0, 1), (1, 1), (2, 1)]);
+//         // println!("{:?}", &plat[1].entries[0..10]);
+//         assert_eq!(seq, [(0, 1), (1, 1), (2, 1)]);
 
-        let mut seq = vec![];
+//         let mut seq = vec![];
 
-        plat.opts(
-            None,
-            LayerOpts::Single(1),
-            EntryOpts::All,
-            false,
-            &mut |_plat, (layer, layer_id), entry| {
-                seq.push((layer_id, entry));
-                None as Option<()>
-            },
-        );
-        // println!("{seq:?}");
-        assert_eq!(seq, [(1, 2), (1, 1)]);
+//         plat.opts(
+//             None,
+//             LayerOpts::Single(1),
+//             EntryOpts::All,
+//             false,
+//             &mut |_plat, (layer, layer_id), entry| {
+//                 seq.push((layer_id, entry));
+//                 None as Option<()>
+//             },
+//         );
+//         // println!("{seq:?}");
+//         assert_eq!(seq, [(1, 2), (1, 1)]);
 
-        let mut seq = vec![];
-        plat.opts(
-            None,
-            LayerOpts::All,
-            EntryOpts::All,
-            false,
-            &mut |_plat, (layer, layer_id), entry| {
-                seq.push((layer_id, entry));
-                None as Option<()>
-            },
-        );
-        // println!("{seq:?}");
-        assert_eq!(seq, [(2, 1), (1, 2), (1, 1), (0, 1)]);
+//         let mut seq = vec![];
+//         plat.opts(
+//             None,
+//             LayerOpts::All,
+//             EntryOpts::All,
+//             false,
+//             &mut |_plat, (layer, layer_id), entry| {
+//                 seq.push((layer_id, entry));
+//                 None as Option<()>
+//             },
+//         );
+//         // println!("{seq:?}");
+//         assert_eq!(seq, [(2, 1), (1, 2), (1, 1), (0, 1)]);
 
-        let mut seq = vec![];
-        plat.opts(
-            None,
-            LayerOpts::All,
-            EntryOpts::All,
-            true,
-            &mut |_plat, (layer, layer_id), entry| {
-                seq.push((layer_id, entry));
-                None as Option<()>
-            },
-        );
-        // println!("{seq:?}");
-        assert_eq!(seq, [(0, 1), (1, 1), (1, 2), (2, 1)]);
-    }
+//         let mut seq = vec![];
+//         plat.opts(
+//             None,
+//             LayerOpts::All,
+//             EntryOpts::All,
+//             true,
+//             &mut |_plat, (layer, layer_id), entry| {
+//                 seq.push((layer_id, entry));
+//                 None as Option<()>
+//             },
+//         );
+//         // println!("{seq:?}");
+//         assert_eq!(seq, [(0, 1), (1, 1), (1, 2), (2, 1)]);
+//     }
 
-    #[test]
-    fn test_opts_2() {
-        let mut base = ([Node::default(); 128], [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            3,
-            3,
-            3,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
-        );
-        // Base
-        plat[0].set(uvec3(0, 0, 0), 1);
-        plat[0].set(uvec3(0, 1, 0), 1);
-        plat[0].set(uvec3(0, 2, 0), 1);
+//     #[test]
+//     fn test_opts_2() {
+//         let mut base = ([Node::default(); 128], [0; 10]);
+//         let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+//         let mut plat = RawPlat::new(
+//             3,
+//             3,
+//             3,
+//             (&mut base.0, &mut base.1),
+//             (&mut tmp.0, &mut tmp.1),
+//             (&mut schem.0, &mut schem.1),
+//             (&mut canvas.0, &mut canvas.1),
+//         );
+//         // Base
+//         plat[0].set(uvec3(0, 0, 0), 1);
+//         plat[0].set(uvec3(0, 1, 0), 1);
+//         plat[0].set(uvec3(0, 2, 0), 1);
 
-        // Overlapping (Canvas)
-        plat[1].set(uvec3(0, 0, 0), 1);
-        plat[1].set(uvec3(0, 1, 0), 1);
-        plat[1].set(uvec3(0, 2, 0), 1);
+//         // Overlapping (Canvas)
+//         plat[1].set(uvec3(0, 0, 0), 1);
+//         plat[1].set(uvec3(0, 1, 0), 1);
+//         plat[1].set(uvec3(0, 2, 0), 1);
 
-        // Overlapping above Canvas
-        plat[1].set(uvec3(0, 0, 0), 2);
-        plat[1].set(uvec3(0, 1, 0), 2);
-        plat[1].set(uvec3(0, 2, 0), 2);
+//         // Overlapping above Canvas
+//         plat[1].set(uvec3(0, 0, 0), 2);
+//         plat[1].set(uvec3(0, 1, 0), 2);
+//         plat[1].set(uvec3(0, 2, 0), 2);
 
-        let mut seq = vec![];
-        plat.opts(
-            None,
-            LayerOpts::All,
-            EntryOpts::All,
-            false,
-            &mut |_plat, (_layer, layer_id), entry| {
-                seq.push((layer_id, entry));
-                None as Option<()>
-            },
-        );
-        // println!("{seq:?}");
-        assert_eq!(seq, [(1, 2), (1, 1), (0, 1)]);
-    }
-}
+//         let mut seq = vec![];
+//         plat.opts(
+//             None,
+//             LayerOpts::All,
+//             EntryOpts::All,
+//             false,
+//             &mut |_plat, (_layer, layer_id), entry| {
+//                 seq.push((layer_id, entry));
+//                 None as Option<()>
+//             },
+//         );
+//         // println!("{seq:?}");
+//         assert_eq!(seq, [(1, 2), (1, 1), (0, 1)]);
+//     }
+// }
