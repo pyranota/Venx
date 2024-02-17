@@ -218,7 +218,7 @@ impl VenxPlat {
         chunk_range_x: Range<u32>,
         chunk_range_y: Range<u32>,
         chunk_range_z: Range<u32>,
-        lod: Option<usize>,
+        mut lod: Option<usize>,
     ) -> Vec<(Vec<[f32; 3]>, Vec<[f32; 4]>, Vec<[f32; 3]>)> {
         let chunks_amount = (chunk_range_x.end - chunk_range_x.start)
             * (chunk_range_z.end - chunk_range_z.start)
@@ -253,60 +253,26 @@ impl VenxPlat {
             );
             for z in chunk_range_z.clone() {
                 for y in chunk_range_y.clone() {
-                    // let mut lod_level = (u32::max(z, x) / 128) as usize;
+                    let mut lod_level = ((u32::max(z, x) as f64).sqrt() as u32 / (4)) as usize;
 
-                    // if lod_level > 2 {
-                    //     lod_level = 2;
-                    // }
+                    if lod_level > 2 {
+                        lod_level = 2;
+                    }
 
                     // lod_level = 0;
+                    //let mut lod = lod;
 
-                    // TODO: Make LOD's work
+                    let fetched_chunk = plat.load_chunk(uvec3(x, y, z), 0);
+                    let mut found = false;
+                    fetched_chunk.iter(|p, ty| {
+                        if ty == 8 && lod_level > 0 && !found {
+                            found = true;
+                            lod_level -= 1;
+                            return;
+                        }
+                    });
 
-                    let chunk = plat.load_chunk(
-                        uvec3(x, y, z),
-                        lod.unwrap_or_else(|| {
-                            // TODO: Move all these stuff in plat.load_chunk()
-                            // 14, 20 ,22
-                            if let GetNodeResult {
-                                voxel_id,
-                                layer_id,
-                                node_idx,
-                            } = plat.get_normal_unchecked().borrow_raw_plat().get_node(
-                                venx_core::glam::uvec3(x, y, z) * l2s(5),
-                                5,
-                                // Water is always on 0 level
-                                // EntryOpts::Single(8),
-                                // LayerOpts::All,
-                            ) {
-                                // dbg!("Found node", entry, layer);
-                                //if entry >= 21 {
-                                // dbg!("Found leave", entry);
-                                return 0;
-                                //}
-                            }
-                            if let GetNodeResult {
-                                voxel_id,
-                                layer_id,
-                                node_idx,
-                            } = plat.get_normal_unchecked().borrow_raw_plat().get_node(
-                                venx_core::glam::uvec3(x, y, z) * l2s(5),
-                                5,
-                                // Birch logs is always on 0 level
-                                // EntryOpts::Single(19),
-                                // LayerOpts::All,
-                            ) {
-                                // dbg!("Found node", entry, layer);
-                                //if entry >= 21 {
-                                // dbg!("Found leave", entry);
-                                return 0;
-                                //}
-                            }
-
-                            // dbg!("No leave");
-                            1
-                        }),
-                    );
+                    let chunk = plat.load_chunk(uvec3(x, y, z), lod_level);
 
                     let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
 
@@ -383,8 +349,18 @@ impl LayerInterface for VenxPlat {
         }
     }
 
-    fn compress(&mut self, layer: usize) {
-        todo!()
+    fn compress(
+        &mut self,
+        layer: usize,
+        position: UVec3,
+        level: u32,
+        lookup_tables: &mut Vec<std::collections::HashMap<venx_core::plat::node::Node, usize>>,
+    ) {
+        info!("Compress");
+        match &mut self.plat {
+            Plat::Cpu(plat) => plat.compress(layer, position, level, lookup_tables),
+            Plat::Gpu(plat) => todo!(),
+        }
     }
 
     fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
