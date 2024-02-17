@@ -29,7 +29,7 @@ pub struct Chunk {
     /// 5 - size
     ///
     /// Rest - flatten chunk
-    data: [u32; MAX_SIZE + 6],
+    pub(crate) data: [u32; MAX_SIZE + 6],
     // position: UVec3,
     // lod_level: usize,
     // chunk_level: usize,
@@ -134,8 +134,8 @@ impl Chunk {
     }
     /// 3D Position to index in chunk
     pub fn flatten_value(&self, p: UVec3) -> usize {
-        let width = self.width();
-        (p.x + (p.y * width) + (p.z * width * width)) as usize + 6
+        let size = self.size();
+        (p.x + (p.y * size) + (p.z * size * size)) as usize + 6
     }
 
     // Index in chunk to 3D Position
@@ -197,11 +197,60 @@ impl Chunk {
 #[cfg(feature = "bitcode_support")]
 #[cfg(test)]
 mod tests {
+    use rand::Rng;
+    use spirv_std::glam::uvec3;
+
     use super::Chunk;
 
     #[test]
     fn test_chunk_iter() {
         let mut chunk = Chunk::new((0, 0, 0), 0, 4);
+        chunk.set((4, 4, 0).into(), 44);
+
+        chunk.iter(|pos, block| {
+            assert_eq!(pos, (4, 4, 0).into());
+            assert_eq!(block, 44);
+        });
+    }
+
+    #[test]
+    fn test_chunk_get() {
+        let mut chunk = Chunk::new((0, 0, 0), 0, 4);
+        chunk.set((4, 4, 0).into(), 144);
+        chunk.set((1, 5, 1).into(), 434);
+        chunk.set((2, 6, 2).into(), 4454);
+        chunk.set((3, 7, 2).into(), 1414);
+
+        assert_eq!(chunk.get((4, 4, 0).into()).unwrap(), 144);
+        assert_eq!(chunk.get((1, 5, 1).into()).unwrap(), 434);
+        assert_eq!(chunk.get((2, 6, 2).into()).unwrap(), 4454);
+        assert_eq!(chunk.get((3, 7, 2).into()).unwrap(), 1414);
+    }
+
+    #[test]
+    fn test_chunk_iter_voxel_id_full() {
+        let mut chunk = Chunk::new((0, 0, 0), 0, 4);
+
+        let mut rng = rand::thread_rng();
+
+        let mtx: [[[u32; 16]; 16]; 16] = rng.gen();
+
+        for x in 0..16 {
+            for y in 0..16 {
+                for z in 0..16 {
+                    chunk.set(uvec3(x, y, z), mtx[x as usize][y as usize][z as usize]);
+                }
+            }
+        }
+
+        chunk.iter(|pos, block| {
+            assert_eq!(chunk.get(pos).unwrap(), block);
+        });
+    }
+
+    #[test]
+    fn test_chunk_iter_lod() {
+        let mut chunk = Chunk::new((0, 0, 0), 1, 5);
         chunk.set((4, 4, 0).into(), 4);
 
         chunk.iter(|pos, block| {
