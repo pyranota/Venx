@@ -145,3 +145,48 @@ impl<'a> IndexMut<LayerIndex> for RawPlat<'a> {
         &mut self.layers[index_mut as usize]
     }
 }
+
+#[macro_export]
+macro_rules! quick_raw_plat {
+    ($plat:ident, depth $depth:tt, len $layer_len:tt) => {
+        let mut base = (alloc::vec![Node::default(); $layer_len], [0]);
+        let mut tmp = (alloc::vec![Node::default(); 128], [0]);
+        let (mut schem, mut canvas) = (tmp.clone(), tmp.clone());
+        let mut $plat = Box::new(RawPlat::new(
+            $depth,
+            5,
+            5,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        ));
+    };
+
+    ($plat:ident, depth $depth:tt) => {
+        let mut base = (Box::new([Node::default(); 128]), [0; 0]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut $plat = RawPlat::new(
+            $depth,
+            5,
+            5,
+            (&mut *base.0, &mut base.1),
+            (&mut *tmp.0, &mut tmp.1),
+            (&mut *schem.0, &mut schem.1),
+            (&mut *canvas.0, &mut canvas.1),
+        );
+    };
+    ($plat:ident) => {
+        let mut base = (Box::new([Node::default(); 128]), [0; 0]);
+        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        let mut $plat = RawPlat::new(
+            8,
+            5,
+            5,
+            (&mut *base.0, &mut base.1),
+            (&mut *tmp.0, &mut tmp.1),
+            (&mut *schem.0, &mut schem.1),
+            (&mut *canvas.0, &mut canvas.1),
+        );
+    };
+}
