@@ -157,11 +157,14 @@ mod tests {
     use rand::Rng;
     use spirv_std::glam::uvec3;
 
-    use crate::plat::{
-        layer::layer::Layer,
-        node::Node,
-        op::{EntryOpts, LayerOpts},
-        raw_plat::RawPlat,
+    use crate::{
+        plat::{
+            layer::layer::Layer,
+            node::Node,
+            op::{EntryOpts, LayerOpts},
+            raw_plat::RawPlat,
+        },
+        quick_raw_plat,
     };
 
     #[test]
@@ -282,18 +285,23 @@ mod tests {
     }
 
     #[test]
+    fn get_voxel_id_leveled() {
+        quick_raw_plat!(plat, depth 7);
+        plat[1].set(uvec3(0, 0, 0), 1);
+
+        assert_eq!(plat.get_node(uvec3(0, 0, 0), 0).voxel_id, 1);
+        assert_eq!(plat.get_node(uvec3(0, 0, 0), 1).voxel_id, 1);
+        assert_eq!(plat.get_node(uvec3(0, 0, 0), 2).voxel_id, 1);
+        assert_eq!(plat.get_node(uvec3(0, 0, 0), 3).voxel_id, 1);
+        assert_eq!(plat.get_node(uvec3(0, 0, 0), 4).voxel_id, 1);
+        assert_eq!(plat.get_node(uvec3(0, 0, 0), 5).voxel_id, 1);
+        assert_eq!(plat.get_node(uvec3(0, 0, 0), 6).voxel_id, 1);
+    }
+
+    #[test]
     fn get_node_above_fork_level() {
-        let mut base = ([Node::default(); 128], [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            7,
-            3,
-            3,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 7);
+
         plat[1].set(uvec3(0, 1, 0), 1);
         plat[1].set(uvec3(0, 0, 0), 2);
         plat[1].set(uvec3(4, 4, 1), 3);
@@ -306,6 +314,12 @@ mod tests {
         // let nodes = unsafe { &*plat[1].nodes };
         // std::println!("{:?}", plat[1]);
         // std::println!("{:?}", nodes);
+
+        assert!(plat.get_node(uvec3(0, 0, 0), 3,).is_some());
+        assert!(plat.get_node(uvec3(0, 0, 0), 3,).is_some());
+
+        assert!(plat.get_node(uvec3(0, 0, 0), 4,).is_some());
+        assert!(plat.get_node(uvec3(0, 0, 0), 4,).is_some());
 
         assert!(plat.get_node(uvec3(0, 0, 0), 5,).is_some());
         assert!(plat.get_node(uvec3(0, 0, 0), 6,).is_some());
