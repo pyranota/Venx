@@ -16,7 +16,7 @@ rand =  {version = "0.8.4", optional = true }
 
 
 [features]
-default = []
+default = ["bitcode_support"]
 gpu = []
 bitcode_support = ["dep:bitcode", "dep:serde", "dep:rand"]
 
