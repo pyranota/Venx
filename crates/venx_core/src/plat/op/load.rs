@@ -58,18 +58,23 @@ impl RawPlat<'_> {
             }
         }
 
-        // self.traverse_region(
-        //     position,
-        //     chunk_level,
-        //     super::EntryOpts::All,
-        //     LayerOpts::All,
-        //     &mut |props| {
-        //         if props.level == lod_level {
-        //             chunk.set(*props.position / chunk_lod_scaler, props.entry);
-        //             props.drop_tree = true;
+        // for layer_idx in 0..4 {
+        //     // let node_idx = self[layer_idx].get_node_idx_gpu(uvec3(0, 0, 0) * l2s(5), 5, None);
+
+        //     // if node_idx != 0 {
+        //     self[layer_idx].traverse(0, 2, UVec3::ZERO, true, 5, &mut |p| {
+        //         if p.level == 0 {
+        //             // chunk.set(*p.position, p.entry);
+
+        //             //chunk.set(uvec3(0, 0, 0), 2);
+        //             //props.drop_tree = true;
         //         }
-        //     },
-        // );
+        //     });
+
+        //     // }
+        // }
+
+        // chunk.data[5] = 9;
     }
     //#[cfg(feature = "bitcode_support")]
     pub fn load_chunk(&self, position: UVec3, lod_level: usize) -> Chunk {
@@ -82,34 +87,34 @@ impl RawPlat<'_> {
 
         // // let real_chunk_size = l2s(chunk.level());
 
-        for x in 0..32 {
-            for y in 0..32 {
-                for z in 0..32 {
-                    let res = self.get_voxel(uvec3(
-                        x + position.x * 32,
-                        y + position.y * 32,
-                        z + position.z * 32,
-                    ));
+        // for x in 0..32 {
+        //     for y in 0..32 {
+        //         for z in 0..32 {
+        //             let res = self.get_voxel(uvec3(
+        //                 x + position.x * 32,
+        //                 y + position.y * 32,
+        //                 z + position.z * 32,
+        //             ));
 
-                    if res.is_some() {
-                        chunk.set(uvec3(x, y, z), res.voxel_id as u32);
-                    }
-                }
-            }
-        }
-
-        // self.traverse_region(
-        //     position,
-        //     chunk_level,
-        //     super::EntryOpts::All,
-        //     LayerOpts::All,
-        //     &mut |props| {
-        //         if props.level == lod_level {
-        //             chunk.set(*props.position / chunk_lod_scaler, props.entry);
-        //             props.drop_tree = true;
+        //             if res.is_some() {
+        //                 chunk.set(uvec3(x, y, z), res.voxel_id as u32);
+        //             }
         //         }
-        //     },
-        // );
+        //     }
+        // }
+
+        self.traverse_region(
+            position,
+            chunk_level,
+            super::EntryOpts::All,
+            LayerOpts::All,
+            &mut |props| {
+                if props.level == lod_level {
+                    chunk.set(*props.position / chunk_lod_scaler, props.entry);
+                    props.drop_tree = true;
+                }
+            },
+        );
 
         chunk
     }
