@@ -1,7 +1,8 @@
 use std::{f32::consts::PI, slice::Chunks};
 
 use bevy::{
-    math::vec3, pbr::wireframe::Wireframe, prelude::*, render::render_resource::PrimitiveTopology,
+    log, math::vec3, pbr::wireframe::Wireframe, prelude::*,
+    render::render_resource::PrimitiveTopology,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use pollster::block_on;
@@ -26,22 +27,13 @@ fn setup(
     mut bevy_meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // Its small-sized plat, its slow to convert it from mca each run, it will be saved
-    let plat = VenxPlat::load("mca_small").unwrap_or_else(|e| {
+    let plat = VenxPlat::load("mca_mid").unwrap_or_else(|e| {
         warn!("Plat wasnt found on device, creating new and saving ({e})");
         // Convert from minecraft map
-        let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1)).unwrap();
-        plat.save("mca_small").unwrap();
+        let plat = VenxPlat::load_mca("./assets/mca/4/", (0..1, 0..1)).unwrap();
+        plat.save("mca_mid").unwrap();
         plat
     });
-
-    // let plat_2 = VenxPlat::load("mca_small").unwrap_or_else(|e| {
-    //     warn!("Plat wasnt found on device, creating new and saving ({e})");
-    //     // Convert from minecraft map
-    //     let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1)).unwrap();
-    //     plat.save("mca_small").unwrap();
-    //     plat
-    // });
 
     // let mut plat = VenxPlat::new(6, 5, 5);
 
@@ -54,17 +46,17 @@ fn setup(
 
     info!("Loading chunks");
 
-    let mut blank_chunk = Box::new(vec![]);
+    let mut blank_chunks = Box::new(vec![]);
 
-    for x in 0..16 {
+    for x in 0..32 {
         for y in 3..7 {
-            for z in 0..16 {
-                blank_chunk.push(Chunk::new((x, y, z), 0, 5))
+            for z in 0..32 {
+                blank_chunks.push(Chunk::new((x, y, z), 0, 5))
             }
         }
     }
 
-    let chunks = plat.load_chunks(blank_chunk);
+    let chunks = plat.load_chunks(blank_chunks);
 
     info!("Transfer from gpu");
     let plat = block_on(plat.transfer_from_gpu());
@@ -116,24 +108,24 @@ fn setup(
     // ambient light
     cmd.insert_resource(AmbientLight {
         color: Color::WHITE,
-        brightness: 0.13,
+        brightness: 0.53,
     });
     // // light
-    cmd.spawn(PointLightBundle {
-        point_light: PointLight {
-            intensity: 4000.0,
-            shadows_enabled: true,
-            range: 400.,
-            radius: 200.,
-            ..default()
-        },
-        transform: Transform::from_xyz(0.0, 15.0, 0.0),
-        ..default()
-    });
+    // cmd.spawn(PointLightBundle {
+    //     point_light: PointLight {
+    //         intensity: 4000.0,
+    //         shadows_enabled: false,
+    //         range: 400.,
+    //         radius: 200.,
+    //         ..default()
+    //     },
+    //     transform: Transform::from_xyz(0.0, 15.0, 0.0),
+    //     ..default()
+    // });
     // directional 'sun' light
     cmd.spawn(DirectionalLightBundle {
         directional_light: DirectionalLight {
-            shadows_enabled: true,
+            shadows_enabled: false,
             ..default()
         },
         transform: Transform {
