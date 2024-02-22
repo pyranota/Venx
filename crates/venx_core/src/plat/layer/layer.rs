@@ -265,12 +265,81 @@ impl<'a> Layer<'a> {
         found_idx.voxel_id
     }
 
-    pub fn get_node_idx_gpu(
-        &self,
-        mut position: UVec3,
-        level: usize,
-        voxel_id_opt: Option<usize>,
-    ) -> usize {
+    pub fn get_node_gpu_no_enum(&self, mut position: UVec3, level: usize) -> usize {
+        // let addr = &NodeAddr::from_position(position, self.depth, level);
+        // self.get_node_with_addr(addr, level, voxel_id_opt)
+        //  return 0;
+        let mut current_level = self.depth as usize;
+
+        let mut size = l2s(self.depth);
+        let mut found_idx = GetNodeResult::None();
+        let fork_level = 4;
+        let mut idx = 2;
+
+        while current_level > fork_level {
+            if current_level == 6 {
+                return 0;
+            }
+
+            let child_index = Node::get_child_index(position, current_level - 1);
+
+            let below_node_idx = self.nodes[idx].children[child_index];
+
+            if below_node_idx != 0 {
+                idx = below_node_idx as usize;
+
+                if current_level == level + 1 {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+            {
+                size /= 2;
+                position %= size;
+                current_level -= 1;
+            }
+        }
+
+        self.iter_fork(idx as usize, &mut |props| {
+            let mut size = size;
+            let mut position = position.clone();
+            let mut current_level = current_level;
+            let mut idx = props.node_idx;
+
+            while current_level > level {
+                let child_index = Node::get_child_index(position, current_level - 1);
+
+                let below_node_idx = self[idx].children[child_index];
+
+                if below_node_idx != 0 {
+                    idx = below_node_idx as usize;
+                    if current_level == level + 1 {
+                        found_idx = GetNodeResult::Some(
+                            props.voxel_id as usize,
+                            // TODO: Let layer store its id
+                            0,
+                            below_node_idx as usize,
+                        );
+                        //found_idx = Some(below_node_idx as usize);
+                    }
+                } else {
+                    return;
+                }
+                {
+                    size /= 2;
+                    position %= size;
+                    current_level -= 1;
+                }
+            }
+
+            props.drop = true;
+        });
+
+        found_idx.voxel_id
+    }
+
+    pub fn get_node_idx_gpu(&self, mut position: UVec3, level: usize) -> usize {
         // let addr = &NodeAddr::from_position(position, self.depth, level);
         // self.get_node_with_addr(addr, level, voxel_id_opt)
         let mut current_level = self.depth as usize;
@@ -308,13 +377,13 @@ impl<'a> Layer<'a> {
         }
 
         self.iter_fork(idx as usize, &mut |props| {
-            if let Some(needed_voxel_id) = voxel_id_opt {
-                if props.voxel_id == needed_voxel_id {
-                    props.drop = true;
-                } else {
-                    return;
-                }
-            }
+            // if let Some(needed_voxel_id) = voxel_id_opt {
+            //     if props.voxel_id == needed_voxel_id {
+            //         props.drop = true;
+            //     } else {
+            //         return;
+            //     }
+            // }
 
             let mut size = size;
             let mut position = position.clone();

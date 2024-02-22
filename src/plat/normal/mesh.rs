@@ -1,16 +1,20 @@
 use std::borrow::{Borrow, BorrowMut};
 
+use log::trace;
 use venx_core::{glam::*, plat::chunk::chunk::Chunk, utils::l2s};
 
 use super::cpu_plat::CpuPlat;
 
-const MESH_SIZE: usize = 36_000;
+pub const MESH_SIZE: usize = 36_000;
+pub const CHUNK_BUCKET: usize = 256;
 
-pub type Mesh = Box<Vec<(Vec3, Vec4, Vec3)>>; // Position, Color, Normal
+pub type Mesh = Box<Vec<[f32; 10]>>; // Position, Color, Normal
 
 impl CpuPlat {
     pub fn to_mesh_greedy(&self, chunk: &Chunk) -> Mesh {
-        let mut mesh_box = Box::new(vec![(Vec3::ZERO, Vec4::ZERO, Vec3::ZERO); MESH_SIZE]);
+        trace!("to_mesh_greedy was called");
+        trace!("Allocate box with mesh of size {MESH_SIZE}");
+        let mut mesh_box = Box::new(vec![[0.; 10]; MESH_SIZE]);
         let mut mesh_idx = 0;
         let mesh = &mut *mesh_box;
 
@@ -19,6 +23,8 @@ impl CpuPlat {
 
         let lod_level = chunk.lod_level();
 
+        trace!("Allocated 6 chunk mesh helpers");
+
         let mut mesh_helper_up = Chunk::new(UVec3::ZERO, lod_level, 5);
         let mut mesh_helper_down = Chunk::new(UVec3::ZERO, lod_level, 5);
         let mut mesh_helper_front = Chunk::new(UVec3::ZERO, lod_level, 5);
@@ -26,6 +32,7 @@ impl CpuPlat {
         let mut mesh_helper_left = Chunk::new(UVec3::ZERO, lod_level, 5);
         let mut mesh_helper_right = Chunk::new(UVec3::ZERO, lod_level, 5);
 
+        trace!("Iterating over all chunk");
         chunk.iter(|pos, block| {
             if block != 0 {
                 let block_color = match block {
@@ -144,7 +151,8 @@ impl CpuPlat {
                 );
             }
         });
-
+        // dbg!(mesh_idx);
+        trace!("Return mesh");
         mesh_box
     }
 }

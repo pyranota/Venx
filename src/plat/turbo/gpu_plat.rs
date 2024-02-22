@@ -1,10 +1,23 @@
 use easy_compute::{
-    include_spirv, BindGroup, BindGroupBuilder, BindGroupVenx, Buffer, BufferRW, ComputePipeline,
-    ComputeServer, PipelineBuilder, ShaderModule,
+    include_spirv,
+    util::{BufferInitDescriptor, DeviceExt},
+    BindGroup, BindGroupBuilder, BindGroupVenx, Buffer, BufferDescriptor, BufferRW, BufferUsages,
+    ComputePipeline, ComputeServer, PipelineBuilder, ShaderModule,
 };
-use venx_core::plat::{node::Node, raw_plat::RawPlat};
+use glam::{UVec3, Vec3, Vec4};
+use venx_core::plat::{
+    chunk::chunk::{Chunk, ChunkLoadRequest},
+    node::Node,
+    raw_plat::RawPlat,
+};
 
-use crate::plat::{interfaces::PlatInterface, normal::cpu_plat::CpuPlat};
+use crate::plat::{
+    interfaces::PlatInterface,
+    normal::{
+        cpu_plat::CpuPlat,
+        mesh::{CHUNK_BUCKET, MESH_SIZE},
+    },
+};
 
 pub struct GpuPlat {
     // Meta
@@ -31,12 +44,29 @@ pub struct GpuPlat {
     pub(crate) canvas_entries: Buffer,
     pub(crate) canvas_bg: BindGroupVenx,
 
+    // Chunks
+    pub(crate) chunks_buffer: Buffer,
+    pub(crate) chunks_requests_buffer: Buffer,
+    pub(crate) chunks_requests_staging_buffer: Buffer,
+    pub(crate) chunk_bg: BindGroupVenx,
+
+    // Chunk helpers
+    pub(crate) mesh: Buffer,
+    pub(crate) mesh_helpers_up: Buffer,
+    pub(crate) mesh_helpers_down: Buffer,
+    pub(crate) mesh_helpers_left: Buffer,
+    pub(crate) mesh_helpers_right: Buffer,
+    pub(crate) mesh_helpers_front: Buffer,
+    pub(crate) mesh_helpers_back: Buffer,
+    pub(crate) mesh_helpers_bg: BindGroupVenx,
+
     // Easy-compute stuff
     pub(crate) cs: ComputeServer,
     pub(crate) module: ShaderModule,
 
     // Pipelines
     pub(crate) load_chunk_pl: ComputePipeline,
+    pub(crate) to_mesh_greedy_pl: ComputePipeline,
 }
 
 impl PlatInterface for GpuPlat {}
@@ -264,6 +294,44 @@ impl GpuPlat {
             .new_module_spv(include_spirv!(env!("venx_shaders.spv")))
             .unwrap();
 
+        let blank_chunks = Box::new(vec![Chunk::new((0, 0, 0), 0, 5); CHUNK_BUCKET]);
+        let blank_chunk_requests = Box::new(vec![ChunkLoadRequest::default(); CHUNK_BUCKET]);
+
+        // let chunk_buffer = cs.new_buffer(bytemuck::cast_slice(&blank_chunks));
+
+        let chunk_buffer = cs.device.create_buffer_init(&BufferInitDescriptor {
+            label: Some("Storage Buffer"),
+            contents: bytemuck::cast_slice(&blank_chunks),
+            usage: BufferUsages::STORAGE, //| BufferUsages::COPY_DST,
+        });
+        let chunk_requests_buffer = cs.new_buffer(bytemuck::cast_slice(&blank_chunk_requests));
+        let chunk_requests_staging_buffer =
+            cs.new_staging_buffer(chunk_requests_buffer.size(), false);
+
+        // let chunk_requests_staging_buffer = cs.device.create_buffer(&BufferDescriptor {
+        //     label: None,
+        //     size: chunk_requests_buffer.size(), //size: 32768 * 4 * locs.len() as u64,
+        //     usage: BufferUsages::MAP_WRITE | BufferUsages::COPY_SRC,
+        //     mapped_at_creation: false,
+        // });
+
+        // Fill staging buffer
+        // cs.eval(|encoder| {
+        //     encoder.copy_buffer_to_buffer(
+        //         &chunk_requests_buffer,
+        //         0,
+        //         &chunk_requests_staging_buffer,
+        //         0,
+        //         chunk_requests_buffer.size(),
+        //     );
+        // })
+        // .await;
+
+        let chunk_bg = BindGroupBuilder::new()
+            .insert(0, false, chunk_buffer.as_entire_binding())
+            .insert(1, false, chunk_requests_buffer.as_entire_binding())
+            .build(&cs);
+
         // Load pipelines
         let load_chunk_pl = PipelineBuilder::new(&module, "load_chunk")
             .for_bindgroup(&base_bg)
@@ -271,6 +339,39 @@ impl GpuPlat {
             .for_bindgroup(&schem_bg)
             .for_bindgroup(&canvas_bg)
             .for_bindgroup(&raw_plat_bg)
+            .for_bindgroup(&chunk_bg)
+            .build(&cs);
+
+        let helpers = Box::new(vec![Chunk::new((0, 0, 0), 0, 5); CHUNK_BUCKET]);
+        akin::akin! {
+            let &orientation = [up, down, back, front, left, right];
+            let chunk_helper_~*orientation_buffer = cs.new_buffer(bytemuck::cast_slice(&helpers));
+        }
+
+        let mesh = cs.new_buffer(bytemuck::cast_slice(&vec![
+            [0; 10];
+            MESH_SIZE * CHUNK_BUCKET
+        ]));
+
+        let mesh_helper_bg = BindGroupBuilder::new()
+            .insert(0, false, mesh.as_entire_binding())
+            .insert(1, false, chunk_helper_up_buffer.as_entire_binding())
+            .insert(2, false, chunk_helper_down_buffer.as_entire_binding())
+            .insert(3, false, chunk_helper_back_buffer.as_entire_binding())
+            .insert(4, false, chunk_helper_front_buffer.as_entire_binding())
+            .insert(5, false, chunk_helper_left_buffer.as_entire_binding())
+            .insert(6, false, chunk_helper_right_buffer.as_entire_binding())
+            .build(&cs);
+
+        // Load pipelines
+        let to_mesh_greedy_pl = PipelineBuilder::new(&module, "to_mesh_greedy")
+            .for_bindgroup(&base_bg)
+            .for_bindgroup(&tmp_bg)
+            .for_bindgroup(&schem_bg)
+            .for_bindgroup(&canvas_bg)
+            .for_bindgroup(&raw_plat_bg)
+            .for_bindgroup(&chunk_bg)
+            .for_bindgroup(&mesh_helper_bg)
             .build(&cs);
 
         Self {
@@ -291,6 +392,19 @@ impl GpuPlat {
             load_chunk_pl,
             raw_plat_depth,
             raw_plat_bg,
+            chunks_buffer: chunk_buffer,
+            chunk_bg,
+            mesh_helpers_up: chunk_helper_up_buffer,
+            mesh_helpers_down: chunk_helper_down_buffer,
+            mesh_helpers_left: chunk_helper_left_buffer,
+            mesh_helpers_right: chunk_helper_right_buffer,
+            mesh_helpers_front: chunk_helper_front_buffer,
+            mesh_helpers_back: chunk_helper_back_buffer,
+            mesh_helpers_bg: mesh_helper_bg,
+            to_mesh_greedy_pl,
+            mesh,
+            chunks_requests_buffer: chunk_requests_buffer,
+            chunks_requests_staging_buffer: chunk_requests_staging_buffer,
         }
     }
 }

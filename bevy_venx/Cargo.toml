@@ -9,16 +9,18 @@ edition = "2021"
 name = "bevy"
 path = "bin/temp_bevy_integration/example.rs"
 
-
-
 [dependencies]
-bevy = { version = "0.12", features = ["dynamic_linking"]} 
+bevy = { version = "0.12" } 
 bevy_water = "0.12"
 bevy_panorbit_camera = "0.13.0"
 pollster = "0.3.0"
 venx = { path = "../" }
 glam = "*"
 downcast-rs = "1.2.0"
+
+[features]
+# Enables parallel processing support by enabling the "rayon" feature of jpeg-decoder.
+dyn = ["bevy/dynamic_linking"]
 
 # [features]
 # build-binary = ["serde", "csv", "crossbeam", "num_cpus"]

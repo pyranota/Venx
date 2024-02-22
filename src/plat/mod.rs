@@ -39,8 +39,8 @@ pub mod interfaces;
 #[cfg(feature = "mca_converter")]
 mod mca_converter;
 mod minecraft_blocks;
-mod normal;
-mod turbo;
+pub mod normal;
+pub mod turbo;
 
 pub struct VenxPlat {
     plat: Plat,
@@ -278,7 +278,12 @@ impl VenxPlat {
 
                     let mesh_idx = counter / capacity;
 
-                    'mesh: for (pos, color, normal) in vx_mesh.iter() {
+                    'mesh: for attr in vx_mesh.iter() {
+                        let (pos, color, normal) = (
+                            Vec3::from_slice(&attr[0..3]),
+                            Vec4::from_slice(&attr[3..7]),
+                            Vec3::from_slice(&attr[7..10]),
+                        );
                         // Each returned mesh is static length, so not all attributes in that mesh are used
                         // To prevent leaking zero attributes into actual mesh, we check it
                         // Dont create blocks with color Vec4::ZERO, it will break the mesh
@@ -324,7 +329,7 @@ impl LoadInterface for VenxPlat {
         }
     }
 
-    fn load_chunks(&self, blank_chunks: Box<Vec<Chunk>>) -> Box<Vec<Chunk>> {
+    fn load_chunks(&self, blank_chunks: Box<Vec<venx_core::plat::chunk::chunk::ChunkLoadRequest>>) {
         match &self.plat {
             Plat::Cpu(plat) => todo!(),
             Plat::Gpu(plat) => plat.load_chunks(blank_chunks),

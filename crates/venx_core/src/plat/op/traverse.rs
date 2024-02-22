@@ -113,7 +113,7 @@ impl RawPlat<'_> {
             let layer = &self[layer_idx];
 
             let node_idx =
-                layer.get_node_idx_gpu(region_position * l2s(region_level), region_level, None);
+                layer.get_node_idx_gpu(region_position * l2s(region_level), region_level);
 
             if node_idx != 0 {
                 layer.traverse(0, node_idx, UVec3::ZERO, true, region_level, callback)
@@ -260,6 +260,164 @@ impl Layer<'_> {
                     stack.pop();
                     continue;
                 }
+            }
+
+            let size = l2s(*level) / 2;
+
+            // Actual node idx in layer.nodes
+            let child_id = &node.children[*index];
+
+            // Increment ahead, so if child_id == 0, it will still do some progress
+            *index += 1;
+
+            if *child_id != 0 && *level > 0 {
+                // TODO: Profile, it might be slow to handle position this way
+                if positioned {
+                    position += Node::get_child_position(*index as u32 - 1) * size;
+                }
+
+                // TODO: Do we need this cache?
+                let (node_idx, level, voxel_id) =
+                    (node_idx.clone(), level.clone(), voxel_id.clone());
+
+                stack.push((
+                    *child_id as usize,
+                    node_idx,
+                    position.clone(),
+                    level - 1,
+                    voxel_id,
+                    0,
+                ));
+            }
+        }
+    }
+
+    /// Depth-first traversal of layer.
+    /// `entry: u32`, `from_node_position: UVec3` are used to adjust data in `Props`
+    pub fn traverse_gpu<F>(
+        &self,
+        entry: u32,
+        from_node_idx: usize,
+        from_node_position: UVec3,
+        positioned: bool,
+        from_level: usize,
+        mut callback: F,
+    ) where
+        // level, entry, position
+        F: FnMut((usize, usize, UVec3)),
+    {
+        // TODO: use assert!
+        if cfg!(feature = "bitcode_support") {
+            assert_ne!(from_node_idx, 0);
+        }
+
+        // Emulate stack with max depth 21 (max graph depth)
+        // Why? This code should compile to SpirV
+        let mut stack: EStack<(
+            /* 0 node_idx */
+            usize,
+            /* 1 parent_idx */
+            usize,
+            /* 2 node_position */
+            UVec3,
+            /* level */
+            usize,
+            /* voxel_id */
+            usize,
+            /* index (progress of iterator in specific node) */
+            usize,
+        )> = EStack::new((from_node_idx, 0, from_node_position, from_level, 0, 0));
+
+        loop {
+            // Read without pulling it
+            let (node_idx, parent_idx, mut position, level, voxel_id, index) = stack.read();
+            // Exit
+            if *index > 7 && *level == from_level {
+                break;
+            }
+
+            // Some cache going on here
+            let node = &self[*node_idx];
+
+            if node.is_fork() {
+                if *index % 2 != 0 {
+                    panic!()
+                }
+
+                // Out of bound
+                if *index == 8 {
+                    let flag = node.flag;
+                    if flag > 0 {
+                        // Switch to next fork in chain
+                        *node_idx = flag as usize;
+                        // Reset index
+                        *index = 0;
+
+                        continue;
+                    } else if flag == -3 {
+                        stack.pop();
+                        continue;
+                    } else {
+                        panic!()
+                    }
+                }
+                let voxel_id = &node.children[*index];
+                let child_id = &node.children[*index + 1];
+
+                *index += 2;
+
+                if *child_id != 0 {
+                    // if *index == 4 {
+                    //     panic!();
+                    // }
+                    let (node_idx, level) = (node_idx.clone(), level.clone());
+
+                    stack.push((
+                        *child_id as usize,
+                        node_idx,
+                        position.clone(),
+                        level,
+                        *voxel_id as usize,
+                        0,
+                    ));
+
+                    continue;
+                } else {
+                    // Exit fork chain
+                    stack.pop();
+                    continue;
+                }
+            }
+
+            // Iterated over all children
+            if *index > 7 {
+                stack.pop();
+                continue;
+            }
+
+            // Call for each enter once
+            // If remove, it will call this callback 7 extra times
+            if *index == 0 {
+                // let mut props = Props {
+                //     // TODO: Make use of positions
+                //     position: &position,
+                //     positioned,
+                //     parent_idx: &parent_idx,
+                //     node: &node,
+                //     node_idx: *node_idx,
+                //     entry: *voxel_id as u32,
+                //     level: *level,
+                //     drop_tree: false,
+                // };
+
+                // let ret = callback(props);
+                callback((*level, *voxel_id, position));
+
+                // // Drop subtree traversal
+                // if props.drop_tree || *level == 0 {
+                //     stack.pop();
+                //     continue;
+                // }
             }
 
             let size = l2s(*level) / 2;

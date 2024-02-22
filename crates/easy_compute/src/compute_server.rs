@@ -23,7 +23,7 @@ impl ComputeServer {
 
         gpu_limits.max_buffer_size = 1 << 30;
 
-        gpu_limits.max_bind_groups = 6;
+        gpu_limits.max_bind_groups = 7;
 
         // `request_adapter` instantiates the general connection to the GPU
         let adapter = instance
@@ -37,7 +37,7 @@ impl ComputeServer {
             .request_device(
                 &wgpu::DeviceDescriptor {
                     label: None,
-                    features: wgpu::Features::empty(),
+                    features: wgpu::Features::empty(), //wgpu::Features::from_name("MAPPABLE_PRIMARY_BUFFERS").unwrap(),
                     limits: gpu_limits,
                 },
                 None,
@@ -86,6 +86,17 @@ impl ComputeServer {
                 contents,
                 usage: wgpu::BufferUsages::STORAGE
                     | wgpu::BufferUsages::COPY_DST
+                    | wgpu::BufferUsages::COPY_SRC,
+            })
+    }
+
+    pub fn new_buffer_writable(&self, contents: &[u8]) -> Buffer {
+        self.device
+            .create_buffer_init(&wgpu::util::BufferInitDescriptor {
+                label: Some("Storage Buffer"),
+                contents,
+                usage: wgpu::BufferUsages::STORAGE
+                    | wgpu::BufferUsages::MAP_WRITE
                     | wgpu::BufferUsages::COPY_SRC,
             })
     }

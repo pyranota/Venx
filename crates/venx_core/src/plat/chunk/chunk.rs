@@ -9,9 +9,9 @@ use crate::utils::l2s;
 
 // #[cfg(not(feature = "bitcode_support"))]
 // const MAX_SIZE: usize = 32;
-
+const WIDTH: usize = 32;
 // #[cfg(feature = "bitcode_support")]
-const MAX_SIZE: usize = 32 * 32 * 32;
+const MAX_SIZE: usize = WIDTH * WIDTH * WIDTH;
 
 #[derive(Clone, Copy)]
 #[repr(transparent)]
@@ -29,7 +29,7 @@ pub struct Chunk {
     /// 5 - size
     ///
     /// Rest - flatten chunk
-    pub(crate) data: [u32; MAX_SIZE + 6],
+    pub data: [u32; MAX_SIZE + 6],
     // position: UVec3,
     // lod_level: usize,
     // chunk_level: usize,
@@ -38,9 +38,29 @@ pub struct Chunk {
     // neighbor chunk levels
 }
 
+impl Default for Chunk {
+    fn default() -> Self {
+        Self {
+            data: [0; MAX_SIZE + 6],
+        }
+    }
+}
+
 unsafe impl Pod for Chunk {}
 
 unsafe impl Zeroable for Chunk {}
+
+#[derive(Clone, Copy, Default, Debug)]
+#[repr(C)]
+pub struct ChunkLoadRequest {
+    pub position: [u32; 3],
+    pub lod_level: u32,
+    pub chunk_level: u32,
+}
+
+unsafe impl Pod for ChunkLoadRequest {}
+
+unsafe impl Zeroable for ChunkLoadRequest {}
 
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
@@ -68,6 +88,23 @@ pub unsafe fn u8_slice_as_any<T: Sized>(p: &[u8]) -> &[T] {
 impl Chunk {
     pub fn lod_level(&self) -> usize {
         self.data[3] as usize
+    }
+
+    pub fn clean(&mut self) {
+        for i in 0..MAX_SIZE {
+            self.data[i + 6] = 0;
+        }
+    }
+
+    pub fn blank_with(&mut self, d: u32) {
+        for i in 0..MAX_SIZE {
+            self.data[i + 6] = d;
+        }
+    }
+    pub fn fill_layer(&mut self, layer: [u32; WIDTH * WIDTH]) {
+        for i in 0..layer.len() {
+            self.data[i + 6] = layer[i];
+        }
     }
     pub fn chunk_level(&self) -> usize {
         self.data[4] as usize
@@ -119,9 +156,21 @@ impl Chunk {
         data[5] = l2s(chunk_level - lod_level);
         Self { data }
     }
+
+    pub fn update_meta(&mut self, p: UVec3, lod_level: usize, chunk_level: usize) {
+        self.data[0] = p.x;
+        self.data[1] = p.y;
+        self.data[2] = p.z;
+        self.data[3] = lod_level as u32;
+        self.data[4] = chunk_level as u32;
+        self.data[5] = l2s(chunk_level - lod_level);
+    }
     pub fn get(&self, block_position: UVec3) -> Option<u32> {
         // Check for out of bound
-        if block_position.max_element() >= self.size() {
+        if block_position.x >= self.size()
+            || block_position.y >= self.size()
+            || block_position.z >= self.size()
+        {
             return None;
         }
 
@@ -132,6 +181,19 @@ impl Chunk {
             return None;
         }
     }
+
+    pub fn get_unchecked(&self, block_position: UVec3) -> u32 {
+        // Check for out of bound
+        if block_position.x >= self.size()
+            || block_position.y >= self.size()
+            || block_position.z >= self.size()
+        {
+            return 0;
+        }
+
+        self.get_raw(block_position)
+    }
+
     /// 3D Position to index in chunk
     pub fn flatten_value(&self, p: UVec3) -> usize {
         let size = self.size();
@@ -160,6 +222,14 @@ impl Chunk {
         let idx = self.flatten_value(position);
 
         self.data[idx] = block;
+    }
+
+    /// Sets local positioned block
+    pub fn set_many<const SIZE: usize>(&mut self, many: [u32; SIZE]) {
+        //let idx = self.flatten_value(position);
+        for idx in 0..many.len() {
+            //self.data[idx + 6] = many[idx];
+        }
     }
     /// Iterating over local positions and blocks
     pub fn iter<F>(&self, mut callback: F)

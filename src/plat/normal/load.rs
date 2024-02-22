@@ -1,4 +1,4 @@
-use venx_core::plat::chunk::chunk::Chunk;
+use venx_core::plat::chunk::chunk::{Chunk, ChunkLoadRequest};
 
 use crate::plat::interfaces::load::LoadInterface;
 
@@ -24,7 +24,7 @@ impl LoadInterface for CpuPlat {
         self.to_mesh_greedy(chunk)
     }
 
-    fn load_chunks(&self, blank_chunks: Box<Vec<Chunk>>) -> Box<Vec<Chunk>> {
+    fn load_chunks(&self, blank_chunks: Box<Vec<ChunkLoadRequest>>) {
         todo!()
     }
 }

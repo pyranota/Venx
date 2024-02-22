@@ -49,7 +49,6 @@ impl LayerInterface for CpuPlat {
                 let node_idx = layer.get_node_idx_gpu(
                     venx_core::glam::UVec3::from_array((position * l2s(level as usize)).to_array()),
                     level as usize,
-                    None,
                 ); // position * l2s(region_level)
 
                 if node_idx == 0 {

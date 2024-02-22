@@ -26,53 +26,76 @@ impl RawPlat<'_> {
 
         // // let real_chunk_size = l2s(chunk.level());
 
-        for x in 0..32 {
-            for y in 0..32 {
-                for z in 0..32 {
-                    // let addr = NodeAddr::from_position(
-                    //     uvec3(
-                    //         x + position.x * 32,
-                    //         y + position.y * 32,
-                    //         z + position.z * 32,
-                    //     ),
-                    //     self.depth,
-                    //     0,
-                    // );
-                    let voxel_id = self[0].get_node_gpu(
-                        uvec3(
-                            x + chunk.position().x * 32,
-                            y + chunk.position().y * 32,
-                            z + chunk.position().z * 32,
-                        ),
-                        0,
-                        None,
-                    );
+        // for x in 0..32 {
+        //     for y in 0..32 {
+        //         for z in 0..32 {
+        //             let voxel_id = self[0].get_node_gpu(
+        //                 uvec3(
+        //                     x + chunk.position().x * 32,
+        //                     y + chunk.position().y * 32,
+        //                     z + chunk.position().z * 32,
+        //                 ),
+        //                 0,
+        //                 None,
+        //             );
 
-                    // let res = self.get_voxel();
+        //             // let res = self.get_voxel();
 
-                    if voxel_id != 0 {
-                        chunk.set((x, y, z).into(), voxel_id as u32);
-                        //chunk[0].set(uvec3(x, y, z), res.voxel_id as u32);
-                    }
-                }
-            }
-        }
-
-        // for layer_idx in 0..4 {
-        //     // let node_idx = self[layer_idx].get_node_idx_gpu(uvec3(0, 0, 0) * l2s(5), 5, None);
-
-        //     // if node_idx != 0 {
-        //     self[layer_idx].traverse(0, 2, UVec3::ZERO, true, 5, &mut |p| {
-        //         if p.level == 0 {
-        //             // chunk.set(*p.position, p.entry);
-
-        //             //chunk.set(uvec3(0, 0, 0), 2);
-        //             //props.drop_tree = true;
+        //             if voxel_id != 0 {
+        //                 chunk.set((x, y, z).into(), voxel_id as u32);
+        //                 //chunk[0].set(uvec3(x, y, z), res.voxel_id as u32);
+        //             }
         //         }
-        //     });
-
-        //     // }
+        //     }
         // }
+
+        //for layer_idx in 0..4 {
+        let node_idx = self[0].get_node_idx_gpu(
+            chunk.position() * l2s(chunk.chunk_level()),
+            chunk.chunk_level(),
+        );
+
+        // let mut counter = 0;
+        // const LIMIT: usize = 128;
+
+        // let mut buffer = [0; LIMIT];
+
+        if node_idx != 0 {
+            self[0].traverse_gpu(
+                0,
+                node_idx,
+                UVec3::ZERO,
+                true,
+                chunk.chunk_level(),
+                |(level, entry, p)| {
+                    if level == 0 {
+                        if entry != 0 {
+                            // buffer[counter] = entry as u32;
+
+                            // counter += 1;
+                            // if counter == LIMIT {
+                            //     counter = 0;
+                            //     chunk.set_many(buffer);
+                            // }
+
+                            //chunk.get(p);
+
+                            chunk.set(p, entry as u32);
+                            //chunk.data[100] = entry as u32;
+                            //chunk.data[5] = entry as u32;
+                            // a[p.x as usize] = chunk.chunk_level();
+                            // b[p.y as usize] = chunk.chunk_level();
+                            // c[p.z as usize] = chunk.chunk_level();
+
+                            //let l = ;
+                        }
+
+                        //     // p.drop_tree = true;
+                    }
+                },
+            );
+        }
+        //}
 
         // chunk.data[5] = 9;
     }

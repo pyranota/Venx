@@ -7,7 +7,7 @@ use crate::{
 
 type MeshHelper = Chunk;
 
-pub type Mesh<'a> = &'a mut [(Vec3, Vec4, Vec3)]; // Position, Color, Normal
+pub type Mesh<'a> = &'a mut [[f32; 10]]; // Position, Color, Normal
 
 impl RawPlat<'_> {
     pub fn greedy_runner(
@@ -28,12 +28,16 @@ impl RawPlat<'_> {
 
         let mut line_direction = Vec3::ZERO;
 
-        line_direction[line_idx] = 1.;
+        match line_idx {
+            0 => line_direction.x = 1.,
+            1 => line_direction.y = 1.,
+            2 => line_direction.z = 1.,
+            _ => panic!(),
+        }
 
-        if !mesh_helper.get(block_position).is_some()
-            && chunk
-                .get_neighbor(self, block_position.as_ivec3(), neighbor_direction)
-                .is_none()
+        if !mesh_helper.get_unchecked(block_position) != 0
+            && chunk.get_neighbor_unchecked(self, block_position.as_ivec3(), neighbor_direction)
+                == 0
         {
             // Create run
             // 1 it is just our first block
@@ -47,17 +51,20 @@ impl RawPlat<'_> {
                     (block_position.as_vec3() + line_direction * (line_len as f32)).as_uvec3();
 
                 // Is it used
-                if mesh_helper.get(next_pos).is_some() {
+                if mesh_helper.get_unchecked(next_pos) != 0 {
                     break;
                 }
-                // Is there a block at this position?
-                if let Some(run_block) = chunk.get(next_pos) {
+                // // Is there a block at this position?
+                let run_block = chunk.get_unchecked(next_pos);
+                if run_block != 0 {
                     // Is it the same as origin block?
                     if run_block == block {
-                        // Is it visible?
-                        if chunk
-                            .get_neighbor(self, (next_pos).as_ivec3(), neighbor_direction)
-                            .is_none()
+                        // // Is it visible?
+                        if chunk.get_neighbor_unchecked(
+                            self,
+                            (next_pos).as_ivec3(),
+                            neighbor_direction,
+                        ) == 0
                         {
                             //dbg!("Found");
                             // Marking this block as
@@ -81,23 +88,46 @@ impl RawPlat<'_> {
                 let mut new_pos = block_position.clone();
 
                 for c in 0..line_len {
-                    new_pos[width_idx] = block_position[width_idx] + line_width;
-                    new_pos[line_idx] = block_position[line_idx] + c;
-                    //dbg!((new_pos, pos));
+                    match width_idx {
+                        0 => new_pos.x = block_position.x + line_width,
+                        1 => new_pos.y = block_position.y + line_width,
+                        2 => new_pos.z = block_position.z + line_width,
+                        _ => panic!(),
+                    }
+
+                    match line_idx {
+                        0 => new_pos.x = block_position.x + c,
+                        1 => new_pos.y = block_position.y + c,
+                        2 => new_pos.z = block_position.z + c,
+                        _ => panic!(),
+                    }
+                    // new_pos[width_idx] = block_position[width_idx] + line_width;
+                    // new_pos[line_idx] = block_position[line_idx] + c;
+                    //
+                    // new_pos[line_idx] = block_position[line_idx] + c;
+
+                    // // Its drivin me crazy
+                    // let mut vec_pos = UVec3::ZERO;
+                    // vec_pos.x = new_pos[0];
+                    // vec_pos.y = new_pos[1];
+                    // vec_pos.z = new_pos[2];
 
                     // Is it used
-                    if mesh_helper.get(new_pos).is_some() {
+                    if mesh_helper.get_unchecked(new_pos) != 0 {
                         flag = false;
                         break;
                     }
                     // Is there a block at this position?
-                    if let Some(run_block) = chunk.get(new_pos) {
+                    let run_block = chunk.get_unchecked(new_pos);
+                    if run_block != 0 {
                         // Is it the same as origin block?
                         if run_block == block {
                             // Is it visible?
-                            if chunk
-                                .get_neighbor(self, (new_pos).as_ivec3(), neighbor_direction)
-                                .is_none()
+                            if chunk.get_neighbor_unchecked(
+                                self,
+                                (new_pos).as_ivec3(),
+                                neighbor_direction,
+                            ) == 0
                             {
                                 //dbg!("Found");
                                 // Marking this block as
@@ -115,8 +145,22 @@ impl RawPlat<'_> {
                 if flag {
                     for c in 0..line_len {
                         let mut new_pos = block_position.clone();
-                        new_pos[width_idx] = block_position[width_idx] + line_width;
-                        new_pos[line_idx] = block_position[line_idx] + c;
+
+                        match width_idx {
+                            0 => new_pos.x = block_position.x + line_width,
+                            1 => new_pos.y = block_position.y + line_width,
+                            2 => new_pos.z = block_position.z + line_width,
+                            _ => panic!(),
+                        }
+
+                        match line_idx {
+                            0 => new_pos.x = block_position.x + c,
+                            1 => new_pos.y = block_position.y + c,
+                            2 => new_pos.z = block_position.z + c,
+                            _ => panic!(),
+                        }
+                        // new_pos[width_idx] = block_position[width_idx] + line_width;
+                        // new_pos[line_idx] = block_position[line_idx] + c;
                         mesh_helper.set(new_pos, 1);
                     }
 
@@ -127,22 +171,54 @@ impl RawPlat<'_> {
             }
             // Fill the mesh
 
-            for mut vertex in face_vertices {
-                // vertex.x *= stretcher.x;
-                // vertex.y *= stretcher.y;
+            for vertex_idx in 0..6 {
+                let mut vertex = face_vertices[vertex_idx];
+                //     // vertex[line_idx] *= line_len as f32;
+                //     // vertex[width_idx] *= line_width as f32;
 
-                vertex[line_idx] *= line_len as f32;
-                vertex[width_idx] *= (line_width) as f32;
+                match line_idx {
+                    0 => vertex.x *= line_len as f32,
+                    1 => vertex.y *= line_len as f32,
+                    2 => vertex.z *= line_len as f32,
+                    _ => panic!(),
+                }
 
-                mesh[*mesh_idx] = ((
-                    ((vertex * scale)
-                        + (block_position * scale as u32 + (chunk.position() * chunk.width()))
-                            .as_vec3()),
-                    block_color,
-                    neighbor_direction.as_vec3(),
-                ));
+                match width_idx {
+                    0 => vertex.x *= line_width as f32,
+                    1 => vertex.y *= line_width as f32,
+                    2 => vertex.z *= line_width as f32,
+                    _ => panic!(),
+                }
+
+                // mesh[*mesh_idx] = ((
+                //     ((vertex * scale)
+                //         + (block_position * scale as u32 + (chunk.position() * chunk.width()))
+                //             .as_vec3()),
+                //     block_color,
+                //     neighbor_direction.as_vec3(),
+                // ));
+                // TODO: Optimize
+                let position = ((vertex * scale)
+                    + (block_position * scale as u32 + (chunk.position() * chunk.width()))
+                        .as_vec3())
+                .to_array();
+
+                let nd = neighbor_direction.as_vec3().to_array();
+                mesh[*mesh_idx] = [
+                    position[0],
+                    position[1],
+                    position[2],
+                    block_color.x,
+                    block_color.y,
+                    block_color.z,
+                    block_color.w,
+                    nd[0],
+                    nd[1],
+                    nd[2], //neighbor_direction,
+                ];
 
                 *mesh_idx += 1;
+                // todo!()
             }
         }
     }
