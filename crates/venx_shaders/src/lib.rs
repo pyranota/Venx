@@ -61,7 +61,7 @@ pub fn load_chunk(
     layer.load_chunk_gpu(&mut chunks[id.x as usize]);
 }
 // Per chunk basis
-// pub const MESH_SIZE: usize = 36_000;
+// pub const MESH_SIZE: usize = 39_000;
 
 // #[spirv(compute(threads(1)))]
 // pub fn to_mesh_greedy(

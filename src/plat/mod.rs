@@ -262,7 +262,7 @@ impl VenxPlat {
                     // lod_level = 0;
                     //let mut lod = lod;
 
-                    let fetched_chunk = plat.load_chunk(uvec3(x, y, z), 0);
+                    let fetched_chunk = plat.load_chunk(uvec3(x, y, z), 0, 5);
                     let mut found = false;
                     fetched_chunk.iter(|p, ty| {
                         if ty == 8 && lod_level > 0 && !found {
@@ -272,7 +272,7 @@ impl VenxPlat {
                         }
                     });
 
-                    let chunk = plat.load_chunk(uvec3(x, y, z), lod_level);
+                    let chunk = plat.load_chunk(uvec3(x, y, z), lod_level, 5);
 
                     let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
 
@@ -307,19 +307,16 @@ impl VenxPlat {
 impl PlatInterface for VenxPlat {}
 
 impl LoadInterface for VenxPlat {
-    fn load_chunk(&self, position: glam::UVec3, lod_level: usize) -> Box<Chunk> {
+    fn load_chunk(
+        &self,
+        position: glam::UVec3,
+        lod_level: usize,
+        chunk_level: usize,
+    ) -> Box<Chunk> {
         match &self.plat {
-            Plat::Cpu(plat) => plat.load_chunk(position, lod_level),
-            Plat::Gpu(plat) => plat.load_chunk(position, lod_level),
+            Plat::Cpu(plat) => plat.load_chunk(position, lod_level, chunk_level),
+            Plat::Gpu(plat) => plat.load_chunk(position, lod_level, chunk_level),
         }
-    }
-
-    fn overlay_chunk(&self) {
-        todo!()
-    }
-
-    fn overlay_chunks(&self) {
-        todo!()
     }
 
     fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> Mesh {

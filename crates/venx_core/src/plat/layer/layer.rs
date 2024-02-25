@@ -12,6 +12,9 @@ use crate::{
     utils::l2s,
 };
 
+/// Alias for layer
+pub type Lr<'a> = Layer<'a>;
+
 #[derive(PartialEq)]
 pub struct Layer<'a> {
     // TODO: move to RawPlat metadata
@@ -47,6 +50,15 @@ pub struct ForkIterProps {
 }
 
 impl<'a> Layer<'a> {
+    /// Index to Base layer
+    pub const BASE: usize = 0;
+    /// Index to Tmp layer
+    pub const TMP: usize = 1;
+    /// Index to Schem layer
+    pub const SCHEM: usize = 2;
+    /// Index to Canvas layer
+    pub const CANVAS: usize = 3;
+
     pub fn new(depth: usize, nodes: &'a mut [Node], entries: &'a mut [usize]) -> Self {
         // Set leaf node
         nodes[1].flag = -2;

@@ -16,17 +16,25 @@ pub trait LayerInterface {
         layer: usize,
         segment: Grid<SIZE>,
         position: UVec3,
-    );
-    fn set_voxel(&mut self, layer: usize, position: UVec3, ty: usize);
+    ) {
+        todo!()
+    }
+    fn set_voxel(&mut self, layer: usize, position: UVec3, ty: usize) {
+        todo!()
+    }
     fn compress(
         &mut self,
         layer: usize,
         position: UVec3,
         level: u32,
         lookup_tables: &mut Vec<HashMap<Node, usize>>,
-    );
+    ) {
+        todo!()
+    }
 
-    fn get_voxel(&self, position: UVec3) -> Option<GetNodeResult>;
+    fn get_voxel(&self, position: UVec3) -> Option<GetNodeResult> {
+        todo!()
+    }
     // fn get_image(&self, handle: usize) -> &Image;
     // fn get_image_mut(&mut self, handle: usize) -> &mut Image;
 

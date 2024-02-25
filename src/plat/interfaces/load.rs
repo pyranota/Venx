@@ -9,12 +9,14 @@ use crate::plat::normal::mesh::Mesh;
 pub trait LoadInterface {
     /// Position in chunk grid
     /// TODO: Make async
-    fn load_chunk(&self, position: UVec3, lod_level: usize) -> Box<Chunk>;
-    fn load_chunks(&self, blank_chunks: Box<Vec<ChunkLoadRequest>>);
-    fn overlay_chunk(&self);
-    fn overlay_chunks(&self);
+    fn load_chunk(&self, position: UVec3, lod_level: usize, chunk_level: usize) -> Box<Chunk> {
+        todo!();
+    }
+    fn load_chunks(&self, blank_chunks: Box<Vec<ChunkLoadRequest>>) {
+        todo!();
+    }
 
-    // Mesh creation
-
-    fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> Mesh;
+    fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> Mesh {
+        todo!();
+    }
 }

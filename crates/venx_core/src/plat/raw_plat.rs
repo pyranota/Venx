@@ -152,7 +152,7 @@ macro_rules! quick_raw_plat {
         let mut base = (alloc::vec![Node::default(); $layer_len], [0]);
         let mut tmp = (alloc::vec![Node::default(); 128], [0]);
         let (mut schem, mut canvas) = (tmp.clone(), tmp.clone());
-        let mut $plat = Box::new(RawPlat::new(
+        let mut $plat = std::boxed::Box::new(RawPlat::new(
             $depth,
             5,
             5,

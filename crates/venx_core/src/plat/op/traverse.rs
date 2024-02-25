@@ -119,18 +119,6 @@ impl RawPlat<'_> {
                 layer.traverse(0, node_idx, UVec3::ZERO, true, region_level, callback)
             }
         }
-
-        // self.opts(
-        //     None,
-        //     layer_opts,
-        //     entry_opts,
-        //     true,
-        //     &mut |_plat, (layer, ..), entry| {
-        //         // We need explicitly call it for all specified entries and layers. Otherwise it would find just one node with most priority.
-
-        //         None as Option<()>
-        //     },
-        // );
     }
 }
 
@@ -476,6 +464,8 @@ mod tests {
         },
         utils::l2s,
     };
+
+    use self::test_utils::gen_rand_mtx;
 
     #[test]
     fn traverse_region() {
@@ -1026,23 +1016,6 @@ mod tests {
         let _ = gen_rand_mtx::<256>(50);
     }
 
-    fn gen_rand_mtx<const SIZE: usize>(empty_probability: u8) -> Box<Vec<Vec<Vec<u32>>>> {
-        let mut rng = rand::thread_rng();
-        let mut mtx = Box::new(alloc::vec![alloc::vec![alloc::vec![0; SIZE]; SIZE]; SIZE]);
-
-        for x in 0..SIZE {
-            for y in 0..SIZE {
-                for z in 0..SIZE {
-                    if !rng.gen_ratio(empty_probability as u32, 100) {
-                        let voxel_id: u16 = rng.gen();
-                        // To prevent 0
-                        mtx[x][y][z] = voxel_id as u32 + 1;
-                    }
-                }
-            }
-        }
-        mtx
-    }
     // #[test]
     // fn test_drop_tree() {
     //     todo!()

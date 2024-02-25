@@ -41,7 +41,7 @@ clean:
      echo "Not done yeeet"
 
 # test specific package in project. Default is venx
-test PACKAGE='venx':
+test +PACKAGE='venx':
     cargo test --package {{PACKAGE}}
 
 _to_shader TARGET='wgsl' NAME='venx_shaders' SPV_V='1.1':
