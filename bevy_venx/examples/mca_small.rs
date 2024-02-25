@@ -24,6 +24,7 @@ fn setup(
     mut cmd: Commands,
     mut bevy_meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    
 ) {
     // Its small-sized plat, its slow to convert it from mca each run, it will be saved
     let plat = VenxPlat::load("mca_small").unwrap_or_else(|e| {

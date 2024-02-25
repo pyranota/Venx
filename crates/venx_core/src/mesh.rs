@@ -101,16 +101,6 @@ impl RawPlat<'_> {
                         2 => new_pos.z = block_position.z + c,
                         _ => panic!(),
                     }
-                    // new_pos[width_idx] = block_position[width_idx] + line_width;
-                    // new_pos[line_idx] = block_position[line_idx] + c;
-                    //
-                    // new_pos[line_idx] = block_position[line_idx] + c;
-
-                    // // Its drivin me crazy
-                    // let mut vec_pos = UVec3::ZERO;
-                    // vec_pos.x = new_pos[0];
-                    // vec_pos.y = new_pos[1];
-                    // vec_pos.z = new_pos[2];
 
                     // Is it used
                     if mesh_helper.get_unchecked(new_pos) != 0 {
@@ -129,7 +119,6 @@ impl RawPlat<'_> {
                                 neighbor_direction,
                             ) == 0
                             {
-                                //dbg!("Found");
                                 // Marking this block as
                                 // It continues only if all conditions were met
                                 continue;
@@ -159,8 +148,6 @@ impl RawPlat<'_> {
                             2 => new_pos.z = block_position.z + c,
                             _ => panic!(),
                         }
-                        // new_pos[width_idx] = block_position[width_idx] + line_width;
-                        // new_pos[line_idx] = block_position[line_idx] + c;
                         mesh_helper.set(new_pos, 1);
                     }
 
@@ -173,8 +160,6 @@ impl RawPlat<'_> {
 
             for vertex_idx in 0..6 {
                 let mut vertex = face_vertices[vertex_idx];
-                //     // vertex[line_idx] *= line_len as f32;
-                //     // vertex[width_idx] *= line_width as f32;
 
                 match line_idx {
                     0 => vertex.x *= line_len as f32,
@@ -190,13 +175,6 @@ impl RawPlat<'_> {
                     _ => panic!(),
                 }
 
-                // mesh[*mesh_idx] = ((
-                //     ((vertex * scale)
-                //         + (block_position * scale as u32 + (chunk.position() * chunk.width()))
-                //             .as_vec3()),
-                //     block_color,
-                //     neighbor_direction.as_vec3(),
-                // ));
                 // TODO: Optimize
                 let position = ((vertex * scale)
                     + (block_position * scale as u32 + (chunk.position() * chunk.width()))

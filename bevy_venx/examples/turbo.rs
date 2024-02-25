@@ -34,7 +34,7 @@ fn setup(
         plat.save("demo").unwrap();
         plat
     });
-
+    dbg!(plat.depth());
     // let mut plat = VenxPlat::new(6, 5, 5);
 
     // plat.set_voxel(0, (0, 0, 0).into(), 4);
@@ -44,8 +44,8 @@ fn setup(
     info!("Transfer to gpu");
     let plat = block_on(plat.transfer_to_gpu());
 
-    for r_x in 0..7 {
-        for r_z in 0..7 {
+    for r_x in 0..1 {
+        for r_z in 0..2 {
             info!("Starting");
             dbg!(r_x, r_z);
             let mut chunk_updates = Box::new(vec![]);
@@ -86,49 +86,51 @@ fn setup(
             // // // );
             // // info!("Computing mesh");
             // // //for chunk in chunks.iter() {
-            // let mesh = plat.compute_mesh_from_chunk(&Chunk::default());
-            // // //info!("Mesh is computed");
-            // // //assert!(chunk.get((0, 2, 0).into()).is_some());
+            let mesh = plat.compute_mesh_from_chunk(&Chunk::default());
+            // //info!("Mesh is computed");
+            // //assert!(chunk.get((0, 2, 0).into()).is_some());
 
-            // let mut vertices: Vec<[f32; 3]> = vec![];
-            // let mut colors: Vec<[f32; 4]> = vec![];
-            // let mut normals: Vec<[f32; 3]> = vec![];
+            let mut vertices: Vec<[f32; 3]> = vec![];
+            let mut colors: Vec<[f32; 4]> = vec![];
+            let mut normals: Vec<[f32; 3]> = vec![];
 
-            // let mut counter = 0;
-            // // info!("Adding vertices");
-            // for attr in mesh.iter() {
-            //     let (pos, color, normal) = (
-            //         Vec3::from_slice(&attr[0..3]),
-            //         Vec4::from_slice(&attr[3..7]),
-            //         Vec3::from_slice(&attr[7..10]),
-            //     );
-            //     if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
-            //         //dbg!(counter);
-            //         continue;
-            //     }
-            //     counter += 1;
-            //     vertices.push(pos.to_array());
-            //     colors.push(color.to_array());
-            //     normals.push(normal.to_array());
-            // }
+            let mut counter = 0;
+            // info!("Adding vertices");
+            for attr in mesh.iter() {
+                let (pos, color, normal) = (
+                    Vec3::from_slice(&attr[0..3]),
+                    Vec4::from_slice(&attr[3..7]),
+                    Vec3::from_slice(&attr[7..10]),
+                );
+                if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
+                    //dbg!(counter);
+                    continue;
+                }
+                counter += 1;
+                vertices.push(pos.to_array());
+                colors.push(color.to_array());
+                normals.push(normal.to_array());
+            }
 
-            // info!("Inserting");
-            // let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
-            // bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
-            // bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
-            // bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
-            // info!("Spawning");
-            // cmd.spawn(PbrBundle {
-            //     mesh: bevy_meshes.add(bevy_mesh),
-            //     material: materials.add(StandardMaterial {
-            //         reflectance: 0.1,
-            //         base_color: Color::rgb(1., 1., 1.),
-            //         // alpha_mode: AlphaMode::Blend,
-            //         ..default()
-            //     }),
-            //     ..default()
-            // })
-            // .insert(Wireframe);
+            dbg!(vertices.len());
+
+            info!("Inserting");
+            let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
+            bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, vertices);
+            bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, colors);
+            bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, normals);
+            info!("Spawning");
+            cmd.spawn(PbrBundle {
+                mesh: bevy_meshes.add(bevy_mesh),
+                material: materials.add(StandardMaterial {
+                    reflectance: 0.1,
+                    base_color: Color::rgb(1., 1., 1.),
+                    // alpha_mode: AlphaMode::Blend,
+                    ..default()
+                }),
+                ..default()
+            })
+            .insert(Wireframe);
         }
     }
 
