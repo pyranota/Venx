@@ -15,6 +15,9 @@ impl VenxPlat {
     pub fn load_mca<'a>(
         dir_path: &'a str,
         region_range: (Range<RegionX>, Range<RegionZ>),
+        ignore_water: bool,
+        height: isize,
+        merge: bool,
     ) -> Result<Self> {
         let rr = region_range.clone();
         let max_width = i32::max(rr.0.end - rr.0.start, rr.1.end - rr.1.start) * 512;
@@ -33,7 +36,7 @@ impl VenxPlat {
                         let complete_chunk = complete::Chunk::from_bytes(&data).unwrap();
 
                         for x in 0..16 {
-                            for y in 120..380 {
+                            for y in (height)..380 {
                                 for z in 0..16 {
                                     if let Some(block) = complete_chunk.block(x, y - 60, z) {
                                         // if let Some(amount) = hashmap.get_mut(block.name()) {
@@ -44,7 +47,7 @@ impl VenxPlat {
 
                                         if block.name() != "minecraft:air"
                                             && block.name() != "minecraft:grass"
-                                            && block.name() != "minecraft:water"
+                                            && (ignore_water && (block.name() != "minecraft:water"))
                                         //&& block.name() != "minecraft:grass"
                                         // && block.name() == "minecraft:stone"
                                         {
@@ -93,7 +96,7 @@ impl VenxPlat {
                         }
                     }
                 }
-                if ch_x % 8 == 0 {
+                if merge && ch_x % 8 == 0 {
                     plat.compress(
                         0,
                         uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),

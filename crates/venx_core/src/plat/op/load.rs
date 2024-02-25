@@ -10,8 +10,6 @@ use crate::{
     utils::l2s,
 };
 
-use super::LayerOpts;
-
 impl Layer<'_> {
     #[inline(always)]
     pub fn load_chunk_gpu(&self, chunk: &mut Chunk) {

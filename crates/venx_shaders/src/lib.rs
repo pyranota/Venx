@@ -12,7 +12,7 @@ use venx_core::plat::{
     },
     layer::layer::Layer,
     node::{Node, NodeAddr},
-    op::{EntryOpts, LayerOpts},
+    node_l2::NodeL2,
     raw_plat::{LayerIndex::Base, RawPlat},
 };
 
@@ -21,7 +21,7 @@ pub fn load_chunk(
     #[spirv(global_invocation_id)] id: UVec3,
     // TODO: Write macro to improve it
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] nodes: &mut [Node],
-    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] entries: &mut [usize],
+    #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] l2: &mut [NodeL2],
 
     #[spirv(storage_buffer, descriptor_set = 4, binding = 0)] meta: &mut [usize],
     #[spirv(storage_buffer, descriptor_set = 5, binding = 0)] chunks: &mut [Chunk],
@@ -30,13 +30,7 @@ pub fn load_chunk(
 ) {
     // let depth = meta[id.x as usize] as usize;
 
-    let layer = Layer {
-        freezed: false,
-        // TODO: use push contants
-        depth: 12,
-        entries,
-        nodes,
-    };
+    let layer: Layer = (nodes, l2, 12).into();
 
     let chunk = &mut chunks[id.x as usize];
 
@@ -69,16 +63,16 @@ pub fn load_chunk(
 
 //     // TODO: Write macro to improve it
 //     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] base_nodes: &mut [Node],
-//     #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] base_entries: &mut [usize],
+//     #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] base_l2: &mut [usize],
 
 //     #[spirv(storage_buffer, descriptor_set = 1, binding = 0)] tmp_nodes: &mut [Node],
-//     #[spirv(storage_buffer, descriptor_set = 1, binding = 1)] tmp_entries: &mut [usize],
+//     #[spirv(storage_buffer, descriptor_set = 1, binding = 1)] tmp_l2: &mut [usize],
 
 //     #[spirv(storage_buffer, descriptor_set = 2, binding = 0)] schem_nodes: &mut [Node],
-//     #[spirv(storage_buffer, descriptor_set = 2, binding = 1)] schem_entries: &mut [usize],
+//     #[spirv(storage_buffer, descriptor_set = 2, binding = 1)] schem_l2: &mut [usize],
 
 //     #[spirv(storage_buffer, descriptor_set = 3, binding = 0)] canvas_nodes: &mut [Node],
-//     #[spirv(storage_buffer, descriptor_set = 3, binding = 1)] canvas_entries: &mut [usize],
+//     #[spirv(storage_buffer, descriptor_set = 3, binding = 1)] canvas_l2: &mut [usize],
 
 //     #[spirv(storage_buffer, descriptor_set = 4, binding = 0)] meta: &mut [usize],
 
@@ -100,25 +94,25 @@ pub fn load_chunk(
 //             Layer {
 //                 freezed: true,
 //                 depth: meta[0] as usize,
-//                 entries: base_entries,
+//                 entries: base_l2,
 //                 nodes: base_nodes,
 //             },
 //             Layer {
 //                 freezed: false,
 //                 depth: meta[0] as usize,
-//                 entries: tmp_entries,
+//                 entries: tmp_l2,
 //                 nodes: tmp_nodes,
 //             },
 //             Layer {
 //                 freezed: false,
 //                 depth: meta[0] as usize,
-//                 entries: schem_entries,
+//                 entries: schem_l2,
 //                 nodes: schem_nodes,
 //             },
 //             Layer {
 //                 freezed: false,
 //                 depth: meta[0] as usize,
-//                 entries: canvas_entries,
+//                 entries: canvas_l2,
 //                 nodes: canvas_nodes,
 //             },
 //         ],

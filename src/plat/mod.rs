@@ -20,7 +20,8 @@ use venx_core::{
         chunk::chunk::Chunk,
         layer::{self, layer::Layer},
         node::Node,
-        op::{get::GetNodeResult, EntryOpts, LayerOpts},
+        node_l2::NodeL2,
+        op::get::GetNodeResult,
         raw_plat::{
             LayerIndex::{Base, Canvas, Schem, Tmp},
             RawPlat,
@@ -89,11 +90,11 @@ impl VenxPlat {
 
             // let level_stringified: String =
             //     ron::ser::to_string_pretty(&level, ron::ser::PrettyConfig::default())?;
-            let encoded_entries: Vec<u8> = bitcode::encode(layer.entries).unwrap();
+            let encoded_entries: Vec<u8> = bitcode::encode(layer.level_2).unwrap();
             let encoded_nodes: Vec<u8> = bitcode::encode(layer.nodes).unwrap();
 
-            let mut entries_file = File::create(format!("{}/entries", layer_path))?;
-            entries_file.write_all(&encoded_entries)?;
+            let mut l2_file = File::create(format!("{}/level_2", layer_path))?;
+            l2_file.write_all(&encoded_entries)?;
 
             let mut nodes_file = File::create(format!("{}/nodes", layer_path))?;
             nodes_file.write_all(&encoded_nodes)?;
@@ -114,13 +115,13 @@ impl VenxPlat {
         ];
 
         for (i, layer_name) in ["base", "tmp", "schem", "canvas"].iter().enumerate() {
-            let entries_path = format!("{path}.plat/layers/{layer_name}/entries");
+            let l2_path = format!("{path}.plat/layers/{layer_name}/level_2");
             let nodes_path = format!("{path}.plat/layers/{layer_name}/nodes");
 
-            let entries: Vec<usize> = bitcode::decode(&read(entries_path)?)?;
+            let l2: Vec<NodeL2> = bitcode::decode(&read(l2_path)?)?;
             let nodes: Vec<Node> = bitcode::decode(&read(nodes_path)?)?;
 
-            components[i] = (nodes, entries);
+            components[i] = (nodes, l2);
         }
 
         // TODO: remove bottleneck. Handle this without cloning

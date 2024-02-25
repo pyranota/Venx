@@ -6,6 +6,7 @@ use venx_core::{
     plat::{
         layer::layer::Layer,
         node::Node,
+        node_l2::NodeL2,
         raw_plat::{
             LayerIndex::{Base, Canvas, Schem, Tmp},
             RawPlat,
@@ -22,20 +23,20 @@ use crate::plat::{interfaces::PlatInterface, turbo::gpu_plat::GpuPlat};
 pub struct CpuPlat {
     // Base
     pub(crate) base_nodes: Vec<Node>,
-    pub(crate) base_entries: Vec<usize>,
+    pub(crate) base_l2: Vec<NodeL2>,
 
     // Tmp
     pub(crate) tmp_nodes: Vec<Node>,
-    pub(crate) tmp_entries: Vec<usize>,
+    pub(crate) tmp_l2: Vec<NodeL2>,
 
     // Schem
     pub(crate) schem_nodes: Vec<Node>,
-    pub(crate) schem_entries: Vec<usize>,
+    pub(crate) schem_l2: Vec<NodeL2>,
 
     // Canvas
     pub(crate) canvas_nodes: Vec<Node>,
-    pub(crate) canvas_entries: Vec<usize>,
-    #[borrows(mut base_nodes, mut base_entries, mut tmp_nodes, mut tmp_entries, mut schem_nodes, mut schem_entries, mut canvas_nodes, mut canvas_entries)]
+    pub(crate) canvas_l2: Vec<NodeL2>,
+    #[borrows(mut base_nodes, mut base_l2, mut tmp_nodes, mut tmp_l2, mut schem_nodes, mut schem_l2, mut canvas_nodes, mut canvas_l2)]
     #[covariant]
     pub raw_plat: RawPlat<'this>,
 }
@@ -44,9 +45,12 @@ impl CpuPlat {
     pub(crate) fn new_plat(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         let base = (
             vec![Node::default(); 1 * (l2s(depth) * l2s(depth) / 2) as usize + 1_500_000],
-            vec![0; 2_200],
+            vec![NodeL2::default(); 2_200],
         );
-        let tmp = (vec![Node::default(); 128_000], vec![0; 1_200]);
+        let tmp = (
+            vec![Node::default(); 128_000],
+            vec![NodeL2::default(); 1_200],
+        );
         let (schem, canvas) = (tmp.clone(), tmp.clone());
 
         Self::new_from(depth, chunk_level, segment_level, base, tmp, schem, canvas)
@@ -58,7 +62,7 @@ impl CpuPlat {
         segment_level: usize,
         len: usize,
     ) -> Self {
-        let base = (vec![Node::default(); len], vec![0; 10]);
+        let base = (vec![Node::default(); len], vec![NodeL2::default(); 10]);
         let (tmp, schem, canvas) = (base.clone(), base.clone(), base.clone());
 
         Self::new_from(depth, chunk_level, segment_level, base, tmp, schem, canvas)
@@ -68,10 +72,10 @@ impl CpuPlat {
         depth: usize,
         chunk_level: usize,
         segment_level: usize,
-        mut base: (Vec<Node>, Vec<usize>),
-        mut tmp: (Vec<Node>, Vec<usize>),
-        mut schem: (Vec<Node>, Vec<usize>),
-        mut canvas: (Vec<Node>, Vec<usize>),
+        mut base: (Vec<Node>, Vec<NodeL2>),
+        mut tmp: (Vec<Node>, Vec<NodeL2>),
+        mut schem: (Vec<Node>, Vec<NodeL2>),
+        mut canvas: (Vec<Node>, Vec<NodeL2>),
     ) -> Self {
         // Setup and drop
         Layer::new(0, &mut base.0, &mut base.1);
@@ -86,67 +90,63 @@ impl CpuPlat {
         depth: usize,
         chunk_level: usize,
         segment_level: usize,
-        base: (Vec<Node>, Vec<usize>),
-        tmp: (Vec<Node>, Vec<usize>),
-        schem: (Vec<Node>, Vec<usize>),
-        canvas: (Vec<Node>, Vec<usize>),
+        base: (Vec<Node>, Vec<NodeL2>),
+        tmp: (Vec<Node>, Vec<NodeL2>),
+        schem: (Vec<Node>, Vec<NodeL2>),
+        canvas: (Vec<Node>, Vec<NodeL2>),
     ) -> Self {
         CpuPlatBuilder {
             raw_plat_builder: |// Base
                                base_nodes: &mut Vec<Node>,
-                               base_entries: &mut Vec<usize>,
+                               base_l2: &mut Vec<NodeL2>,
 
                                // Tmp
                                tmp_nodes: &mut Vec<Node>,
-                               tmp_entries: &mut Vec<usize>,
+                               tmp_l2: &mut Vec<NodeL2>,
 
                                // Schem
                                schem_nodes: &mut Vec<Node>,
-                               schem_entries: &mut Vec<usize>,
+                               schem_l2: &mut Vec<NodeL2>,
 
                                // Canvas
                                canvas_nodes: &mut Vec<Node>,
-                               canvas_entries: &mut Vec<usize>| {
+                               canvas_l2: &mut Vec<NodeL2>| {
                 RawPlat {
                     position: (0, 0, 0),
                     rotation: (0, 0, 0),
                     depth,
                     layers: [
                         Layer {
-                            freezed: false,
                             depth,
-                            entries: base_entries,
+                            level_2: base_l2,
                             nodes: base_nodes,
                         },
                         Layer {
-                            freezed: false,
                             depth,
-                            entries: tmp_entries,
+                            level_2: tmp_l2,
                             nodes: tmp_nodes,
                         },
                         Layer {
-                            freezed: false,
                             depth,
-                            entries: schem_entries,
+                            level_2: schem_l2,
                             nodes: schem_nodes,
                         },
                         Layer {
-                            freezed: false,
                             depth,
-                            entries: canvas_entries,
+                            level_2: canvas_l2,
                             nodes: canvas_nodes,
                         },
                     ],
                 }
             },
             base_nodes: base.0,
-            base_entries: base.1,
+            base_l2: base.1,
             tmp_nodes: tmp.0,
-            tmp_entries: tmp.1,
+            tmp_l2: tmp.1,
             schem_nodes: schem.0,
-            schem_entries: schem.1,
+            schem_l2: schem.1,
             canvas_nodes: canvas.0,
-            canvas_entries: canvas.1,
+            canvas_l2: canvas.1,
         }
         .build()
     }
@@ -161,10 +161,10 @@ impl CpuPlat {
             plat.depth,
             5,
             6,
-            (plat[Base].nodes.to_vec(), plat[Base].entries.to_vec()),
-            (plat[Tmp].nodes.to_vec(), plat[Tmp].entries.to_vec()),
-            (plat[Schem].nodes.to_vec(), plat[Schem].entries.to_vec()),
-            (plat[Canvas].nodes.to_vec(), plat[Canvas].entries.to_vec()),
+            (plat[Base].nodes.to_vec(), plat[Base].level_2.to_vec()),
+            (plat[Tmp].nodes.to_vec(), plat[Tmp].level_2.to_vec()),
+            (plat[Schem].nodes.to_vec(), plat[Schem].level_2.to_vec()),
+            (plat[Canvas].nodes.to_vec(), plat[Canvas].level_2.to_vec()),
         )
         .await
     }

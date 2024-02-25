@@ -1,12 +1,6 @@
 use spirv_std::glam::{uvec3, IVec3, UVec3};
 
-use crate::{
-    plat::{
-        op::{EntryOpts, LayerOpts},
-        raw_plat::RawPlat,
-    },
-    utils::l2s,
-};
+use crate::{plat::raw_plat::RawPlat, utils::l2s};
 
 use super::chunk::{self, Chunk};
 

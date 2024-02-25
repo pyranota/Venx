@@ -25,7 +25,7 @@ fn setup(
     let plat = VenxPlat::load("ALOD").unwrap_or_else(|e| {
         warn!("Plat wasnt found on device, creating new and saving ({e})");
         // Convert from minecraft map
-        let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1)).unwrap();
+        let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1), false, 0, true).unwrap();
         plat.save("ALOD").unwrap();
         plat
     });

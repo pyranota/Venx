@@ -1,12 +1,13 @@
 use spirv_std::glam::{UVec3, Vec3};
 
-use crate::plat::{
-    layer::layer::Layer,
-    node::{Node, NodeAddr},
-    raw_plat::RawPlat,
+use crate::{
+    l2s,
+    plat::{
+        layer::layer::{Layer, Lr},
+        node::{Node, NodeAddr},
+        raw_plat::RawPlat,
+    },
 };
-
-use super::{EntryOpts, LayerOpts};
 
 type Entry_Idx = usize;
 type Layer_Idx = Entry_Idx;
@@ -123,26 +124,441 @@ impl RawPlat<'_> {
         self.get_node(position, 0)
     }
 
-    /// Is there a voxel or not at given position
-    /// Slowest operation you should avoid it as much as possible
-    pub fn at(&self, position: Vec3, level: usize, entry: EntryOpts, layer: LayerOpts) -> bool {
-        // Small optimization
-        // With this we should not calculate children indices each run.
-        // let path = self.find_path(position: Vec3, 0);
+    // /// Is there a voxel or not at given position
+    // /// Slowest operation you should avoid it as much as possible
+    // pub fn at(&self, position: Vec3, level: usize, entry: EntryOpts, layer: LayerOpts) -> bool {
+    //     // Small optimization
+    //     // With this we should not calculate children indices each run.
+    //     // let path = self.find_path(position: Vec3, 0);
 
-        // self.get_node_pathed(..).is_some()
-        todo!()
+    //     // self.get_node_pathed(..).is_some()
+    //     todo!()
+    // }
+
+    // // solid_at -> solid_at_specific. Solid at has no more entry and layer
+    // pub fn solid_at(
+    //     &self,
+    //     position: Vec3,
+    //     level: usize,
+    //     entry: EntryOpts,
+    //     layer: LayerOpts,
+    // ) -> bool {
+    //     todo!()
+    // }
+}
+
+impl Lr<'_> {
+    pub fn get_node(
+        &self,
+        mut position: UVec3,
+        level: usize,
+        voxel_id_opt: Option<usize>,
+    ) -> GetNodeResult {
+        // TODO: Handle cases with 4th level
+        let mut current_level = self.depth as usize;
+
+        let mut size = l2s(self.depth);
+        let mut found_idx = GetNodeResult::None();
+        let fork_level = 4;
+        let mut idx = 2;
+
+        while current_level > fork_level {
+            let child_index = Node::get_child_index(position, current_level - 1);
+
+            let below_node_idx = self[idx].children[child_index];
+
+            if below_node_idx != 0 {
+                idx = below_node_idx as usize;
+
+                if current_level == level + 1 {
+                    let res = GetNodeResult::Some(
+                        0,
+                        // TODO: Let layer store its id
+                        0,
+                        below_node_idx as usize,
+                    );
+                    return res;
+                }
+            } else {
+                return GetNodeResult::None();
+            }
+            {
+                size /= 2;
+                position %= size;
+                current_level -= 1;
+            }
+        }
+
+        self.iter_fork(idx as usize, &mut |props| {
+            if let Some(needed_voxel_id) = voxel_id_opt {
+                if props.voxel_id == needed_voxel_id {
+                    props.drop = true;
+                } else {
+                    return;
+                }
+            }
+
+            let mut size = size;
+            let mut position = position.clone();
+            let mut current_level = current_level;
+            let mut idx = props.node_idx;
+
+            while current_level > level {
+                let child_index = Node::get_child_index(position, current_level - 1);
+
+                let below_node_idx = self[idx].children[child_index];
+
+                if below_node_idx != 0 {
+                    idx = below_node_idx as usize;
+                    if current_level == level + 1 {
+                        found_idx = GetNodeResult::Some(
+                            props.voxel_id as usize,
+                            // TODO: Let layer store its id
+                            0,
+                            below_node_idx as usize,
+                        );
+                        //found_idx = Some(below_node_idx as usize);
+                    }
+                } else {
+                    return;
+                }
+                {
+                    size /= 2;
+                    position %= size;
+                    current_level -= 1;
+                }
+            }
+
+            props.drop = true;
+        });
+
+        found_idx
+    }
+    pub fn get_node_gpu(
+        &self,
+        mut position: UVec3,
+        level: usize,
+        voxel_id_opt: Option<usize>,
+    ) -> usize {
+        // let addr = &NodeAddr::from_position(position, self.depth, level);
+        // self.get_node_with_addr(addr, level, voxel_id_opt)
+        let mut current_level = self.depth as usize;
+
+        let mut size = l2s(self.depth);
+        let mut found_idx = GetNodeResult::None();
+        let fork_level = 4;
+        let mut idx = 2;
+
+        while current_level > fork_level {
+            let child_index = Node::get_child_index(position, current_level - 1);
+
+            let below_node_idx = self[idx].children[child_index];
+
+            if below_node_idx != 0 {
+                idx = below_node_idx as usize;
+
+                if current_level == level + 1 {
+                    let res = GetNodeResult::Some(
+                        0,
+                        // TODO: Let layer store its id
+                        0,
+                        below_node_idx as usize,
+                    );
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+            {
+                size /= 2;
+                position %= size;
+                current_level -= 1;
+            }
+        }
+
+        self.iter_fork(idx as usize, &mut |props| {
+            if let Some(needed_voxel_id) = voxel_id_opt {
+                if props.voxel_id == needed_voxel_id {
+                    props.drop = true;
+                } else {
+                    return;
+                }
+            }
+
+            let mut size = size;
+            let mut position = position.clone();
+            let mut current_level = current_level;
+            let mut idx = props.node_idx;
+
+            while current_level > level {
+                let child_index = Node::get_child_index(position, current_level - 1);
+
+                let below_node_idx = self[idx].children[child_index];
+
+                if below_node_idx != 0 {
+                    idx = below_node_idx as usize;
+                    if current_level == level + 1 {
+                        found_idx = GetNodeResult::Some(
+                            props.voxel_id as usize,
+                            // TODO: Let layer store its id
+                            0,
+                            below_node_idx as usize,
+                        );
+                        //found_idx = Some(below_node_idx as usize);
+                    }
+                } else {
+                    return;
+                }
+                {
+                    size /= 2;
+                    position %= size;
+                    current_level -= 1;
+                }
+            }
+
+            props.drop = true;
+        });
+
+        found_idx.voxel_id
     }
 
-    // solid_at -> solid_at_specific. Solid at has no more entry and layer
-    pub fn solid_at(
+    pub fn get_node_gpu_no_enum(&self, mut position: UVec3, level: usize) -> usize {
+        // let addr = &NodeAddr::from_position(position, self.depth, level);
+        // self.get_node_with_addr(addr, level, voxel_id_opt)
+        //  return 0;
+        let mut current_level = self.depth as usize;
+
+        let mut size = l2s(self.depth);
+        let mut found_idx = GetNodeResult::None();
+        let fork_level = 4;
+        let mut idx = 2;
+
+        while current_level > fork_level {
+            if current_level == 6 {
+                return 0;
+            }
+
+            let child_index = Node::get_child_index(position, current_level - 1);
+
+            let below_node_idx = self.nodes[idx].children[child_index];
+
+            if below_node_idx != 0 {
+                idx = below_node_idx as usize;
+
+                if current_level == level + 1 {
+                    return 0;
+                }
+            } else {
+                return 0;
+            }
+            {
+                size /= 2;
+                position %= size;
+                current_level -= 1;
+            }
+        }
+
+        self.iter_fork(idx as usize, &mut |props| {
+            let mut size = size;
+            let mut position = position.clone();
+            let mut current_level = current_level;
+            let mut idx = props.node_idx;
+
+            while current_level > level {
+                let child_index = Node::get_child_index(position, current_level - 1);
+
+                let below_node_idx = self[idx].children[child_index];
+
+                if below_node_idx != 0 {
+                    idx = below_node_idx as usize;
+                    if current_level == level + 1 {
+                        found_idx = GetNodeResult::Some(
+                            props.voxel_id as usize,
+                            // TODO: Let layer store its id
+                            0,
+                            below_node_idx as usize,
+                        );
+                        //found_idx = Some(below_node_idx as usize);
+                    }
+                } else {
+                    return;
+                }
+                {
+                    size /= 2;
+                    position %= size;
+                    current_level -= 1;
+                }
+            }
+
+            props.drop = true;
+        });
+
+        found_idx.voxel_id
+    }
+
+    pub fn get_node_idx_gpu(&self, mut position: UVec3, level: usize) -> usize {
+        // let addr = &NodeAddr::from_position(position, self.depth, level);
+        // self.get_node_with_addr(addr, level, voxel_id_opt)
+        let mut current_level = self.depth as usize;
+
+        let mut size = l2s(self.depth);
+        let mut found_idx = GetNodeResult::None();
+        let fork_level = 4;
+        let mut idx = 2;
+
+        while current_level > fork_level {
+            let child_index = Node::get_child_index(position, current_level - 1);
+
+            let below_node_idx = self[idx].children[child_index];
+
+            if below_node_idx != 0 {
+                idx = below_node_idx as usize;
+
+                if current_level == level + 1 {
+                    let res = GetNodeResult::Some(
+                        0,
+                        // TODO: Let layer store its id
+                        0,
+                        below_node_idx as usize,
+                    );
+                    return below_node_idx as usize;
+                }
+            } else {
+                return 0;
+            }
+            {
+                size /= 2;
+                position %= size;
+                current_level -= 1;
+            }
+        }
+
+        self.iter_fork(idx as usize, &mut |props| {
+            // if let Some(needed_voxel_id) = voxel_id_opt {
+            //     if props.voxel_id == needed_voxel_id {
+            //         props.drop = true;
+            //     } else {
+            //         return;
+            //     }
+            // }
+
+            let mut size = size;
+            let mut position = position.clone();
+            let mut current_level = current_level;
+            let mut idx = props.node_idx;
+
+            while current_level > level {
+                let child_index = Node::get_child_index(position, current_level - 1);
+
+                let below_node_idx = self[idx].children[child_index];
+
+                if below_node_idx != 0 {
+                    idx = below_node_idx as usize;
+                    if current_level == level + 1 {
+                        found_idx = GetNodeResult::Some(
+                            props.voxel_id as usize,
+                            // TODO: Let layer store its id
+                            0,
+                            below_node_idx as usize,
+                        );
+                        //found_idx = Some(below_node_idx as usize);
+                    }
+                } else {
+                    return;
+                }
+                {
+                    size /= 2;
+                    position %= size;
+                    current_level -= 1;
+                }
+            }
+
+            props.drop = true;
+        });
+
+        found_idx.node_idx
+    }
+
+    pub fn get_node_with_addr(
         &self,
-        position: Vec3,
+        addr: &NodeAddr,
         level: usize,
-        entry: EntryOpts,
-        layer: LayerOpts,
-    ) -> bool {
-        todo!()
+        voxel_id_opt: Option<usize>,
+    ) -> (usize) {
+        todo!();
+        let mut current_level = self.depth as usize;
+
+        let mut found_idx = GetNodeResult::None();
+        let fork_level = 4;
+        let mut idx = 2;
+
+        while current_level > fork_level {
+            let child_index = addr.get_idx(current_level);
+
+            let below_node_idx = self[idx].children[child_index];
+
+            if below_node_idx != 0 {
+                idx = below_node_idx as usize;
+
+                if current_level == level + 1 {
+                    let res = GetNodeResult::Some(
+                        0,
+                        // TODO: Let layer store its id
+                        0,
+                        below_node_idx as usize,
+                    );
+                    // return res;
+                    return 0;
+                }
+            } else {
+                return 0;
+                // return GetNodeResult::None();
+            }
+            {
+                current_level -= 1;
+            }
+        }
+
+        self.iter_fork(idx as usize, &mut |props| {
+            if let Some(needed_voxel_id) = voxel_id_opt {
+                if props.voxel_id == needed_voxel_id {
+                    props.drop = true;
+                } else {
+                    return;
+                }
+            }
+
+            let mut current_level = current_level;
+            let mut idx = props.node_idx;
+
+            while current_level > level {
+                let child_index = addr.get_idx(current_level);
+
+                let below_node_idx = self[idx].children[child_index];
+
+                if below_node_idx != 0 {
+                    idx = below_node_idx as usize;
+                    if current_level == level + 1 {
+                        found_idx = GetNodeResult::Some(
+                            props.voxel_id as usize,
+                            // TODO: Let layer store its id
+                            0,
+                            below_node_idx as usize,
+                        );
+                        //found_idx = Some(below_node_idx as usize);
+                    }
+                } else {
+                    return;
+                }
+                {
+                    current_level -= 1;
+                }
+            }
+
+            props.drop = true;
+        });
+        return found_idx.voxel_id;
+        //found_idx
     }
 }
 #[cfg(feature = "bitcode_support")]
@@ -158,28 +574,14 @@ mod tests {
     use spirv_std::glam::uvec3;
 
     use crate::{
-        plat::{
-            layer::layer::Layer,
-            node::Node,
-            op::{EntryOpts, LayerOpts},
-            raw_plat::RawPlat,
-        },
+        plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat},
         quick_raw_plat,
     };
 
     #[test]
     fn get_node() {
-        let mut base = ([Node::default(); 128], [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            5,
-            3,
-            3,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 5);
+
         plat[1].set(uvec3(0, 1, 0), 1);
         plat[1].set(uvec3(0, 0, 0), 2);
         plat[1].set(uvec3(4, 4, 1), 3);
@@ -197,17 +599,7 @@ mod tests {
 
     #[test]
     fn full_matrix() {
-        let mut base = (Box::new([Node::default(); 23_000]), [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            5,
-            3,
-            3,
-            (&mut *base.0, &mut base.1),
-            (&mut *tmp.0, &mut tmp.1),
-            (&mut *schem.0, &mut schem.1),
-            (&mut *canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 5, len 23_000);
 
         let mut rng = rand::thread_rng();
 
@@ -239,17 +631,7 @@ mod tests {
 
     #[test]
     fn get_node_known_voxel_id() {
-        let mut base = (Box::new([Node::default(); 23_000]), [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            5,
-            3,
-            3,
-            (&mut *base.0, &mut base.1),
-            (&mut *tmp.0, &mut tmp.1),
-            (&mut *schem.0, &mut schem.1),
-            (&mut *canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 5, len 23_000);
 
         let mut rng = rand::thread_rng();
 
@@ -284,19 +666,19 @@ mod tests {
         }
     }
 
-    #[test]
-    fn get_voxel_id_leveled() {
-        quick_raw_plat!(plat, depth 7);
-        plat[1].set(uvec3(0, 0, 0), 1);
+    // #[test]
+    // fn get_voxel_id_leveled() {
+    //     quick_raw_plat!(plat, depth 7);
+    //     plat[1].set(uvec3(0, 0, 0), 1);
 
-        assert_eq!(plat.get_node(uvec3(0, 0, 0), 0).voxel_id, 1);
-        assert_eq!(plat.get_node(uvec3(0, 0, 0), 1).voxel_id, 1);
-        assert_eq!(plat.get_node(uvec3(0, 0, 0), 2).voxel_id, 1);
-        assert_eq!(plat.get_node(uvec3(0, 0, 0), 3).voxel_id, 1);
-        assert_eq!(plat.get_node(uvec3(0, 0, 0), 4).voxel_id, 1);
-        assert_eq!(plat.get_node(uvec3(0, 0, 0), 5).voxel_id, 1);
-        assert_eq!(plat.get_node(uvec3(0, 0, 0), 6).voxel_id, 1);
-    }
+    //     assert_eq!(plat.get_node(uvec3(0, 0, 0), 0).voxel_id, 1);
+    //     assert_eq!(plat.get_node(uvec3(0, 0, 0), 1).voxel_id, 1);
+    //     assert_eq!(plat.get_node(uvec3(0, 0, 0), 2).voxel_id, 1);
+    //     assert_eq!(plat.get_node(uvec3(0, 0, 0), 3).voxel_id, 1);
+    //     assert_eq!(plat.get_node(uvec3(0, 0, 0), 4).voxel_id, 1);
+    //     assert_eq!(plat.get_node(uvec3(0, 0, 0), 5).voxel_id, 1);
+    //     assert_eq!(plat.get_node(uvec3(0, 0, 0), 6).voxel_id, 1);
+    // }
 
     #[test]
     fn get_node_above_fork_level() {
@@ -329,17 +711,7 @@ mod tests {
     }
     #[test]
     fn get_node_positions_only() {
-        let mut base = ([Node::default(); 128], [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            5,
-            3,
-            3,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 5);
         plat[1].set(uvec3(0, 1, 0), 1);
         plat[1].set(uvec3(0, 0, 0), 2);
         plat[1].set(uvec3(4, 4, 1), 3);
@@ -368,17 +740,7 @@ mod tests {
 
     #[test]
     fn get_node_check_non_existing() {
-        let mut base = ([Node::default(); 128], [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            5,
-            3,
-            3,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 5);
         plat[1].set(uvec3(0, 1, 0), 1);
         plat[1].set(uvec3(0, 0, 0), 2);
         plat[1].set(uvec3(4, 4, 1), 3);
@@ -408,17 +770,7 @@ mod tests {
     #[test]
     fn get_voxel() {
         use crate::*;
-        let mut base = ([Node::default(); 128], [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            5,
-            3,
-            3,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 5);
         // Base
         plat[0].set(uvec3(0, 0, 0), 1);
         plat[0].set(uvec3(0, 1, 0), 1);

@@ -60,7 +60,10 @@ mod tests {
 
     use spirv_std::glam::uvec3;
 
-    use crate::plat::{node::Node, raw_plat::RawPlat};
+    use crate::{
+        plat::{node::Node, raw_plat::RawPlat},
+        quick_raw_plat,
+    };
 
     // #[test]
     // fn problematic_set_voxel() {
@@ -86,17 +89,7 @@ mod tests {
 
     #[test]
     fn set_voxel() {
-        let mut base = ([Node::default(); 512], [0; 10]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
-        let mut plat = RawPlat::new(
-            6,
-            4,
-            2,
-            (&mut base.0, &mut base.1),
-            (&mut tmp.0, &mut tmp.1),
-            (&mut schem.0, &mut schem.1),
-            (&mut canvas.0, &mut canvas.1),
-        );
+        quick_raw_plat!(plat, depth 6, len 512);
 
         plat[1].set(uvec3(0, 0, 0), 1);
         plat[1].set(uvec3(0, 0, 0), 2);

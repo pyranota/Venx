@@ -30,7 +30,7 @@ fn setup(
     let plat = VenxPlat::load("demo").unwrap_or_else(|e| {
         warn!("Plat wasnt found on device, creating new and saving ({e})");
         // Convert from minecraft map
-        let plat = VenxPlat::load_mca("./assets/mca/49/", (0..1, 0..1)).unwrap();
+        let plat = VenxPlat::load_mca("./assets/mca/49/", (0..1, 0..1), true, 0, true).unwrap();
         plat.save("demo").unwrap();
         plat
     });

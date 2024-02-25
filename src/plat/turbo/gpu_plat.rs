@@ -8,6 +8,7 @@ use glam::{UVec3, Vec3, Vec4};
 use venx_core::plat::{
     chunk::chunk::{Chunk, ChunkLoadRequest},
     node::Node,
+    node_l2::NodeL2,
     raw_plat::RawPlat,
 };
 
@@ -26,22 +27,22 @@ pub struct GpuPlat {
     // raw_plat_freezed: Buffer,
     // Base layer
     pub(crate) base_nodes: Buffer,
-    pub(crate) base_entries: Buffer,
+    pub(crate) base_l2: Buffer,
     pub(crate) base_bg: BindGroupVenx,
 
     // Tmp layer
     pub(crate) tmp_nodes: Buffer,
-    pub(crate) tmp_entries: Buffer,
+    pub(crate) tmp_l2: Buffer,
     pub(crate) tmp_bg: BindGroupVenx,
 
     // Schem layer
     pub(crate) schem_nodes: Buffer,
-    pub(crate) schem_entries: Buffer,
+    pub(crate) schem_l2: Buffer,
     pub(crate) schem_bg: BindGroupVenx,
 
     // Canvas layer
     pub(crate) canvas_nodes: Buffer,
-    pub(crate) canvas_entries: Buffer,
+    pub(crate) canvas_l2: Buffer,
     pub(crate) canvas_bg: BindGroupVenx,
 
     // Chunks
@@ -79,19 +80,19 @@ impl GpuPlat {
         let raw_plat_depth_stb = self.cs.new_staging_buffer(self.raw_plat_depth.size(), true);
         // Base layer
         let base_nodes_stb = self.cs.new_staging_buffer(self.base_nodes.size(), true);
-        let base_entries_stb = self.cs.new_staging_buffer(self.base_entries.size(), true);
+        let base_l2_stb = self.cs.new_staging_buffer(self.base_l2.size(), true);
 
         // Tmp layer
         let tmp_nodes_stb = self.cs.new_staging_buffer(self.tmp_nodes.size(), true);
-        let tmp_entries_stb = self.cs.new_staging_buffer(self.tmp_entries.size(), true);
+        let tmp_l2_stb = self.cs.new_staging_buffer(self.tmp_l2.size(), true);
 
         // Schem layer
         let schem_nodes_stb = self.cs.new_staging_buffer(self.schem_nodes.size(), true);
-        let schem_entries_stb = self.cs.new_staging_buffer(self.schem_entries.size(), true);
+        let schem_l2_stb = self.cs.new_staging_buffer(self.schem_l2.size(), true);
 
         // Canvas layer
         let canvas_nodes_stb = self.cs.new_staging_buffer(self.canvas_nodes.size(), true);
-        let canvas_entries_stb = self.cs.new_staging_buffer(self.canvas_entries.size(), true);
+        let canvas_l2_stb = self.cs.new_staging_buffer(self.canvas_l2.size(), true);
 
         // Copy from buffers to staging buffers
         self.cs
@@ -116,11 +117,11 @@ impl GpuPlat {
                 );
                 // Entries
                 encoder.copy_buffer_to_buffer(
-                    &self.base_entries,
+                    &self.base_l2,
                     0,
-                    &base_entries_stb,
+                    &base_l2_stb,
                     0,
-                    base_entries_stb.size(),
+                    base_l2_stb.size(),
                 );
 
                 // Tmp layer copy
@@ -133,13 +134,7 @@ impl GpuPlat {
                     tmp_nodes_stb.size(),
                 );
                 // Entries
-                encoder.copy_buffer_to_buffer(
-                    &self.tmp_entries,
-                    0,
-                    &tmp_entries_stb,
-                    0,
-                    tmp_entries_stb.size(),
-                );
+                encoder.copy_buffer_to_buffer(&self.tmp_l2, 0, &tmp_l2_stb, 0, tmp_l2_stb.size());
 
                 // Schem layer copy
                 // Nodes
@@ -152,11 +147,11 @@ impl GpuPlat {
                 );
                 // Entries
                 encoder.copy_buffer_to_buffer(
-                    &self.schem_entries,
+                    &self.schem_l2,
                     0,
-                    &schem_entries_stb,
+                    &schem_l2_stb,
                     0,
-                    schem_entries_stb.size(),
+                    schem_l2_stb.size(),
                 );
 
                 // Canvas layer copy
@@ -170,11 +165,11 @@ impl GpuPlat {
                 );
                 // Entries
                 encoder.copy_buffer_to_buffer(
-                    &self.canvas_entries,
+                    &self.canvas_l2,
                     0,
-                    &canvas_entries_stb,
+                    &canvas_l2_stb,
                     0,
-                    canvas_entries_stb.size(),
+                    canvas_l2_stb.size(),
                 );
             })
             .await;
@@ -188,26 +183,26 @@ impl GpuPlat {
         // Base layer
         let base_nodes: Vec<Node> = base_nodes_stb.read_manual().await;
         base_nodes_stb.unmap();
-        let base_entries: Vec<usize> = base_entries_stb.read_manual().await;
-        base_entries_stb.unmap();
+        let base_l2: Vec<NodeL2> = base_l2_stb.read_manual().await;
+        base_l2_stb.unmap();
 
         // Tmp layer
         let tmp_nodes: Vec<Node> = tmp_nodes_stb.read_manual().await;
         tmp_nodes_stb.unmap();
-        let tmp_entries: Vec<usize> = tmp_entries_stb.read_manual().await;
-        tmp_entries_stb.unmap();
+        let tmp_l2: Vec<NodeL2> = tmp_l2_stb.read_manual().await;
+        tmp_l2_stb.unmap();
 
         // Schem layer
         let schem_nodes: Vec<Node> = schem_nodes_stb.read_manual().await;
         schem_nodes_stb.unmap();
-        let schem_entries: Vec<usize> = schem_entries_stb.read_manual().await;
-        schem_entries_stb.unmap();
+        let schem_l2: Vec<NodeL2> = schem_l2_stb.read_manual().await;
+        schem_l2_stb.unmap();
 
         // Canvas layer
         let canvas_nodes: Vec<Node> = canvas_nodes_stb.read_manual().await;
         canvas_nodes_stb.unmap();
-        let canvas_entries: Vec<usize> = canvas_entries_stb.read_manual().await;
-        canvas_entries_stb.unmap();
+        let canvas_l2: Vec<NodeL2> = canvas_l2_stb.read_manual().await;
+        canvas_l2_stb.unmap();
 
         // Create CpuPlat from copied
         // WARNING! Hardcoded values
@@ -215,24 +210,24 @@ impl GpuPlat {
             depth[0],
             5,
             6,
-            (base_nodes, base_entries),
-            (tmp_nodes, tmp_entries),
-            (schem_nodes, schem_entries),
-            (canvas_nodes, canvas_entries),
+            (base_nodes, base_l2),
+            (tmp_nodes, tmp_l2),
+            (schem_nodes, schem_l2),
+            (canvas_nodes, canvas_l2),
         )
         // CpuPlat::new_from(
         //     depth[0],
         //     5,
         //     6,
-        //     (base_nodes, base_entries),
-        //     (tmp_nodes, tmp_entries),
-        //     (schem_nodes, schem_entries),
-        //     (canvas_nodes, canvas_entries),
+        //     (base_nodes, base_l2),
+        //     (tmp_nodes, tmp_l2),
+        //     (schem_nodes, schem_l2),
+        //     (canvas_nodes, canvas_l2),
         // )
     }
     pub async fn new_plat(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         // TODO: make more flexible
-        let base = (vec![Node::default(); 128], vec![0; 10]);
+        let base = (vec![Node::default(); 128], vec![NodeL2::default(); 10]);
         let (tmp, schem, canvas) = (base.clone(), base.clone(), base.clone());
 
         Self::new_from(depth, chunk_level, segment_level, base, tmp, schem, canvas).await
@@ -242,10 +237,10 @@ impl GpuPlat {
         depth: usize,
         chunk_level: usize,
         segment_level: usize,
-        base: (Vec<Node>, Vec<usize>),
-        tmp: (Vec<Node>, Vec<usize>),
-        schem: (Vec<Node>, Vec<usize>),
-        canvas: (Vec<Node>, Vec<usize>),
+        base: (Vec<Node>, Vec<NodeL2>),
+        tmp: (Vec<Node>, Vec<NodeL2>),
+        schem: (Vec<Node>, Vec<NodeL2>),
+        canvas: (Vec<Node>, Vec<NodeL2>),
     ) -> Self {
         let mut cs = ComputeServer::new().await;
 
@@ -259,34 +254,34 @@ impl GpuPlat {
 
         // Base layer
         let base_nodes_buffer = cs.new_buffer(bytemuck::cast_slice(&base.0));
-        let base_entries_buffer = cs.new_buffer(bytemuck::cast_slice(&base.1));
+        let base_l2_buffer = cs.new_buffer(bytemuck::cast_slice(&base.1));
         let base_bg = BindGroupBuilder::new()
             .insert(0, false, base_nodes_buffer.as_entire_binding())
-            .insert(1, false, base_entries_buffer.as_entire_binding())
+            .insert(1, false, base_l2_buffer.as_entire_binding())
             .build(&cs);
 
         // Tmp layer
         let tmp_nodes_buffer = cs.new_buffer(bytemuck::cast_slice(&tmp.0));
-        let tmp_entries_buffer = cs.new_buffer(bytemuck::cast_slice(&tmp.1));
+        let tmp_l2_buffer = cs.new_buffer(bytemuck::cast_slice(&tmp.1));
         let tmp_bg = BindGroupBuilder::new()
             .insert(0, false, tmp_nodes_buffer.as_entire_binding())
-            .insert(1, false, tmp_entries_buffer.as_entire_binding())
+            .insert(1, false, tmp_l2_buffer.as_entire_binding())
             .build(&cs);
 
         // Schem layer
         let schem_nodes_buffer = cs.new_buffer(bytemuck::cast_slice(&schem.0));
-        let schem_entries_buffer = cs.new_buffer(bytemuck::cast_slice(&schem.1));
+        let schem_l2_buffer = cs.new_buffer(bytemuck::cast_slice(&schem.1));
         let schem_bg = BindGroupBuilder::new()
             .insert(0, false, schem_nodes_buffer.as_entire_binding())
-            .insert(1, false, schem_entries_buffer.as_entire_binding())
+            .insert(1, false, schem_l2_buffer.as_entire_binding())
             .build(&cs);
 
         // Canvas layer
         let canvas_nodes_buffer = cs.new_buffer(bytemuck::cast_slice(&canvas.0));
-        let canvas_entries_buffer = cs.new_buffer(bytemuck::cast_slice(&canvas.1));
+        let canvas_l2_buffer = cs.new_buffer(bytemuck::cast_slice(&canvas.1));
         let canvas_bg = BindGroupBuilder::new()
             .insert(0, false, canvas_nodes_buffer.as_entire_binding())
-            .insert(1, false, canvas_entries_buffer.as_entire_binding())
+            .insert(1, false, canvas_l2_buffer.as_entire_binding())
             .build(&cs);
 
         // Load shaders
@@ -376,16 +371,16 @@ impl GpuPlat {
 
         Self {
             base_nodes: base_nodes_buffer,
-            base_entries: base_entries_buffer,
+            base_l2: base_l2_buffer,
             base_bg,
             tmp_nodes: tmp_nodes_buffer,
-            tmp_entries: tmp_entries_buffer,
+            tmp_l2: tmp_l2_buffer,
             tmp_bg,
             schem_nodes: schem_nodes_buffer,
-            schem_entries: schem_entries_buffer,
+            schem_l2: schem_l2_buffer,
             schem_bg,
             canvas_nodes: canvas_nodes_buffer,
-            canvas_entries: canvas_entries_buffer,
+            canvas_l2: canvas_l2_buffer,
             canvas_bg,
             cs,
             module,

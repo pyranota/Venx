@@ -2,7 +2,7 @@ use core::ops::{Index, IndexMut};
 
 use spirv_std::glam::UVec3;
 
-use super::{layer::layer::Layer, node::Node, op::LayerOpts};
+use super::{layer::layer::Layer, node::Node, node_l2::NodeL2};
 
 // TODO: rename to RawPlatMut and create LayerMut
 #[derive(PartialEq, Debug)]
@@ -35,10 +35,10 @@ impl<'a> RawPlat<'a> {
         depth: usize,
         chunk_level: usize,
         segment_level: usize,
-        base: (&'a mut [Node], &'a mut [usize]),
-        tmp: (&'a mut [Node], &'a mut [usize]),
-        schem: (&'a mut [Node], &'a mut [usize]),
-        canvas: (&'a mut [Node], &'a mut [usize]),
+        base: (&'a mut [Node], &'a mut [NodeL2]),
+        tmp: (&'a mut [Node], &'a mut [NodeL2]),
+        schem: (&'a mut [Node], &'a mut [NodeL2]),
+        canvas: (&'a mut [Node], &'a mut [NodeL2]),
     ) -> Self {
         assert!(depth > 4);
         RawPlat {
@@ -123,7 +123,7 @@ impl<'a> IndexMut<usize> for RawPlat<'a> {
         &mut self.layers[index_mut]
     }
 }
-
+#[deprecated = "No easy way to import in scope with shortcuts. Use Layer associated constants instead: `Lr::BASE`"]
 #[repr(usize)]
 pub enum LayerIndex {
     Base = 0,
@@ -145,12 +145,18 @@ impl<'a> IndexMut<LayerIndex> for RawPlat<'a> {
         &mut self.layers[index_mut as usize]
     }
 }
-
+/// Quickly create raw plat for testing
+///
+/// `!(plat_name, depth ?usize = 8, len ?usize = 128)`
+///
+/// Where `?` means optional and `=` default values
 #[macro_export]
 macro_rules! quick_raw_plat {
     ($plat:ident, depth $depth:tt, len $layer_len:tt) => {
-        let mut base = (alloc::vec![Node::default(); $layer_len], [0]);
-        let mut tmp = (alloc::vec![Node::default(); 128], [0]);
+        extern crate alloc;
+        extern crate std;
+        let mut base = (alloc::vec![Node::default(); $layer_len], alloc::vec![crate::plat::node_l2::NodeL2::default(); $layer_len]);
+        let mut tmp = (alloc::vec![Node::default(); 128],  alloc::vec![crate::plat::node_l2::NodeL2::default(); 128]);
         let (mut schem, mut canvas) = (tmp.clone(), tmp.clone());
         let mut $plat = std::boxed::Box::new(RawPlat::new(
             $depth,
@@ -164,8 +170,11 @@ macro_rules! quick_raw_plat {
     };
 
     ($plat:ident, depth $depth:tt) => {
-        let mut base = (Box::new([Node::default(); 128]), [0; 0]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        extern crate alloc;
+        extern crate std;
+        let mut base = (alloc::vec![Node::default(); 128], alloc::vec![crate::plat::node_l2::NodeL2::default(); 128]);
+        let mut tmp = (alloc::vec![Node::default(); 128],  alloc::vec![crate::plat::node_l2::NodeL2::default(); 128]);
+        let (mut schem, mut canvas) = (tmp.clone(), tmp.clone());
         let mut $plat = RawPlat::new(
             $depth,
             5,
@@ -177,8 +186,11 @@ macro_rules! quick_raw_plat {
         );
     };
     ($plat:ident) => {
-        let mut base = (Box::new([Node::default(); 128]), [0; 0]);
-        let (mut tmp, mut schem, mut canvas) = (base.clone(), base.clone(), base.clone());
+        extern crate alloc;
+        extern crate std;
+        let mut base = (alloc::vec![Node::default(); 128], alloc::vec![crate::plat::node_l2::NodeL2::default(); 128]);
+        let mut tmp = (alloc::vec![Node::default(); 128],  alloc::vec![crate::plat::node_l2::NodeL2::default(); 128]);
+        let (mut schem, mut canvas) = (tmp.clone(), tmp.clone());
         let mut $plat = RawPlat::new(
             8,
             5,

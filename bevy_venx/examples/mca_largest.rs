@@ -50,7 +50,7 @@ fn setup(
     let plat = VenxPlat::load("mca_largest").unwrap_or_else(|e| {
         warn!("Plat wasnt found on device, creating new and saving ({e})");
         // Convert from minecraft map
-        let plat = VenxPlat::load_mca("./assets/mca/49/", (0..8, 0..8)).unwrap();
+        let plat = VenxPlat::load_mca("./assets/mca/49/", (0..8, 0..8), false, 0, true).unwrap();
         plat.save("mca_largest").unwrap();
         plat
     });

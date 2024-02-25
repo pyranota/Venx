@@ -8,7 +8,7 @@
     Hopefully it will provide any ideas how to improve the situation.
 
     Potential outcomes:
-        Use forked structure?
+        Use forked structure? (Accepted)
         Lookup tables?
         Dont do anything?
 
@@ -21,13 +21,7 @@ use criterion::{black_box, criterion_group, criterion_main, Criterion};
 use log::warn;
 use rand::Rng;
 use venx::plat::{interfaces::layer::LayerInterface, VenxPlat};
-use venx_core::{
-    glam::uvec3,
-    plat::{
-        node::NodeAddr,
-        op::{EntryOpts, LayerOpts},
-    },
-};
+use venx_core::{glam::uvec3, plat::node::NodeAddr};
 
 fn criterion_benchmark(c: &mut Criterion) {
     // let plat = VenxPlat::load("mca_small_all_blocks").unwrap_or_else(|e| {

@@ -18,8 +18,6 @@ pub struct Node {
     ///
     /// `-1` - free node
     ///
-    /// `-2` - leaf
-    ///
     /// `-3` - fork without link to the next
     ///
     /// `0 < n` - fork where flag is link to the next fork
