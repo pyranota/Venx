@@ -272,7 +272,7 @@ impl Layer<'_> {
     /// until level 1
     pub fn traverse_new<F>(
         &self,
-        from_node_position: UVec3,
+        mut from_node_position: UVec3,
         levels: RangeInclusive<usize>,
         mut callback: F,
     ) where
@@ -283,7 +283,19 @@ impl Layer<'_> {
         let depth = self.depth;
         let fork_level = 4;
 
+        from_node_position *= l2s(from_level);
+
         assert!(from_level >= 5);
+
+        let index = if depth > from_level {
+            Node::get_child_index(from_node_position, depth - 1)
+        } else {
+            0
+        };
+        let size = l2s(depth) / 2;
+        from_node_position.x %= size;
+        from_node_position.y %= size;
+        from_node_position.z %= size;
 
         // Emulate stack with max depth 21 (max graph depth)
         // (Depth is bounded to [NodeAddr], which is essentially single u64,
@@ -302,7 +314,7 @@ impl Layer<'_> {
             usize,
             /* index (progress of iterator in specific node) */
             usize,
-        )> = EStack::new((1, 0, UVec3::ZERO, self.depth, 0, 0));
+        )> = EStack::new((1, 0, UVec3::ZERO, self.depth, 0, index));
 
         loop {
             // Read without pulling it
@@ -348,8 +360,8 @@ impl Layer<'_> {
                 let mut push_level: usize = level - 1;
                 let mut push_node_idx: usize = child as usize;
                 let mut call_closure: bool = true;
+                let mut push_index: usize = 0;
                 let push_parent_idx: usize = *node_idx;
-                let push_index: usize = 0;
 
                 if level == fork_level && self[*node_idx].is_fork() {
                     let node = &self[*node_idx];
@@ -380,9 +392,18 @@ impl Layer<'_> {
                             panic!()
                         }
                     }
-                } else if level == 3 {
-                    //size = 0;
-                    *index += 1;
+                }
+                // This step if ignored while iterating over transparent layer (forks)
+                else if level > from_level {
+                    push_index = Node::get_child_index(from_node_position, level - 1);
+                    from_node_position.x %= size;
+                    from_node_position.y %= size;
+                    from_node_position.z %= size;
+
+                    // Prevent from future iterations
+                    *index = 8;
+                } else if level == from_level {
+                    *index = 8;
                 } else {
                     *index += 1;
                 }
@@ -415,290 +436,14 @@ impl Layer<'_> {
                 // All done
                 stack.pop();
                 continue;
+            } else if level >= from_level {
+                // Exit if child is zero and its not itarable level
+                break;
             } else {
                 *index += 1;
             }
         }
     }
-
-    // pub fn traverse_new<F>(
-    //     &self,
-    //     from_node_position: UVec3,
-    //     levels: RangeInclusive<usize>,
-    //     mut callback: F,
-    // ) where
-    //     F: FnMut(Props),
-    // {
-    //     let from_level = *levels.end();
-    //     let until_level = *levels.start();
-    //     let bounding_box_start = from_node_position * l2s(from_level);
-    //     let bounding_box_end = (from_node_position + UVec3::ONE) * l2s(from_level);
-    //     let depth = self.depth;
-
-    //     let fork_level = 4;
-
-    //     assert!(from_level >= 5);
-
-    //     // Emulate stack with max depth 21 (max graph depth)
-    //     // Why? This code should compile to SpirV
-    //     let mut stack: EStack<(
-    //         /* 0 node_idx */
-    //         usize,
-    //         /* 1 parent_idx */
-    //         usize,
-    //         /* 2 node_position */
-    //         UVec3,
-    //         /* level */
-    //         usize,
-    //         /* voxel_id */
-    //         usize,
-    //         /* index (progress of iterator in specific node) */
-    //         usize,
-    //     )> = EStack::new((1, 0, UVec3::ZERO, self.depth, 0, 0));
-
-    //     loop {
-    //         // Read without pulling it
-    //         let (node_idx, parent_idx, mut position, level, voxel_id, index) = stack.read();
-
-    //         let level = *level;
-    //         // Exit
-    //         if *index > 7 && level == depth {
-    //             break;
-    //         }
-
-    //         if *index > 7 && level < 3 {
-    //             stack.pop();
-    //             continue;
-    //         }
-
-    //         // if level == 2 && *index < 8 {
-    //         //     let node = &self.level_2[*node_idx];
-
-    //         //     let size = l2s(level) / 2;
-
-    //         //     let packed_child = &node.index_l1(*index);
-
-    //         //     // Increment ahead, so if child_id == 0, it will still do some progress
-    //         //     *index += 1;
-
-    //         //     if *packed_child != 0 {
-    //         //         position += Node::get_child_position(*index as u32 - 1) * size;
-
-    //         //         // TODO: Profile, it might be slow to handle position this way
-
-    //         //         // TODO: Do we need this cache?
-    //         //         let (node_idx, level, voxel_id) =
-    //         //             (node_idx.clone(), level.clone(), voxel_id.clone());
-
-    //         //         stack.push((
-    //         //             *packed_child as usize,
-    //         //             node_idx,
-    //         //             position.clone(),
-    //         //             level - 1,
-    //         //             voxel_id,
-    //         //             0,
-    //         //         ));
-    //         //     }
-
-    //         //     continue;
-    //         // }
-    //         // if level == 1 {
-    //         //     let packed_node = *node_idx;
-
-    //         //     let child = packed_node & (1 << (*index));
-
-    //         //     let size = l2s(level) / 2;
-
-    //         //     // Increment ahead, so if child_id == 0, it will still do some progress
-    //         //     *index += 1;
-
-    //         //     if child != 0 {
-    //         //         position += Node::get_child_position(*index as u32 - 1) * size;
-
-    //         //         // TODO: Profile, it might be slow to handle position this way
-
-    //         //         // TODO: Do we need this cache?
-    //         //         let (node_idx, level, voxel_id) =
-    //         //             (node_idx.clone(), level.clone(), voxel_id.clone());
-
-    //         //         stack.push((child, node_idx, position.clone(), level - 1, voxel_id, 0));
-    //         //     }
-
-    //         //     continue;
-    //         // }
-
-    //         // Call for each enter just once
-    //         // If remove, it will call this callback 7 extra times
-    //         if *index == 0 {}
-
-    //         // Some cache going on here
-    //         let node = &self[*node_idx];
-
-    //         // Iterated over all children
-    //         if *index > 7 {
-    //             stack.pop();
-    //             continue;
-    //         }
-
-    //         let size = l2s(level) / 2;
-
-    //         // Child node idx in case its normal Node
-    //         // Child node on level2 in case its level-2 Node
-    //         let child = if level == 2 {
-    //             // Return index between 0 and 256 to NodeL2
-    //             self.level_2[*node_idx].index_l1(*index)
-    //         } else if level == 1 {
-    //             // We have all data incoded in node_idx.
-    //             // So we will just use it to determine is there any voxel (1) or not (0)
-    //             // TODO: Move to [NodeL2] struct
-    //             (*node_idx & (1 << (*index))) as u32
-    //         } else {
-    //             self[*node_idx][*index]
-    //         };
-
-    //         if child != 0 && level > 0 {
-    //             let position = position + Node::get_child_position(*index as u32) * size;
-    //             let push_voxel_id: usize;
-    //             let push_level: usize;
-    //             let push_node_idx: usize;
-    //             let push_parent_idx: usize;
-    //             let call_closure: bool;
-    //             let push_index: usize;
-
-    //             if level == fork_level {
-    //                 // Out of bound
-    //                 if *index > 7 {
-    //                     let flag = node.flag;
-    //                     if flag > 0 {
-    //                         // Switch to next fork in chain
-    //                         *node_idx = flag as usize;
-    //                         // Reset index
-    //                         *index = 0;
-
-    //                         continue;
-    //                     } else if flag == -3 {
-    //                         // All done
-    //                         stack.pop();
-    //                         continue;
-    //                     } else {
-    //                         panic!()
-    //                     }
-    //                 }
-
-    //                 if child != 0 {
-    //                     push_voxel_id = node.children[*index] as usize;
-    //                     push_node_idx = node.children[*index + 1] as usize;
-    //                     push_parent_idx = *node_idx;
-    //                     call_closure = false;
-    //                     push_index = 0;
-    //                     push_level = level;
-    //                     *index += 2;
-    //                 } else {
-    //                     // All done
-    //                     stack.pop();
-    //                     continue;
-    //                 }
-    //             } else if level == 2 {
-    //                 *index += 1;
-    //                 push_index = 0;
-    //                 push_voxel_id = *voxel_id;
-    //                 push_level = level - 1;
-    //                 push_node_idx = child as usize;
-    //                 push_parent_idx = *node_idx as usize;
-    //                 call_closure = true;
-    //             } else if level == 1 {
-    //                 *index += 1;
-    //                 push_index = 0;
-    //                 push_voxel_id = *voxel_id;
-    //                 push_level = level - 1;
-    //                 push_node_idx = child as usize;
-    //                 push_parent_idx = *node_idx as usize;
-    //                 call_closure = true;
-    //             } else {
-    //                 *index += 1;
-    //                 push_index = 0;
-    //                 push_voxel_id = *voxel_id;
-    //                 push_level = level - 1;
-    //                 push_node_idx = child as usize;
-    //                 push_parent_idx = *node_idx as usize;
-    //                 call_closure = true;
-    //             }
-    //             // if node.is_fork() {
-    //             //     if *index % 2 != 0 {
-    //             //         panic!()
-    //             //     }
-
-    //             //     // Out of bound
-    //             //     if *index == 8 {
-    //             //         let flag = node.flag;
-    //             //         if flag > 0 {
-    //             //             // Switch to next fork in chain
-    //             //             *node_idx = flag as usize;
-    //             //             // Reset index
-    //             //             *index = 0;
-
-    //             //             continue;
-    //             //         } else if flag == -3 {
-    //             //             stack.pop();
-    //             //             continue;
-    //             //         } else {
-    //             //             panic!()
-    //             //         }
-    //             //     }
-    //             //     let voxel_id = &node.children[*index];
-    //             //     let child_id = &node.children[*index + 1];
-
-    //             //     *index += 2;
-
-    //             //     if *child_id != 0 {
-    //             //         // if *index == 4 {
-    //             //         //     panic!();
-    //             //         // }
-    //             //         let (node_idx, level) = (node_idx.clone(), level.clone());
-
-    //             //         stack.push((
-    //             //             *child_id as usize,
-    //             //             node_idx,
-    //             //             position.clone(),
-    //             //             level,
-    //             //             *voxel_id as usize,
-    //             //             0,
-    //             //         ));
-
-    //             //         continue;
-    //             //     } else {
-    //             //         // Exit fork chain
-    //             //         stack.pop();
-    //             //         continue;
-    //             //     }
-    //             // }
-    //             if call_closure {
-    //                 let props = Props {
-    //                     position: &position,
-    //                     positioned: true,
-    //                     parent_idx: &node_idx,
-    //                     node: &Node::default(),
-    //                     node_idx: push_node_idx as usize,
-    //                     entry: push_voxel_id as u32,
-    //                     level: push_level,
-    //                     drop_tree: false,
-    //                 };
-    //                 callback(props);
-    //             }
-
-    //             if level > 1 {
-    //                 stack.push((
-    //                     push_node_idx,
-    //                     push_parent_idx,
-    //                     position.clone(),
-    //                     push_level,
-    //                     push_voxel_id,
-    //                     push_index,
-    //                 ));
-    //             }
-    //         }
-    //     }
-    // }
 
     /// Depth-first traversal of layer.
     /// `entry: u32`, `from_node_position: UVec3` are used to adjust data in `Props`
@@ -914,33 +659,69 @@ mod tests {
     }
 
     #[test]
-    fn traverse_region() {
+    fn traverse_region_zero() {
         quick_raw_plat!(plat, depth 6);
         // Base
         plat[Lr::BASE].set(uvec3(14, 14, 14), 1);
-        plat[Base].set(uvec3(0, 0, 0), 2);
-        plat[Base].set(uvec3(5, 15, 5), 3);
-        plat[Base].set(uvec3(0, 10, 0), 1);
+        plat[Lr::BASE].set(uvec3(0, 0, 0), 2);
+        plat[Lr::BASE].set(uvec3(5, 15, 5), 3);
+        // Out
+        plat[Lr::BASE].set(uvec3(40, 40, 40), 1);
 
-        // Canvas
-        plat[Canvas].set(uvec3(15, 15, 15), 1);
-        plat[Canvas].set(uvec3(0, 0, 0), 2);
         let mut seq = alloc::vec![];
-        traverse_region!(plat, rng 0..=5, pos UVec3::ZERO, {|p|{                if p.level == 0 {
-            seq.push(p.position.clone());
-        }}});
+        traverse_region!(plat, rng 0..=5, pos UVec3::ZERO, {
+                |p|{
+                    if p.level == 0 {
+                    seq.push(p.position.clone());
+                }
+            }
+        });
 
-        assert_eq!(
-            seq,
-            [
-                uvec3(0, 10, 0),
-                uvec3(14, 14, 14),
-                uvec3(0, 0, 0),
-                uvec3(5, 15, 5),
-                uvec3(15, 15, 15),
-                uvec3(0, 0, 0)
-            ]
-        );
+        assert_eq!(seq, [uvec3(14, 14, 14), uvec3(0, 0, 0), uvec3(5, 15, 5),]);
+    }
+
+    #[test]
+    fn traverse_region_one() {
+        quick_raw_plat!(plat, depth 6);
+        // Base
+        plat[Lr::BASE].set(uvec3(14, 14, 14), 1);
+        plat[Lr::BASE].set(uvec3(0, 0, 0), 2);
+        plat[Lr::BASE].set(uvec3(5, 15, 5), 3);
+        // Out
+        plat[Lr::BASE].set(uvec3(40, 40, 40), 1);
+
+        let mut seq = alloc::vec![];
+        traverse_region!(plat, rng 0..=5, pos UVec3::ONE, {
+                |p|{
+                    if p.level == 0 {
+                    seq.push(p.position.clone());
+                }
+            }
+        });
+
+        assert_eq!(seq, [uvec3(40, 40, 40),]);
+    }
+
+    #[test]
+    fn traverse_region_one_deep() {
+        quick_raw_plat!(plat, depth 15);
+        // Base
+        plat[Lr::BASE].set(uvec3(14, 14, 14), 1);
+        plat[Lr::BASE].set(uvec3(0, 0, 0), 2);
+        plat[Lr::BASE].set(uvec3(5, 15, 5), 3);
+        // Out
+        plat[Lr::BASE].set(uvec3(40, 40, 40), 1);
+
+        let mut seq = alloc::vec![];
+        traverse_region!(plat, rng 0..=5, pos UVec3::ONE, {
+                |p|{
+                    if p.level == 0 {
+                    seq.push(p.position.clone());
+                }
+            }
+        });
+
+        assert_eq!(seq, [uvec3(40, 40, 40),]);
     }
 
     // #[test]
