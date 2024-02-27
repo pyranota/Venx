@@ -160,7 +160,7 @@ impl Lr<'_> {
         let mut size = l2s(self.depth);
         let mut found_idx = GetNodeResult::None();
         let fork_level = 4;
-        let mut idx = 2;
+        let mut idx = 1;
 
         while current_level > fork_level {
             let child_index = Node::get_child_index(position, current_level - 1);
@@ -210,6 +210,24 @@ impl Lr<'_> {
 
                 if below_node_idx != 0 {
                     idx = below_node_idx as usize;
+                    if current_level == 3 {
+                        let node_l2 = self.level_2[idx];
+                        {
+                            let size = 4;
+                            position.x %= size;
+                            position.y %= size;
+                            position.z %= size;
+                        }
+                        if node_l2.is_at(position) {
+                            found_idx = GetNodeResult::Some(
+                                props.voxel_id as usize,
+                                // TODO: Let layer store its id
+                                0,
+                                below_node_idx as usize,
+                            );
+                        }
+                        return;
+                    }
                     if current_level == level + 1 {
                         found_idx = GetNodeResult::Some(
                             props.voxel_id as usize,
@@ -297,6 +315,18 @@ impl Lr<'_> {
 
                 if below_node_idx != 0 {
                     idx = below_node_idx as usize;
+                    if current_level == 3 {
+                        let node_l2 = self.level_2[idx];
+                        if node_l2.is_at(position) {
+                            found_idx = GetNodeResult::Some(
+                                props.voxel_id as usize,
+                                // TODO: Let layer store its id
+                                0,
+                                below_node_idx as usize,
+                            );
+                        }
+                        return;
+                    }
                     if current_level == level + 1 {
                         found_idx = GetNodeResult::Some(
                             props.voxel_id as usize,
@@ -708,6 +738,9 @@ mod tests {
 
         assert!(plat.get_node(uvec3(32, 32, 32), 5,).is_none());
         assert!(plat.get_node(uvec3(64, 64, 64), 5,).is_none());
+
+        assert!(plat.get_node(uvec3(12, 3, 312), 0,).is_none());
+        assert!(plat.get_node(uvec3(24, 4, 4), 0,).is_none());
     }
     #[test]
     fn get_node_positions_only() {

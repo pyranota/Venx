@@ -52,6 +52,7 @@ pub fn load_chunk(
     //     chunk.set(p, voxel as u32);
     //     //chunk.data[i as usize] = voxel as u32;
     // }
+
     layer.load_chunk_gpu(&mut chunks[id.x as usize]);
 }
 // Per chunk basis

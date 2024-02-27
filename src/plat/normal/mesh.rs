@@ -6,7 +6,7 @@ use venx_core::{glam::*, plat::chunk::chunk::Chunk, utils::l2s};
 use super::cpu_plat::CpuPlat;
 
 // TODO: Move to another place
-pub const MESH_SIZE: usize = 39_000;
+pub const MESH_SIZE: usize = 89_000;
 pub const CHUNK_BUCKET: usize = 256;
 
 pub type Mesh = Box<Vec<[f32; 10]>>; // Position, Color, Normal

@@ -3,8 +3,8 @@ use std::f32::consts::PI;
 use bevy::{
     math::vec3,
     pbr::{
-        CascadeShadowConfigBuilder, DirectionalLightShadowMap, NotShadowCaster,
-        ScreenSpaceAmbientOcclusionBundle,
+        wireframe::Wireframe, CascadeShadowConfigBuilder, DirectionalLightShadowMap,
+        NotShadowCaster, ScreenSpaceAmbientOcclusionBundle,
     },
     prelude::*,
     render::render_resource::PrimitiveTopology,
@@ -34,8 +34,8 @@ fn setup(
     //     plat
     // });
 
-    let plat = VenxPlat::load_mca("./assets/mca/1/", (0..5, 0..5), true, 120, false).unwrap();
-    for mesh in plat.static_mesh(0..16, 3..6, 0..16, Some(1)) {
+    let plat = VenxPlat::load_mca("./assets/mca/1/", (0..5, 0..5), true, 100, false).unwrap();
+    for mesh in plat.static_mesh(0..16, 2..6, 0..16, Some(0)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
@@ -52,8 +52,7 @@ fn setup(
             }),
             ..default()
         })
-        //.insert(Wireframe)
-        ;
+        .insert(Wireframe);
     }
 
     // ambient light
@@ -138,21 +137,21 @@ fn setup(
         cascade_shadow_config,
         ..default()
     });
-    // Sky
-    cmd.spawn((
-        PbrBundle {
-            mesh: bevy_meshes.add(Mesh::from(shape::Box::default())),
-            material: materials.add(StandardMaterial {
-                base_color: Color::hex("888888").unwrap(),
-                unlit: true,
-                cull_mode: None,
-                ..default()
-            }),
-            transform: Transform::from_scale(Vec3::splat(1900.0)),
-            ..default()
-        },
-        NotShadowCaster,
-    ));
+    // // Sky
+    // cmd.spawn((
+    //     PbrBundle {
+    //         mesh: bevy_meshes.add(Mesh::from(shape::Box::default())),
+    //         material: materials.add(StandardMaterial {
+    //             base_color: Color::hex("888888").unwrap(),
+    //             unlit: true,
+    //             cull_mode: None,
+    //             ..default()
+    //         }),
+    //         transform: Transform::from_scale(Vec3::splat(1900.0)),
+    //         ..default()
+    //     },
+    //     NotShadowCaster,
+    // ));
 
     // camera
     cmd.spawn((
@@ -181,7 +180,7 @@ fn setup(
             directional_light_color: Color::rgba(1.0, 0.95, 0.85, 0.5),
             directional_light_exponent: 30.0,
             falloff: FogFalloff::from_visibility_colors(
-                300.0, // distance in world units up to which objects retain visibility (>= 5% contrast)
+                1000.0, // distance in world units up to which objects retain visibility (>= 5% contrast)
                 Color::rgb(0.35, 0.5, 0.66), // atmospheric extinction color (after light is lost due to absorption by atmospheric particles)
                 Color::rgb(0.8, 0.844, 1.0), // atmospheric inscattering color (light gained due to scattering from the sun)
             ),

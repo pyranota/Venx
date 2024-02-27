@@ -123,7 +123,7 @@ impl<'a> IndexMut<usize> for RawPlat<'a> {
         &mut self.layers[index_mut]
     }
 }
-#[deprecated = "No easy way to import in scope with shortcuts. Use Layer associated constants instead: `Lr::BASE`"]
+#[deprecated = "No easy way to import in scope with shortcuts. Use [Layer] associated constants instead: [Lr::BASE]"]
 #[repr(usize)]
 pub enum LayerIndex {
     Base = 0,
@@ -147,11 +147,27 @@ impl<'a> IndexMut<LayerIndex> for RawPlat<'a> {
 }
 /// Quickly create raw plat for testing
 ///
-/// `!(plat_name, depth ?usize = 8, len ?usize = 128)`
+/// `!(plat_name, depth ?usize = 8, len ?usize = 128, lenrest ?usize = 128)`
 ///
 /// Where `?` means optional and `=` default values
 #[macro_export]
 macro_rules! quick_raw_plat {
+    ($plat:ident, depth $depth:tt, len $layer_len:tt, lenrest $lenrest:tt) => {
+        extern crate alloc;
+        extern crate std;
+        let mut base = (alloc::vec![Node::default(); $layer_len], alloc::vec![crate::plat::node_l2::NodeL2::default(); $layer_len]);
+        let mut tmp = (alloc::vec![Node::default(); $lenrest],  alloc::vec![crate::plat::node_l2::NodeL2::default(); $lenrest]);
+        let (mut schem, mut canvas) = (tmp.clone(), tmp.clone());
+        let mut $plat = std::boxed::Box::new(RawPlat::new(
+            $depth,
+            5,
+            5,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        ));
+    };
     ($plat:ident, depth $depth:tt, len $layer_len:tt) => {
         extern crate alloc;
         extern crate std;

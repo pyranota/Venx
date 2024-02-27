@@ -45,7 +45,7 @@ impl CpuPlat {
     pub(crate) fn new_plat(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         let base = (
             vec![Node::default(); 1 * (l2s(depth) * l2s(depth) / 2) as usize + 1_500_000],
-            vec![NodeL2::default(); 2_200],
+            vec![NodeL2::default(); 1 * (l2s(depth) * l2s(depth) / 2) as usize + 1_500_000],
         );
         let tmp = (
             vec![Node::default(); 128_000],

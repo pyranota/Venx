@@ -5,7 +5,7 @@ use spirv_std::glam::{uvec3, UVec3};
 
 use crate::{
     plat::{
-        node::{Node, NodeAddr},
+        node::{AllocatableNode, Node, NodeAddr},
         node_l2::NodeL2,
         op::{get::GetNodeResult, traverse::Props},
         stack::EStack,
@@ -61,28 +61,44 @@ impl<'a> Layer<'a> {
     pub const CANVAS: usize = 3;
 
     pub fn new(depth: usize, nodes: &'a mut [Node], l2_nodes: &'a mut [NodeL2]) -> Self {
-        // Set leaf node
-        nodes[1].flag = -2;
-        nodes[1].children = [1; 8];
-        // first free node head
-        nodes[0].flag = -1;
-        nodes[0].children[0] = 3;
-        // Chain holders
-        // First 2 nodes are not holders, the rest is holders
-        // TODO: Decouple chaining holders and validating/creating layer
-        // TODO: clear every node up
-        for (i, free) in nodes.iter_mut().enumerate().skip(3) {
-            // Mark as holder
-            free.flag = -1;
-            // Set link to next holder
-            free.children[0] = i as u32 + 1;
-        }
+        {
+            // first free node head
+            nodes[0].flag = -1;
+            nodes[0].children[0] = 2;
+            // Chain holders
+            // First 2 nodes are not holders, the rest is holders
+            // TODO: Decouple chaining holders and validating/creating layer
+            // TODO: clear every node up
+            for (i, free) in nodes.iter_mut().enumerate().skip(2) {
+                // Mark as holder
+                free.flag = -1;
+                // Set link to next holder
+                free.children[0] = i as u32 + 1;
+            }
 
-        nodes.last_mut().unwrap()[0] = 0;
+            nodes.last_mut().unwrap()[0] = 0;
+        }
+        // Do the same for level_2 nodes
+        {
+            // first free node head
+            l2_nodes[0].set_child(0, 1);
+            // Chain holders
+            // First 2 nodes are not holders, the rest is holders
+            // TODO: Decouple chaining holders and validating/creating layer
+            // TODO: clear every node up
+            for (i, free) in l2_nodes.iter_mut().enumerate().skip(1) {
+                // Set link to next holder
+                free.set_child(0, i as u32 + 1);
+            }
+
+            l2_nodes.last_mut().unwrap().set_child(0, 0);
+        }
 
         (nodes, l2_nodes, depth).into()
     }
 
+    /// Show free space
+    /// Currently it ignores level-2 free space
     pub fn free(&self) -> usize {
         let mut idx = 0;
         let mut free = 0;
@@ -99,34 +115,39 @@ impl<'a> Layer<'a> {
     }
 
     /// Deallocate node with holder-pool
-    pub fn deallocate_node(&mut self, node_idx: usize) {
+    pub fn deallocate_node<N: AllocatableNode + Default + 'a>(&mut self, node_idx: usize) {
         // Append empty linked list
-        self[node_idx].flag = -1;
-        self[node_idx].children[0] = self.nodes[0].children[0];
+        let first_free_node_idx = N::get_first_free_link(self);
+        let node = N::get_node_mut(self, node_idx);
+        node.set_flag(-1);
+        node.set_child(0, first_free_node_idx);
 
         // Change the actual head to new one
-        self[0].children[0] = node_idx as u32;
+        N::set_first_free_link(self, node_idx as u32);
     }
 
     /// Allocate node from holder-pool
-    pub fn allocate_node(&mut self) -> usize {
-        self.allocate_node_from(Node::default())
+    pub fn allocate_node<N: AllocatableNode + Default + 'a>(&mut self) -> usize {
+        self.allocate_node_from(N::default())
     }
     /// Allocate node from pool from given node
-    pub fn allocate_node_from(&mut self, node: Node) -> usize {
-        if self.nodes[0].children[0] != 0 {
+    pub fn allocate_node_from<N: AllocatableNode + Default + 'a>(&mut self, node: N) -> usize {
+        if N::get_first_free_link(self) != 0 {
             // Taking node linked by head
-            let allocated_idx = self[0][0] as usize;
-            let allocated_node = &mut self[allocated_idx];
+            let allocated_idx = N::get_first_free_link(self) as usize;
+            let allocated_node = N::get_node_mut(self, allocated_idx);
             // Safety check
-            assert_eq!(allocated_node.flag, -1);
+            assert_eq!(allocated_node.get_flag(), -1);
             // Setting link from allocated_idx to head
-            self[0][0] = allocated_node[0];
+            let allocated_node_child = allocated_node.get_child(0);
+
+            N::set_first_free_link(self, allocated_node_child);
             // Set
-            self[allocated_idx] = node;
+            let used_noded = N::get_node_mut(self, allocated_idx); // = node;
+            *used_noded = node;
             allocated_idx
         } else {
-            panic!("You are out of holder-nodes");
+            panic!("You are out of holder-nodes on type: {}", N::name());
         }
     }
 
@@ -188,7 +209,7 @@ impl<'a> Layer<'a> {
 
             if node_below_idx == 0 {
                 // Fork does not exist, lets change that
-                let new_branch_idx = self.allocate_node();
+                let new_branch_idx = self.allocate_node::<Node>();
 
                 let fork = Node {
                     flag: -3,
@@ -210,7 +231,7 @@ impl<'a> Layer<'a> {
                         if found_voxel_id == 0 {
                             // Nothing here, lets fill it
                             // So we can allocate our new node to voxel_id
-                            let new_branch_idx = self.allocate_node();
+                            let new_branch_idx = self.allocate_node::<Node>();
 
                             self[fork_idx as usize][voxel_id_idx * 2] = voxel_id;
                             self[fork_idx as usize][(voxel_id_idx * 2) + 1] = new_branch_idx as u32;
@@ -230,7 +251,7 @@ impl<'a> Layer<'a> {
                         // If you are at this point, its only possible if there is not place left
                         // To fix that, lets extend it with new fork
                         // Fork does not exist, lets change that
-                        let new_branch_idx = self.allocate_node();
+                        let new_branch_idx = self.allocate_node::<Node>();
 
                         let fork = Node {
                             flag: -3,
@@ -248,7 +269,7 @@ impl<'a> Layer<'a> {
         } else {
             let node_below_idx = node.children[child_idx];
             if node_below_idx == 0 {
-                let new_child_idx = self.allocate_node();
+                let new_child_idx = self.allocate_node::<Node>();
 
                 self[from_idx].children[child_idx] = new_child_idx as u32;
                 return new_child_idx;

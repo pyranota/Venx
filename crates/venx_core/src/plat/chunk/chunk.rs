@@ -182,6 +182,12 @@ impl Chunk {
         }
     }
 
+    pub fn get_global(&self, mut block_position: UVec3) -> Option<u32> {
+        block_position -= self.position() * self.width() as u32;
+        // TODO: Potential bug                   ^^^^^^^
+        self.get(block_position)
+    }
+
     pub fn get_unchecked(&self, block_position: UVec3) -> u32 {
         // Check for out of bound
         if block_position.x >= self.size()
@@ -219,11 +225,23 @@ impl Chunk {
     }
     /// Sets local positioned block
     pub fn set(&mut self, position: UVec3, block: u32) {
+        assert!(position.x < self.size());
+        assert!(position.y < self.size());
+        assert!(position.z < self.size());
+
         let idx = self.flatten_value(position);
 
         self.data[idx] = block;
     }
 
+    /// Sets global positioned block
+    pub fn set_global(&mut self, mut position: UVec3, block: u32) {
+        position -= self.position() * self.width() as u32;
+        // TODO: Potential bug            ^^^^^^^
+        self.set(position, block);
+    }
+
+    #[deprecated]
     /// Sets local positioned block
     pub fn set_many<const SIZE: usize>(&mut self, many: [u32; SIZE]) {
         //let idx = self.flatten_value(position);

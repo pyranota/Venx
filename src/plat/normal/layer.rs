@@ -66,7 +66,7 @@ impl LayerInterface for CpuPlat {
                     for child in &mut layer[parent_idx].children {
                         if *child == current_idx as u32 {
                             *child = new_idx as u32;
-                            layer.deallocate_node(current_idx);
+                            layer.deallocate_node::<Node>(current_idx);
                             continue 'changing;
                         }
                     }

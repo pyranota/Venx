@@ -60,6 +60,58 @@ impl Node {
     }
 }
 
+impl AllocatableNode for Node {
+    fn get_child(&self, index: usize) -> u32 {
+        self[index]
+    }
+
+    fn get_flag(&self) -> i32 {
+        self.flag
+    }
+
+    fn set_child(&mut self, index: usize, child: u32) {
+        self[index] = child;
+    }
+
+    fn set_flag(&mut self, flag: i32) {
+        self.flag = flag;
+    }
+
+    fn get_first_free_link(layer: &Layer) -> u32 {
+        layer[0][0]
+    }
+
+    fn set_first_free_link(layer: &mut Layer, new_link: u32) {
+        layer[0][0] = new_link
+    }
+
+    fn get_node_mut<'a>(layer: &'a mut Layer<'_>, index: usize) -> &'a mut Self {
+        &mut layer[index]
+    }
+
+    fn name() -> &'static str {
+        "Node"
+    }
+}
+
+pub trait AllocatableNode {
+    fn get_child(&self, index: usize) -> u32;
+
+    fn get_flag(&self) -> i32;
+
+    fn set_child(&mut self, index: usize, child: u32);
+
+    fn set_flag(&mut self, flag: i32);
+
+    fn get_first_free_link(layer: &Layer) -> u32;
+
+    fn set_first_free_link(layer: &mut Layer, new_link: u32);
+
+    fn get_node_mut<'a>(layer: &'a mut Layer<'_>, index: usize) -> &'a mut Self;
+
+    fn name() -> &'static str;
+}
+
 impl Index<usize> for Node {
     type Output = u32;
 
