@@ -22,15 +22,3 @@ downcast-rs = "1.2.0"
 # Enables parallel processing support by enabling the "rayon" feature of jpeg-decoder.
 dyn = ["bevy/dynamic_linking"]
 
-# [features]
-# build-binary = ["serde", "csv", "crossbeam", "num_cpus"]
-
-[patch.crates-io]
-# gpu-descriptor = "0.2.3"
- # ahash = "0.7.7"
-
-[profile.dev]
-#incremental = true
-
-[profile.release]
-#incremental = true

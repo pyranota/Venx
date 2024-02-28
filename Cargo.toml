@@ -53,11 +53,6 @@ spirv-builder = { git = "https://github.com/EmbarkStudios/rust-gpu.git", package
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"] }
 
-[patch.crates-io]
-# bevy_ui = "0.12.1"
-# gpu-descriptor = "0.2.3"
-# ahash = "0.7.7"
-
 [features]
 default = [ "turbo", "mca_converter"]
 turbo = ["dep:easy_compute", "dep:bytemuck", "dep:bytemuck_derive"]
@@ -66,23 +61,20 @@ mca_converter = ["dep:fastanvil"]
 # Enable a small amount of optimization in debug mode
 [profile.dev]
 opt-level = 1
-# incremental = true
 
 # Enable high optimizations for dependencies (incl. Bevy), but not for our code:
 [profile.dev.package."*"]
 opt-level = 3
-#incremental = true
 
 # Compile build-dependencies in release mode with
 # the same settings as regular dependencies.
 [profile.release.build-override]
 opt-level = 3
 codegen-units = 16
-#incremental = true
 
 [profile.dev.build-override]
 opt-level = 3
 codegen-units = 16
-#incremental = false
+
 
 
