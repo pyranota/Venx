@@ -4,7 +4,10 @@ use glam::{uvec3, Vec2, Vec3};
 use log::info;
 use pollster::block_on;
 use std::{collections::HashMap, fs, ops::Range, path::PathBuf, usize};
-use venx_core::{plat::node::Node, utils::s2l};
+use venx_core::{
+    plat::{node::Node, node_l2::NodeL2},
+    utils::s2l,
+};
 
 use super::{interfaces::layer::LayerInterface, Plat, VenxPlat};
 
@@ -26,6 +29,7 @@ impl VenxPlat {
         let mut plat = VenxPlat::new(s2l(max_width as u32), 5, 9);
 
         let mut lookup_tables: Vec<HashMap<Node, usize>> = vec![HashMap::new(); 15];
+        let mut lookup_table_l2: HashMap<NodeL2, usize> = HashMap::new();
 
         for (rg_pos, mut region) in rgs {
             //let mut segment = Segment::new(9);
@@ -102,6 +106,7 @@ impl VenxPlat {
                         uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
                         9,
                         &mut lookup_tables,
+                        &mut lookup_table_l2,
                     );
                 }
             }
@@ -140,11 +145,13 @@ impl VenxPlat {
         let mut plat = VenxPlat::new(s2l(max_width as u32), 5, 9);
 
         let mut lookup_tables: Vec<HashMap<Node, usize>> = vec![HashMap::new(); 15];
+        let mut lookup_table_l2: HashMap<NodeL2, usize> = HashMap::new();
 
         let mut last_id = 1;
         let mut register = HashMap::new();
 
         for (rg_pos, mut region) in rgs {
+            info!("{rg_pos:?}");
             for ch_x in 0..32 {
                 for ch_z in 0..32 {
                     if let Ok(Some(data)) = region.read_chunk(ch_x, ch_z) {
@@ -186,6 +193,7 @@ impl VenxPlat {
                         uvec3(rg_pos[0] as u32, 0, rg_pos[1] as u32),
                         9,
                         &mut lookup_tables,
+                        &mut lookup_table_l2,
                     );
                 }
             }

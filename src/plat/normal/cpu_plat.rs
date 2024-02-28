@@ -43,14 +43,15 @@ pub struct CpuPlat {
 
 impl CpuPlat {
     pub(crate) fn new_plat(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
+        // let base = (
+        //     vec![Node::default(); 3 * (l2s(depth) * l2s(depth)) as usize + 590_000],
+        //     vec![NodeL2::default(); 6 * (l2s(depth) * l2s(depth)) as usize + 80_000],
+        // );
         let base = (
-            vec![Node::default(); 1 * (l2s(depth) * l2s(depth) / 2) as usize + 1_500_000],
-            vec![NodeL2::default(); 1 * (l2s(depth) * l2s(depth) / 2) as usize + 1_500_000],
+            vec![Node::default(); 1 * (l2s(depth) * l2s(depth)) as usize + 590_000],
+            vec![NodeL2::default(); 1 * (l2s(depth) * l2s(depth)) as usize + 80_000],
         );
-        let tmp = (
-            vec![Node::default(); 128_000],
-            vec![NodeL2::default(); 1_200],
-        );
+        let tmp = (vec![Node::default(); 8], vec![NodeL2::default(); 2]);
         let (schem, canvas) = (tmp.clone(), tmp.clone());
 
         Self::new_from(depth, chunk_level, segment_level, base, tmp, schem, canvas)

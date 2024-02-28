@@ -25,17 +25,17 @@ fn setup(
     mut bevy_meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
-    // // Its small-sized plat, its slow to convert it from mca each run, it will be saved
-    // let plat = VenxPlat::load("sm_l2").unwrap_or_else(|e| {
-    //     warn!("Plat wasnt found on device, creating new and saving ({e})");
-    //     // Convert from minecraft map
-    //     let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1)).unwrap();
-    //     plat.save("sm_l2").unwrap();
-    //     plat
-    // });
+    // Its small-sized plat, its slow to convert it from mca each run, it will be saved
+    let plat = VenxPlat::load("sm").unwrap_or_else(|e| {
+        warn!("Plat wasnt found on device, creating new and saving ({e})");
+        // Convert from minecraft map
+        let plat = VenxPlat::load_mca_untyped("./assets/mca/4/", (0..4, 0..4)).unwrap();
+        plat.save("sm").unwrap();
+        plat
+    });
 
-    let plat = VenxPlat::load_mca("./assets/mca/1/", (0..5, 0..5), true, 100, false).unwrap();
-    for mesh in plat.static_mesh(0..16, 2..6, 0..16, Some(0)) {
+    // let plat = VenxPlat::load_mca("./assets/mca/1/", (0..5, 0..5), true, 100, true).unwrap();
+    for mesh in plat.static_mesh(0..16, 3..8, 0..16, Some(0)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());

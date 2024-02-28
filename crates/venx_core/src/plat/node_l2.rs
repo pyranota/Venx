@@ -16,7 +16,7 @@ use super::node::{AllocatableNode, Node};
 /// Why? It uses 4.5 times less memory than [Node]
 pub struct NodeL2 {
     /// [[u8, u8, u8, u8], [u8, u8, u8, u8]]
-    packed_children: [u32; 2],
+    pub(crate) packed_children: [u32; 2],
 }
 // Question?
 // What if different compute shader invocations will write at the same time, but different positions?

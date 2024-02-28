@@ -14,7 +14,6 @@ use crate::{
 #[derive(Clone)]
 pub struct Props<'a> {
     /// Position of node in global 3d coords
-    /// If no initial position was specified in `traverse` method, it will be local
     pub position: &'a UVec3,
     /// If false, than position is always UVec3::ZERO (Makes algorithm a bit faster)
     pub positioned: bool,
@@ -280,22 +279,17 @@ impl Layer<'_> {
     {
         let from_level = *levels.end();
         let until_level = *levels.start();
-        let depth = self.depth;
         let fork_level = 4;
 
         from_node_position *= l2s(from_level);
 
         assert!(from_level >= 5);
 
-        let index = if depth > from_level {
-            Node::get_child_index(from_node_position, depth - 1)
-        } else {
-            0
-        };
-        let size = l2s(depth) / 2;
-        from_node_position.x %= size;
-        from_node_position.y %= size;
-        from_node_position.z %= size;
+        let node_idx = self.get_node(from_node_position, from_level, None);
+
+        if node_idx.is_none() {
+            return;
+        }
 
         // Emulate stack with max depth 21 (max graph depth)
         // (Depth is bounded to [NodeAddr], which is essentially single u64,
@@ -314,7 +308,7 @@ impl Layer<'_> {
             usize,
             /* index (progress of iterator in specific node) */
             usize,
-        )> = EStack::new((1, 0, UVec3::ZERO, self.depth, 0, index));
+        )> = EStack::new((node_idx.node_idx, 0, from_node_position, from_level, 0, 0));
 
         loop {
             // Read without pulling it
@@ -322,7 +316,7 @@ impl Layer<'_> {
 
             let level = *level;
             // Exit
-            if *index > 7 && level == depth {
+            if *index > 7 && level == from_level {
                 break;
             }
 
@@ -348,9 +342,10 @@ impl Layer<'_> {
                 // We have all data incoded in node_idx.
                 // So we will just use it to determine is there any voxel (1) or not (0)
                 // TODO: Move to [NodeL2] struct
-                (*node_idx & (1 << (*index))) as u32
+                ((*node_idx & (1 << (*index))) >> (*index)) as u32
+                //                             ^^^^^^^^^^^^ this here makes our child nice 0 or 1
             } else {
-                self[*node_idx][*index]
+                self[*node_idx][*index] as u32
             };
 
             if child != 0 && level > 0 {
@@ -360,7 +355,7 @@ impl Layer<'_> {
                 let mut push_level: usize = level - 1;
                 let mut push_node_idx: usize = child as usize;
                 let mut call_closure: bool = true;
-                let mut push_index: usize = 0;
+                let push_index: usize = 0;
                 let push_parent_idx: usize = *node_idx;
 
                 if level == fork_level && self[*node_idx].is_fork() {
@@ -392,18 +387,8 @@ impl Layer<'_> {
                             panic!()
                         }
                     }
-                }
-                // This step if ignored while iterating over transparent layer (forks)
-                else if level > from_level {
-                    push_index = Node::get_child_index(from_node_position, level - 1);
-                    from_node_position.x %= size;
-                    from_node_position.y %= size;
-                    from_node_position.z %= size;
-
-                    // Prevent from future iterations
-                    *index = 8;
-                } else if level == from_level {
-                    *index = 8;
+                } else if level == fork_level && *voxel_id == 0 {
+                    panic!();
                 } else {
                     *index += 1;
                 }
@@ -436,9 +421,6 @@ impl Layer<'_> {
                 // All done
                 stack.pop();
                 continue;
-            } else if level >= from_level {
-                // Exit if child is zero and its not itarable level
-                break;
             } else {
                 *index += 1;
             }
@@ -608,16 +590,16 @@ impl Layer<'_> {
 mod tests {
     extern crate alloc;
     extern crate std;
-    use crate::{plat::layer::layer::Lr, *};
+    use crate::{plat::layer::layer::Lr, test_utils::set_rand_plat, *};
     use core::borrow::{Borrow, BorrowMut};
-    use std::{dbg, println};
+    use std::{collections::HashSet, dbg, println};
 
     use alloc::{
         borrow::ToOwned,
         boxed::Box,
         vec::{self, Vec},
     };
-    use rand::Rng;
+    use rand::{thread_rng, Rng};
     use spirv_std::glam::{uvec3, UVec3};
 
     use crate::{
@@ -630,33 +612,6 @@ mod tests {
     };
 
     use self::test_utils::gen_rand_mtx;
-
-    /// Stable traverse API. Used for many tests using same API which can be changed.
-    /// But this macro API's staying always the same.
-    /// Meaning, if you did any changes to traverse. You need just to change this macro and everything will work.
-    #[macro_export]
-    macro_rules! traverse {
-        ($plat:ident, lr $layer:literal, $callback:tt) => {
-            $plat[$layer].traverse_new(UVec3::ZERO, 0..=$plat.depth, $callback);
-        };
-        ($plat:ident, $callback:tt) => {
-            for layer_idx in 0..4 {
-                $plat[layer_idx].traverse_new(UVec3::ZERO, 0..=$plat.depth, $callback);
-            }
-        };
-    }
-    // TODO: Fix formatting
-    #[macro_export]
-    macro_rules! traverse_region {
-        ($plat:ident, lr $layer:literal, rng $range:expr, pos $position:expr, $callback:tt) => {
-            $plat[$layer].traverse_new($position, $range, $callback);
-        };
-        ($plat:ident, rng $range:expr, pos $position:expr, $callback:tt) => {
-            for layer_idx in 0..4 {
-                $plat[layer_idx].traverse_new($position, $range, $callback);
-            }
-        };
-    }
 
     #[test]
     fn traverse_region_zero() {
@@ -846,8 +801,207 @@ mod tests {
     }
 
     #[test]
-    fn traverse_levels_and_check_ids() {
-        quick_raw_plat!(plat, depth 6, len 1_000);
+    fn traverse_check_path_by_levels() {
+        quick_raw_plat!(plat, depth 10, len 10);
+
+        plat[0].set((7, 20, 5).into(), 52);
+
+        let mut seq = alloc::vec![];
+
+        traverse!(plat, {
+            |p| {
+                seq.push(p.level);
+            }
+        });
+
+        assert_eq!(&seq, &alloc::vec![9, 8, 7, 6, 5, 4, 3, 2, 1, 0]);
+    }
+
+    #[test]
+    fn traverse_check_path_by_flags() {
+        quick_raw_plat!(plat, depth 10, len 160);
+
+        set_rand_plat::<16>(&mut plat, 99);
+
+        let mut seq = alloc::vec![];
+
+        traverse!(plat, {
+            |p| {
+                if p.level > 2 {
+                    seq.push(plat[0][p.node_idx].flag);
+                    if plat[0][p.node_idx].flag != 0 {
+                        dbg!(p.level);
+                    }
+                }
+            }
+        });
+
+        assert_eq!(&seq, &alloc::vec![0; seq.len()]);
+    }
+
+    #[test]
+    fn traverse_check_path_by_node_idx() {
+        quick_raw_plat!(plat, depth 10, len 10060);
+
+        set_rand_plat::<32>(&mut plat, 90);
+
+        let mut seq = alloc::vec![];
+        let mut seq2 = alloc::vec![];
+
+        traverse!(plat, {
+            |p| {
+                if p.level > 2 {
+                    // let node = plat[0][p.node_idx];
+                    // assert!(!node.is_fork());
+
+                    seq.push(p.node_idx);
+                    seq2.push(
+                        plat[0]
+                            .get_node(
+                                *p.position,
+                                p.level,
+                                if p.entry == 0 {
+                                    None
+                                } else {
+                                    Some(p.entry as usize)
+                                },
+                            )
+                            .node_idx,
+                    );
+                }
+            }
+        });
+
+        assert_eq!(&seq, &seq2);
+    }
+
+    #[test]
+    fn traverse_check_count() {
+        quick_raw_plat!(plat, depth 10, len 200_060);
+
+        set_rand_plat::<64>(&mut plat, 90);
+
+        let mut count = 0;
+
+        traverse!(plat, {
+            |p| {
+                // Only nodes on levels 3..depth are actually stored
+                // nodes on level 2 stored separetely on layer.level_2
+                // 0 and 1 levels dont actually exist. So we dont count it
+                if p.level > 2 {
+                    count += 1;
+                }
+            }
+        });
+
+        let mut fork_count = 0;
+
+        for node in plat[0].nodes.iter() {
+            if node.is_fork() {
+                fork_count += 1;
+            }
+        }
+
+        dbg!(fork_count);
+
+        assert_ne!(fork_count, 0);
+        assert_ne!(count, 0);
+        assert_ne!(plat[0].free(), 0);
+        assert_ne!(plat[0].nodes.len(), 0);
+        assert_eq!(plat[0].nodes.len(), plat[0].free() + count + fork_count);
+    }
+
+    #[test]
+    fn traverse_check_register() {
+        // quick_raw_plat!(plat, depth 10, len 200_060);
+
+        // set_rand_plat::<64>(&mut plat, 90);
+
+        // let mut register = HashSet::new();
+
+        // traverse!(plat, {
+        //     |p| {
+        //         // Only nodes on levels 3..depth are actually stored
+        //         // nodes on level 2 stored separetely on layer.level_2
+        //         // 0 and 1 levels dont actually exist. So we dont count it
+        //         if p.level > 2 {
+        //             register.insert(p.node_idx);
+        //         }
+        //     }
+        // });
+
+        // let mut fork_count = 0;
+
+        // for node in plat[0].nodes.iter() {
+        //     if node.is_fork() {
+        //         fork_count += 1;
+        //     }
+        // }
+
+        // dbg!(fork_count);
+
+        // assert_ne!(fork_count, 0);
+        // assert_ne!(count, 0);
+        // assert_ne!(plat[0].free(), 0);
+        // assert_ne!(plat[0].nodes.len(), 0);
+        // assert_eq!(plat[0].nodes.len(), plat[0].free() + count + fork_count);
+    }
+
+    #[test]
+    fn traverse_compare_count_with_mtx() {
+        quick_raw_plat!(plat, depth 10, len 200_060);
+
+        let mtx = set_rand_plat::<64>(&mut plat, 90);
+        let mut voxels_in_mtx = 0;
+
+        for l in mtx.iter() {
+            for l in l {
+                for v in l {
+                    if *v != 0 {
+                        voxels_in_mtx += 1;
+                    }
+                }
+            }
+        }
+
+        let mut voxels_from_traverse = 0;
+
+        traverse!(plat, {
+            |p| {
+                if p.level == 0 {
+                    voxels_from_traverse += 1;
+                }
+            }
+        });
+
+        assert_eq!(voxels_in_mtx, voxels_from_traverse);
+    }
+
+    #[test]
+    fn traverse_check_leaked_forks() {
+        quick_raw_plat!(plat, depth 10, len 1000_060);
+
+        set_rand_plat::<64>(&mut plat, 50);
+
+        let mut leaked = alloc::vec![];
+
+        traverse!(plat, {
+            |p| {
+                if p.level > 2 {
+                    let node = plat[0][p.node_idx];
+                    if node.is_fork() {
+                        leaked.push((node, p.node_idx, p.level));
+                    }
+                }
+            }
+        });
+
+        assert_eq!(leaked, alloc::vec![]);
+    }
+
+    #[test]
+    fn traverse_check_l1_n_l0() {
+        quick_raw_plat!(plat, depth 10, len 100);
 
         plat[0].set((0, 12, 8).into(), 22);
         plat[0].set((1, 12, 8).into(), 32);
@@ -855,53 +1009,15 @@ mod tests {
         plat[0].set((5, 12, 4).into(), 12);
         plat[0].set((1, 2, 11).into(), 2);
 
-        let mut seq = alloc::vec![];
-
         traverse!(plat, {
             |p| {
-                seq.push(p.entry);
-            }
-        });
-
-        assert_eq!(
-            &seq,
-            &alloc::vec![
-                0, 0, 22, 22, 22, 22, 22, 32, 32, 32, 32, 32, 52, 52, 52, 52, 52, 12, 12, 12, 12,
-                12, 2, 2, 2, 2, 2, 0, 0, 0
-            ]
-        );
-
-        traverse!(plat, {
-            |p| {
-                if p.level != 4 {
-                    assert_eq!(
-                        plat[0]
-                            .get_node(*p.position, p.level, Some(p.entry as usize))
-                            .voxel_id,
-                        p.entry as usize
-                    )
+                if p.level == 1 {
+                    assert!(p.node_idx < 256);
+                } else if p.level == 0 {
+                    assert_eq!(p.node_idx, 1);
                 }
             }
         });
-    }
-
-    #[test]
-    fn traverse_check_path() {
-        quick_raw_plat!(plat, depth 6, len 10);
-
-        plat[0].set((7, 20, 5).into(), 52);
-
-        let mut seq = alloc::vec![];
-
-        let mut invocation_amount = 0;
-
-        plat[0].traverse(0, 2, UVec3::ZERO, false, 6, &mut |p| {
-            seq.push((*p.parent_idx, p.node_idx, plat[0][p.node_idx]));
-            invocation_amount += 1;
-        });
-        dbg!(&plat[0]);
-        assert_eq!(&seq, &alloc::vec![]);
-        assert_eq!(invocation_amount, 7);
     }
 
     #[test]
@@ -1084,6 +1200,74 @@ mod tests {
                     plat.get_voxel(*p.position ).voxel_id as u32
                 );
         } }});
+    }
+
+    #[test]
+    #[allow(unused_braces)]
+    fn traverse_noise_64x64x64() {
+        quick_raw_plat!(plat, depth 6, len 589834, len2 262145, lenrest 2);
+
+        use rand::seq::SliceRandom;
+        let mut ids: Vec<u32> = (1..=(64 * 64 * 64)).collect();
+        ids.shuffle(&mut thread_rng());
+
+        let mut idx = 0;
+        for x in 0..64 {
+            for y in 0..64 {
+                for z in 0..64 {
+                    plat[0].set(uvec3(x, y, z), ids[idx]);
+                    idx += 1;
+                }
+            }
+        }
+
+        traverse!(plat, { |_p| {} });
+    }
+
+    #[test]
+    fn count_on_each_level() {
+        /*
+            Nodes:
+            Free-head - 1
+            l6 - 1
+            l5 - 8
+            fork - 8^2 * (16^3 / 4) (2^6 * 2^10 = 2^14 = 65536)
+            l4 - 8^2 * 16^3 (2^6 * 2^12 = 2^18 = 262144)
+            l3 - 2^18 (262144)
+
+           Total: 589834
+
+           Nodes L2:
+            Free-head - 1
+            l2: 2^18 (262144)
+
+           Total: 262145
+
+        */
+        quick_raw_plat!(plat, depth 6, len 589834, len2 262145, lenrest 2);
+
+        use rand::seq::SliceRandom;
+        let mut ids: Vec<u32> = (1..=(64 * 64 * 64)).collect();
+        ids.shuffle(&mut thread_rng());
+
+        let mut idx = 0;
+        for x in 0..64 {
+            for y in 0..64 {
+                for z in 0..64 {
+                    plat[0].set(uvec3(x, y, z), ids[idx]);
+                    idx += 1;
+                }
+            }
+        }
+        let mut counts = [0; 8];
+
+        traverse!(plat, {
+            |p| {
+                counts[p.level] += 1;
+            }
+        });
+
+        assert_eq!(counts, [262144, 262144, 262144, 262144, 262144, 8, 1, 1]);
     }
 
     #[test]

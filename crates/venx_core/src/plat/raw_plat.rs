@@ -147,11 +147,27 @@ impl<'a> IndexMut<LayerIndex> for RawPlat<'a> {
 }
 /// Quickly create raw plat for testing
 ///
-/// `!(plat_name, depth ?usize = 8, len ?usize = 128, lenrest ?usize = 128)`
+/// `!(plat_name, depth ?usize = 8, len ?usize = 128, len2 ?usize = len, lenrest ?usize = 128)`
 ///
 /// Where `?` means optional and `=` default values
 #[macro_export]
 macro_rules! quick_raw_plat {
+    ($plat:ident, depth $depth:tt, len $layer_len:tt, len2 $layer_len_l2:tt, lenrest $lenrest:tt) => {
+        extern crate alloc;
+        extern crate std;
+        let mut base = (alloc::vec![Node::default(); $layer_len], alloc::vec![crate::plat::node_l2::NodeL2::default(); $layer_len_l2]);
+        let mut tmp = (alloc::vec![Node::default(); $lenrest],  alloc::vec![crate::plat::node_l2::NodeL2::default(); $lenrest]);
+        let (mut schem, mut canvas) = (tmp.clone(), tmp.clone());
+        let mut $plat = std::boxed::Box::new(RawPlat::new(
+            $depth,
+            5,
+            5,
+            (&mut base.0, &mut base.1),
+            (&mut tmp.0, &mut tmp.1),
+            (&mut schem.0, &mut schem.1),
+            (&mut canvas.0, &mut canvas.1),
+        ));
+    };
     ($plat:ident, depth $depth:tt, len $layer_len:tt, lenrest $lenrest:tt) => {
         extern crate alloc;
         extern crate std;
@@ -171,10 +187,10 @@ macro_rules! quick_raw_plat {
     ($plat:ident, depth $depth:tt, len $layer_len:tt) => {
         extern crate alloc;
         extern crate std;
-        let mut base = (alloc::vec![Node::default(); $layer_len], alloc::vec![crate::plat::node_l2::NodeL2::default(); $layer_len]);
-        let mut tmp = (alloc::vec![Node::default(); 128],  alloc::vec![crate::plat::node_l2::NodeL2::default(); 128]);
+        let mut base = (alloc::vec![crate::plat::node::Node::default(); $layer_len], alloc::vec![crate::plat::node_l2::NodeL2::default(); $layer_len]);
+        let mut tmp = (alloc::vec![crate::plat::node::Node::default(); 128],  alloc::vec![crate::plat::node_l2::NodeL2::default(); 128]);
         let (mut schem, mut canvas) = (tmp.clone(), tmp.clone());
-        let mut $plat = std::boxed::Box::new(RawPlat::new(
+        let mut $plat = std::boxed::Box::new(crate::plat::raw_plat::RawPlat::new(
             $depth,
             5,
             5,

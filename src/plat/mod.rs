@@ -1,5 +1,6 @@
 use std::{
     borrow::Borrow,
+    collections::HashMap,
     fs::{create_dir_all, read, read_to_string, File},
     io::{Read, Write},
     ops::Range,
@@ -36,6 +37,7 @@ use self::{
     turbo::gpu_plat::GpuPlat,
 };
 
+mod charts;
 pub mod interfaces;
 #[cfg(feature = "mca_converter")]
 mod mca_converter;
@@ -61,16 +63,20 @@ struct MetaSerDeser {
 }
 
 impl VenxPlat {
-    /// Save plat to .config directory
+    /// Save plat to .cache directory
     pub fn save(&self, name: &str) -> anyhow::Result<()> {
         info!("Saving {name}.plat");
         let path = ".cache/".to_owned() + name;
-        // TODO: Make .config in custom location
+        // TODO: Make .cache in custom location
         create_dir_all(format!("{}.plat", path))?;
         create_dir_all(format!("{}.plat/layers/", path))?;
-        //   let entry: String = ron::ser::to_string_pretty(&self, ron::ser::PrettyConfig::default())?;
+        create_dir_all(format!("{}.plat/report", path))?;
+
+        self.chart_node_destibution(&format!("{}.plat/report/node_destribution", path), name)?;
+
         let mut file = File::create(format!("{}.plat/meta.ron", path))?;
 
+        // TODO: make use of transfer.    XXXXXXXXXXXXXXXXXXXXX
         let raw_plat = self.get_normal_unchecked().borrow_raw_plat();
         let meta: String = ron::ser::to_string_pretty(
             &MetaSerDeser {
@@ -81,15 +87,13 @@ impl VenxPlat {
             ron::ser::PrettyConfig::default(),
         )?;
         file.write_all(meta.as_bytes())?;
-        // Create layers dirs
 
+        // Create layers dirs
         for (layer_name, layer) in raw_plat.layers() {
             let layer_path = format!("{path}.plat/layers/{layer_name}");
 
             create_dir_all(&layer_path)?;
 
-            // let level_stringified: String =
-            //     ron::ser::to_string_pretty(&level, ron::ser::PrettyConfig::default())?;
             let encoded_entries: Vec<u8> = bitcode::encode(layer.level_2).unwrap();
             let encoded_nodes: Vec<u8> = bitcode::encode(layer.nodes).unwrap();
 
@@ -99,6 +103,7 @@ impl VenxPlat {
             let mut nodes_file = File::create(format!("{}/nodes", layer_path))?;
             nodes_file.write_all(&encoded_nodes)?;
         }
+
         Ok(())
     }
 
@@ -263,17 +268,17 @@ impl VenxPlat {
                     // lod_level = 0;
                     //let mut lod = lod;
 
-                    let fetched_chunk = plat.load_chunk(uvec3(x, y, z), 0, 5);
-                    let mut found = false;
-                    fetched_chunk.iter(|p, ty| {
-                        if ty == 8 && lod_level > 0 && !found {
-                            found = true;
-                            lod_level -= 1;
-                            return;
-                        }
-                    });
+                    // let fetched_chunk = plat.load_chunk(uvec3(x, y, z), 0, 5);
+                    // let mut found = false;
+                    // fetched_chunk.iter(|p, ty| {
+                    //     if ty == 8 && lod_level > 0 && !found {
+                    //         found = true;
+                    //         lod_level -= 1;
+                    //         return;
+                    //     }
+                    // });
 
-                    let chunk = plat.load_chunk(uvec3(x, y, z), lod_level, 5);
+                    let chunk = plat.load_chunk(uvec3(x, y, z), 0, 5);
 
                     let vx_mesh = plat.compute_mesh_from_chunk(&chunk);
 
@@ -358,10 +363,13 @@ impl LayerInterface for VenxPlat {
         position: UVec3,
         level: u32,
         lookup_tables: &mut Vec<std::collections::HashMap<venx_core::plat::node::Node, usize>>,
+        lookup_table_l2: &mut HashMap<NodeL2, usize>,
     ) {
         info!("Compress");
         match &mut self.plat {
-            Plat::Cpu(plat) => plat.compress(layer, position, level, lookup_tables),
+            Plat::Cpu(plat) => {
+                plat.compress(layer, position, level, lookup_tables, lookup_table_l2)
+            }
             Plat::Gpu(plat) => todo!(),
         }
     }

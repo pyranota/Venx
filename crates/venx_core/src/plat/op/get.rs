@@ -13,7 +13,7 @@ type Entry_Idx = usize;
 type Layer_Idx = Entry_Idx;
 type Node_Idx = Layer_Idx;
 
-#[derive(PartialEq, Eq, Hash)]
+#[derive(PartialEq, Eq, Hash, Debug)]
 pub struct GetNodeResult {
     /// If 0 its none
     pub voxel_id: usize,
@@ -161,6 +161,10 @@ impl Lr<'_> {
         let mut found_idx = GetNodeResult::None();
         let fork_level = 4;
         let mut idx = 1;
+
+        if level == self.depth {
+            return GetNodeResult::Some(0, 0, 1);
+        }
 
         while current_level > fork_level {
             let child_index = Node::get_child_index(position, current_level - 1);

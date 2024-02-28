@@ -97,25 +97,40 @@ impl<'a> Layer<'a> {
         (nodes, l2_nodes, depth).into()
     }
 
-    /// Show free space
-    /// Currently it ignores level-2 free space
+    /// Show free space in Nodes
     pub fn free(&self) -> usize {
         let mut idx = 0;
         let mut free = 0;
         loop {
-            free += 1;
             idx = self[idx][0] as usize;
             if idx == 0 {
                 break;
             }
+            free += 1;
             assert!(free < self.nodes.len())
         }
 
         free
     }
 
+    /// Show free space on level 2
+    pub fn free_l2(&self) -> usize {
+        let mut idx = 0;
+        let mut free = 0;
+        loop {
+            idx = self.level_2[idx].packed_children[0] as usize;
+            if idx == 0 {
+                break;
+            }
+            free += 1;
+            assert!(free < self.level_2.len())
+        }
+
+        free
+    }
+
     /// Deallocate node with holder-pool
-    pub fn deallocate_node<N: AllocatableNode + Default + 'a>(&mut self, node_idx: usize) {
+    pub fn deallocate_node<N: AllocatableNode + 'a>(&mut self, node_idx: usize) {
         // Append empty linked list
         let first_free_node_idx = N::get_first_free_link(self);
         let node = N::get_node_mut(self, node_idx);
@@ -131,7 +146,7 @@ impl<'a> Layer<'a> {
         self.allocate_node_from(N::default())
     }
     /// Allocate node from pool from given node
-    pub fn allocate_node_from<N: AllocatableNode + Default + 'a>(&mut self, node: N) -> usize {
+    pub fn allocate_node_from<N: AllocatableNode + 'a>(&mut self, node: N) -> usize {
         if N::get_first_free_link(self) != 0 {
             // Taking node linked by head
             let allocated_idx = N::get_first_free_link(self) as usize;
@@ -302,5 +317,40 @@ impl<'a> Index<usize> for Layer<'a> {
 impl<'a> IndexMut<usize> for Layer<'a> {
     fn index_mut(&mut self, index_mut: usize) -> &mut Self::Output {
         &mut self.nodes[index_mut]
+    }
+}
+
+#[cfg(feature = "bitcode_support")]
+#[cfg(test)]
+mod tests {
+    use std::dbg;
+
+    use crate::{quick_raw_plat, test_utils::set_rand_plat, traverse};
+
+    extern crate alloc;
+    extern crate std;
+    #[test]
+    fn count_free() {
+        quick_raw_plat!(plat, depth 10, len 600_060);
+
+        set_rand_plat::<64>(&mut plat, 50);
+
+        let mut free_count = 0;
+
+        for node in plat[0].nodes.iter().skip(1) {
+            if node.flag == -1 {
+                free_count += 1;
+            }
+        }
+
+        // TODO:
+        // let mut free_l2_count = 0;
+        // for node in plat[0].level_2.iter() {
+        //     if node.flag == -1 {
+        //         free_count += 1;
+        //     }
+        // }
+
+        assert_eq!(free_count, plat[0].free());
     }
 }

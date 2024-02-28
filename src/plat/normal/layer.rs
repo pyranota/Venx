@@ -1,10 +1,11 @@
 use std::{borrow::BorrowMut, collections::HashMap};
 
-use log::info;
+use log::{info, warn};
+use ron::de;
 use venx_core::{
     glam::UVec3,
     l2s,
-    plat::{node::Node, op::get::GetNodeResult},
+    plat::{node::Node, node_l2::NodeL2, op::get::GetNodeResult},
     utils::Grid,
 };
 
@@ -23,57 +24,91 @@ impl LayerInterface for CpuPlat {
         position: glam::UVec3,
         level: u32,
         lookup_tables: &mut Vec<HashMap<Node, usize>>,
+        lookup_table_l2: &mut HashMap<NodeL2, usize>,
     ) {
-        info!(
-            "Free space on layer: {}",
-            self.borrow_raw_plat()[layer].free()
-        );
-
-        for lvl in 1..(4) {
+        for lvl in 2..=3 {
             let mut to_change = vec![];
-
-            // TODO: Cache it
 
             self.with_raw_plat_mut(|plat| {
                 let layer = &mut plat[layer];
 
-                let node_idx = layer.get_node_idx_gpu(
-                    venx_core::glam::UVec3::from_array((position * l2s(level as usize)).to_array()),
-                    level as usize,
-                ); // position * l2s(region_level)
-
-                if node_idx == 0 {
-                    info!("Empty, not merging");
-                    return;
+                if lvl == 2 {
+                    layer.traverse_new(position.to_array().into(), 0..=(level as usize), |p| {
+                        if p.level == lvl {
+                            let node = &layer.level_2[p.node_idx];
+                            if let Some(shared_idx) = lookup_table_l2.get(node) {
+                                if *shared_idx != p.node_idx {
+                                    to_change.push((p.node_idx, *p.parent_idx, *shared_idx));
+                                }
+                            } else {
+                                lookup_table_l2.insert(*node, p.node_idx);
+                            }
+                        }
+                    });
+                } else {
+                    layer.traverse_new(position.to_array().into(), 0..=(level as usize), |p| {
+                        if p.level == lvl {
+                            let mut node = layer[p.node_idx];
+                            node.flag = 0;
+                            if let Some(shared_idx) = lookup_tables[lvl].get(&node) {
+                                if *shared_idx != p.node_idx {
+                                    to_change.push((p.node_idx, *p.parent_idx, *shared_idx));
+                                }
+                            } else {
+                                lookup_tables[lvl].insert(node, p.node_idx);
+                            }
+                        }
+                    });
                 }
 
-                layer.traverse(0, node_idx, UVec3::ZERO, false, level as usize, &mut |p| {
-                    if p.level == lvl {
-                        if let Some(shared_idx) = lookup_tables[lvl].get(p.node) {
-                            if *shared_idx != p.node_idx {
-                                to_change.push((p.node_idx, *p.parent_idx, *shared_idx));
-                            }
-                        } else {
-                            lookup_tables[lvl].insert(*p.node, p.node_idx);
-                        }
-
-                        p.drop_tree = true;
-                    }
-                });
+                let mut deallocated = 0;
 
                 'changing: for (current_idx, parent_idx, new_idx) in to_change {
                     // let parent_children = &mut self.levels[lvl as usize + 1].nodes;
-                    for child in &mut layer[parent_idx].children {
-                        if *child == current_idx as u32 {
-                            *child = new_idx as u32;
-                            layer.deallocate_node::<Node>(current_idx);
-                            continue 'changing;
+                    if lvl == 4 {
+                        for child in &mut layer[parent_idx].children.iter_mut().skip(1).step_by(2) {
+                            if *child == current_idx as u32 {
+                                *child = new_idx as u32;
+                                deallocated += 1;
+                                if lvl == 2 {
+                                    layer.deallocate_node::<NodeL2>(current_idx);
+                                } else {
+                                    layer.deallocate_node::<Node>(current_idx);
+                                }
+
+                                continue 'changing;
+                            }
+                        }
+                    } else {
+                        for child in &mut layer[parent_idx].children {
+                            if *child == current_idx as u32 {
+                                *child = new_idx as u32;
+                                deallocated += 1;
+                                if lvl == 2 {
+                                    layer.deallocate_node::<NodeL2>(current_idx);
+                                } else {
+                                    layer.deallocate_node::<Node>(current_idx);
+                                }
+
+                                continue 'changing;
+                            }
                         }
                     }
                 }
+                //dbg!(layer.free(), layer.free_l2());
+                if deallocated == 0 {
+                    warn!("No deallocations");
+                }
             });
         }
-        //
+
+        //if position.x > 5 && position.z > 5 {
+        info!(
+            "Free space on layer: \n l2:   {} \n rest: {}",
+            self.borrow_raw_plat()[layer].free_l2(),
+            self.borrow_raw_plat()[layer].free()
+        );
+        //}
     }
 
     fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {

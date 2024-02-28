@@ -2,7 +2,7 @@ use std::{collections::HashMap, sync::Arc};
 
 use glam::UVec3;
 use venx_core::{
-    plat::{node::Node, op::get::GetNodeResult},
+    plat::{node::Node, node_l2::NodeL2, op::get::GetNodeResult},
     utils::Grid,
 };
 
@@ -28,6 +28,7 @@ pub trait LayerInterface {
         position: UVec3,
         level: u32,
         lookup_tables: &mut Vec<HashMap<Node, usize>>,
+        lookup_table_l2: &mut HashMap<NodeL2, usize>,
     ) {
         todo!()
     }
