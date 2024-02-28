@@ -9,14 +9,12 @@ use std::{
 use glam::{uvec3, UVec3, Vec3, Vec4};
 use log::info;
 use serde::{Deserialize, Serialize};
-use venx_core::{
-    plat::{
-        chunk::chunk::Chunk,
-        node::Node,
-        node_l2::NodeL2,
-        op::get::GetNodeResult,
-        raw_plat::LayerIndex::{Base, Canvas, Schem, Tmp},
-    },
+use venx_core::plat::{
+    chunk::chunk::Chunk,
+    node::Node,
+    node_l2::NodeL2,
+    op::get::GetNodeResult,
+    raw_plat::LayerIndex::{Base, Canvas, Schem, Tmp},
 };
 
 use self::{
@@ -156,7 +154,7 @@ impl VenxPlat {
         segment_level: usize,
         len: usize,
     ) -> Self {
-        let plat = Plat::Cpu(CpuPlat::new_plat_with_length(
+        let plat = Plat::Cpu(CpuPlat::_new_plat_with_length(
             depth,
             chunk_level,
             segment_level,

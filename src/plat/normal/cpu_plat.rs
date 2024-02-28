@@ -55,7 +55,7 @@ impl CpuPlat {
         Self::new_from(depth, chunk_level, segment_level, base, tmp, schem, canvas)
     }
     // TMP
-    pub(crate) fn new_plat_with_length(
+    pub(crate) fn _new_plat_with_length(
         depth: usize,
         chunk_level: usize,
         segment_level: usize,

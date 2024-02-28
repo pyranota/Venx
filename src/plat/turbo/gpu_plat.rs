@@ -18,7 +18,7 @@ use crate::plat::{
         mesh::{CHUNK_BUCKET, MESH_SIZE},
     },
 };
-
+#[allow(dead_code)]
 pub struct GpuPlat {
     // Meta
     pub(crate) raw_plat_depth: Buffer,

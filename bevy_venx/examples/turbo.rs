@@ -1,17 +1,10 @@
-use std::{f32::consts::PI};
-
 use bevy::{
-    math::vec3, pbr::wireframe::Wireframe, prelude::*,
-    render::render_resource::PrimitiveTopology,
+    math::vec3, pbr::wireframe::Wireframe, prelude::*, render::render_resource::PrimitiveTopology,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use pollster::block_on;
 use venx::{
-    plat::{
-        interfaces::{load::LoadInterface},
-        normal::mesh::CHUNK_BUCKET,
-        VenxPlat,
-    },
+    plat::{interfaces::load::LoadInterface, normal::mesh::CHUNK_BUCKET, VenxPlat},
     Chunk, ChunkLoadRequest,
 };
 
@@ -112,6 +105,8 @@ fn setup(
                 normals.push(normal.to_array());
             }
 
+            let _ = counter;
+
             dbg!(vertices.len());
 
             info!("Inserting");
@@ -165,7 +160,7 @@ fn setup(
         },
         transform: Transform {
             translation: Vec3::new(-10.0, 300.0, -10.0),
-            rotation: Quat::from_rotation_x(-PI / 3.87),
+            rotation: Quat::from_rotation_x(-std::f32::consts::PI / 3.87),
             ..default()
         },
         // The default cascade config is designed to handle large scenes.

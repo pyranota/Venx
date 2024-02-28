@@ -70,8 +70,6 @@ fn main() {
 //     info!("AVG amount different types of blocks in single 32x32x32 chunk: {avg}");
 // }
 
-const WIDTH: usize = 16;
-
 // // 16x16x16
 fn setup(
     _cmd: Commands,
