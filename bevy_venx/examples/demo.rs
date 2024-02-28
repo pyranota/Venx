@@ -1,8 +1,8 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    core_pipeline::experimental::taa::{TemporalAntiAliasBundle, TemporalAntiAliasPlugin},
-    math::{uvec3, vec3},
+    core_pipeline::experimental::taa::TemporalAntiAliasPlugin,
+    math::vec3,
     pbr::{
         CascadeShadowConfigBuilder, DirectionalLightShadowMap, NotShadowCaster,
         ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionQualityLevel,
@@ -78,8 +78,8 @@ fn move_character(
 
 fn handle_collisions(
     mut q: Query<(Entity, &mut Transform, &mut Velocity), With<MidAir>>,
-    time: Res<Time>,
-    mut pq: Query<&BevyPlat>,
+    _time: Res<Time>,
+    pq: Query<&BevyPlat>,
     mut commands: Commands,
 ) {
     for (e, mut t, mut v) in &mut q {
@@ -112,7 +112,7 @@ fn apply_velocity(
 }
 
 /// Project velocity into transform
-fn handle_velocity(mut q: Query<(&mut Transform, &Velocity), With<Character>>, time: Res<Time>) {
+fn handle_velocity(mut q: Query<(&mut Transform, &Velocity), With<Character>>, _time: Res<Time>) {
     for (mut t, v) in &mut q {
         t.translation += v.0;
     }
@@ -174,7 +174,7 @@ fn setup(
     tr.translation.y += 123.;
 
     cmd.spawn((
-        Name::new(format!("Water world")),
+        Name::new("Water world".to_string()),
         MaterialMeshBundle {
             mesh,
             material,
@@ -259,7 +259,7 @@ fn setup(
         },
         ..default()
     });
-    let cascade_shadow_config = CascadeShadowConfigBuilder {
+    let _cascade_shadow_config = CascadeShadowConfigBuilder {
         first_cascade_far_bound: 500.,
         maximum_distance: 3500.0,
         ..default()

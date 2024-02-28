@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::{
     math::vec3,
-    pbr::wireframe::{Wireframe, WireframePlugin},
+    pbr::wireframe::{Wireframe},
     prelude::*,
     render::render_resource::PrimitiveTopology,
 };

@@ -3,15 +3,11 @@
 
 */
 
-use std::f32::consts::PI;
-
 use bevy::{
-    math::vec3,
     prelude::*,
-    render::render_resource::PrimitiveTopology,
     utils::hashbrown::{HashMap, HashSet},
 };
-use bevy_panorbit_camera::PanOrbitCamera;
+
 use venx::plat::{interfaces::layer::LayerInterface, VenxPlat};
 
 fn main() {
@@ -78,9 +74,9 @@ const WIDTH: usize = 16;
 
 // // 16x16x16
 fn setup(
-    mut cmd: Commands,
-    mut bevy_meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    _cmd: Commands,
+    _bevy_meshes: ResMut<Assets<Mesh>>,
+    _materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Its small-sized plat, its slow to convert it from mca each run, it will be saved
     let plat = VenxPlat::load("mca_small_all_blocks").unwrap_or_else(|e| {
@@ -118,7 +114,7 @@ fn setup(
 
     let mut total = 0;
 
-    let mut len = map.len();
+    let len = map.len();
 
     for (_pos, key) in map.iter() {
         total += key - 1;

@@ -1,7 +1,8 @@
 use easy_compute::{
     include_spirv,
-    util::{BufferInitDescriptor, DeviceExt}, BindGroupBuilder, BindGroupVenx, Buffer, BufferRW, BufferUsages,
-    ComputePipeline, ComputeServer, PipelineBuilder, ShaderModule,
+    util::{BufferInitDescriptor, DeviceExt},
+    BindGroupBuilder, BindGroupVenx, Buffer, BufferRW, BufferUsages, ComputePipeline,
+    ComputeServer, PipelineBuilder, ShaderModule,
 };
 
 use venx_core::plat::{

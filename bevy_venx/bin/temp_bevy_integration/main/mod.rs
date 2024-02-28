@@ -28,7 +28,7 @@ impl Plugin for Venx {
             // bevy_panorbit_camera::PanOrbitCameraPlugin,
             // WireframePlugin,
             (
-                FrameTimeDiagnosticsPlugin::default(),
+                FrameTimeDiagnosticsPlugin,
                 bevy_panorbit_camera::PanOrbitCameraPlugin,
                 WireframePlugin,
             ), // TemporalAntiAliasPlugin,

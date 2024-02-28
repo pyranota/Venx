@@ -1,14 +1,14 @@
-use std::{f32::consts::PI, slice::Chunks, thread::sleep, time::Duration};
+use std::{f32::consts::PI};
 
 use bevy::{
-    log, math::vec3, pbr::wireframe::Wireframe, prelude::*,
+    math::vec3, pbr::wireframe::Wireframe, prelude::*,
     render::render_resource::PrimitiveTopology,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use pollster::block_on;
 use venx::{
     plat::{
-        interfaces::{layer::LayerInterface, load::LoadInterface},
+        interfaces::{load::LoadInterface},
         normal::mesh::CHUNK_BUCKET,
         VenxPlat,
     },
@@ -48,8 +48,8 @@ fn setup(
         for r_z in 0..2 {
             info!("Starting");
             dbg!(r_x, r_z);
-            let mut chunk_updates = Box::new(vec![]);
-            let mut chunk_updates_2 = Box::new(vec![]);
+            let mut chunk_updates = Box::<Vec<ChunkLoadRequest>>::default();
+            let mut chunk_updates_2 = Box::<Vec<ChunkLoadRequest>>::default();
 
             for x in 0..16 {
                 for y in 3..5 {
@@ -57,13 +57,13 @@ fn setup(
                         if chunk_updates.len() >= CHUNK_BUCKET {
                             chunk_updates_2.push(ChunkLoadRequest {
                                 position: [x + r_x * 16, y, z + r_z * 16],
-                                lod_level: r_x / 1,
+                                lod_level: r_x,
                                 chunk_level: 5,
                             });
                         }
                         chunk_updates.push(ChunkLoadRequest {
                             position: [x + r_x * 16, y, z + r_z * 16],
-                            lod_level: r_x / 1,
+                            lod_level: r_x,
                             chunk_level: 5,
                         });
                     }

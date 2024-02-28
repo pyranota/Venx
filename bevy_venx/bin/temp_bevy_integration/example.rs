@@ -1,18 +1,11 @@
-use std::rc::Rc;
-use std::time::{Duration, Instant};
-
-use bevy::pbr::wireframe::Wireframe;
 use bevy::render::render_resource::PrimitiveTopology;
-use bevy::window::PresentMode;
-use bevy::{log, prelude::*};
-use glam::{uvec3, vec4};
+
+use bevy::prelude::*;
 
 use main::Venx;
-use venx::plat::interfaces::layer::LayerInterface;
-use venx::plat::interfaces::load::LoadInterface;
-use venx::plat::interfaces::PlatInterface;
+
 mod main;
-use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
+
 use venx::plat::VenxPlat;
 
 fn main() {

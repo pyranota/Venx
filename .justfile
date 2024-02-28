@@ -45,9 +45,9 @@ clean:
 test +PACKAGE='venx':
     cargo test --package {{PACKAGE}}
 
-# clippy specified package (Borked)
+# clippy --fix specified package
 clippy +PACKAGE='venx':
-    cargo clippy --package {{PACKAGE}} 
+    cargo clippy --fix --package {{PACKAGE}} 
 
 _to_shader TARGET='wgsl' NAME='venx_shaders' SPV_V='1.1':
     cargo b --package venx_shaders
