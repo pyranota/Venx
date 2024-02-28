@@ -3,10 +3,10 @@ pub mod load;
 // pub mod image;
 pub mod layer;
 
-use std::{any::Any, fmt::Debug};
 
-use downcast_rs::{impl_downcast, Downcast};
-use glam::UVec3;
+
+use downcast_rs::{Downcast};
+
 
 use self::{layer::LayerInterface, load::LoadInterface};
 

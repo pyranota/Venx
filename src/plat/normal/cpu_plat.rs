@@ -1,4 +1,4 @@
-use std::marker::PhantomPinned;
+
 
 use ouroboros::*;
 
@@ -89,8 +89,8 @@ impl CpuPlat {
     /// Create CpuPlat with already filled layer components
     pub(crate) fn from_existing(
         depth: usize,
-        chunk_level: usize,
-        segment_level: usize,
+        _chunk_level: usize,
+        _segment_level: usize,
         base: (Vec<Node>, Vec<NodeL2>),
         tmp: (Vec<Node>, Vec<NodeL2>),
         schem: (Vec<Node>, Vec<NodeL2>),

@@ -17,7 +17,6 @@ use venx_core::{
         op::get::GetNodeResult,
         raw_plat::LayerIndex::{Base, Canvas, Schem, Tmp},
     },
-    utils::Grid,
 };
 
 use self::{
@@ -389,7 +388,7 @@ mod tests {
         let turbo_plat = pollster::block_on(normal_plat_1.transfer_to_gpu());
 
         // Transfer back to cpu
-        let mut transfered_from_gpu = pollster::block_on(turbo_plat.transfer_from_gpu());
+        let transfered_from_gpu = pollster::block_on(turbo_plat.transfer_from_gpu());
 
         // Compare
 

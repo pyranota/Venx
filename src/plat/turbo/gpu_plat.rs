@@ -1,15 +1,13 @@
 use easy_compute::{
     include_spirv,
-    util::{BufferInitDescriptor, DeviceExt},
-    BindGroup, BindGroupBuilder, BindGroupVenx, Buffer, BufferDescriptor, BufferRW, BufferUsages,
+    util::{BufferInitDescriptor, DeviceExt}, BindGroupBuilder, BindGroupVenx, Buffer, BufferRW, BufferUsages,
     ComputePipeline, ComputeServer, PipelineBuilder, ShaderModule,
 };
-use glam::{UVec3, Vec3, Vec4};
+
 use venx_core::plat::{
     chunk::chunk::{Chunk, ChunkLoadRequest},
     node::Node,
     node_l2::NodeL2,
-    raw_plat::RawPlat,
 };
 
 use crate::plat::{
@@ -235,8 +233,8 @@ impl GpuPlat {
 
     pub(crate) async fn new_from(
         depth: usize,
-        chunk_level: usize,
-        segment_level: usize,
+        _chunk_level: usize,
+        _segment_level: usize,
         base: (Vec<Node>, Vec<NodeL2>),
         tmp: (Vec<Node>, Vec<NodeL2>),
         schem: (Vec<Node>, Vec<NodeL2>),

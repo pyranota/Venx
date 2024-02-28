@@ -1,22 +1,19 @@
-use std::intrinsics::size_of;
 
-use bytemuck::{cast, cast_ref, cast_slice};
+
+
 use easy_compute::{
-    util::{BufferInitDescriptor, DeviceExt},
-    BindGroupBuilder, BufferDescriptor, BufferRW, BufferUsages, ComputePassDescriptor,
-    PipelineBuilder,
+    util::{BufferInitDescriptor, DeviceExt}, BufferDescriptor, BufferRW, BufferUsages, ComputePassDescriptor,
 };
-use glam::uvec3;
+
 use log::info;
 use pollster::block_on;
 use venx_core::{
     plat::chunk::chunk::{Chunk, ChunkLoadRequest},
-    utils::Grid,
 };
 
 use crate::plat::{
     interfaces::load::LoadInterface,
-    normal::mesh::{Mesh, CHUNK_BUCKET, MESH_SIZE},
+    normal::mesh::{CHUNK_BUCKET},
 };
 
 use super::gpu_plat::GpuPlat;
