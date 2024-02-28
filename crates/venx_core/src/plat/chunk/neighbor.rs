@@ -1,9 +1,12 @@
-use spirv_std::glam::{uvec3, IVec3, UVec3};
+use spirv_std::glam::IVec3;
 
 use crate::{plat::raw_plat::RawPlat, utils::l2s};
 
-use super::chunk::{self, Chunk};
+use super::chunk::Chunk;
 
+// GLOBAL TODO:
+// Dude, it just needs to be reworked. Yet again...
+// This time it needs to be able to get neighbor without plat.
 impl Chunk {
     pub fn get_neighbor(
         &self,
@@ -66,11 +69,11 @@ impl Chunk {
 
     pub fn get_neighbor_unchecked(
         &self,
-        plat: &RawPlat,
+        _plat: &RawPlat,
         local_block_position: IVec3,
         neighbor_direction: IVec3,
     ) -> u32 {
-        let real_chunk_size = l2s(self.chunk_level());
+        let _real_chunk_size = l2s(self.chunk_level());
         let chunk_size = self.size();
 
         let sum = neighbor_direction + local_block_position;
@@ -125,11 +128,4 @@ impl Chunk {
             return self.get_unchecked(sum.as_uvec3());
         }
     }
-}
-
-#[test]
-fn neighbor_test() {
-    let chunk = Chunk::new(UVec3::ZERO, 0, 4);
-
-    // chunk.get_neighbor((13, 1, 3), (7, 1, 1));
 }

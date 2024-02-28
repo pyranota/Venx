@@ -1,8 +1,5 @@
-use core::ops::{Index, IndexMut};
-
-use spirv_std::glam::UVec3;
-
 use super::{layer::layer::Layer, node::Node, node_l2::NodeL2};
+use core::ops::{Index, IndexMut};
 
 // TODO: rename to RawPlatMut and create LayerMut
 #[derive(PartialEq, Debug)]
@@ -33,8 +30,8 @@ pub struct RawPlat<'a> {
 impl<'a> RawPlat<'a> {
     pub fn new(
         depth: usize,
-        chunk_level: usize,
-        segment_level: usize,
+        _chunk_level: usize,
+        _segment_level: usize,
         base: (&'a mut [Node], &'a mut [NodeL2]),
         tmp: (&'a mut [Node], &'a mut [NodeL2]),
         schem: (&'a mut [Node], &'a mut [NodeL2]),
@@ -42,7 +39,6 @@ impl<'a> RawPlat<'a> {
     ) -> Self {
         assert!(depth > 4);
         RawPlat {
-            //controller: Controller::new(depth, chunk_level, segment_level),
             position: (0, 0, 0),
             rotation: (0, 0, 0),
             depth,
@@ -54,6 +50,8 @@ impl<'a> RawPlat<'a> {
             ],
         }
     }
+    /// Return named layers. Might be useful if you want to get all names in single array
+    /// TODO: Actually it needs to be moved in layer itself
     pub fn layers(&'a self) -> [(&'a str, &'a Layer<'a>); 4] {
         [
             ("base", &self.layers[0]),
@@ -63,45 +61,6 @@ impl<'a> RawPlat<'a> {
         ]
     }
 
-    // #[cfg(test)]
-    // pub fn new_test<
-    //     const BASE_SIZE: usize,
-    //     const TMP_SIZE: usize,
-    //     const SCHEM_SIZE: usize,
-    //     const CANVAS_SIZE: usize,
-    //     const ENTRIES_SIZE: usize,
-    // >(
-    //     depth: usize,
-    //     chunk_level: usize,
-    //     segment_level: usize,
-    // ) -> (
-    //     (
-    //         ([Node; BASE_SIZE], [usize; ENTRIES_SIZE]),
-    //         ([Node; TMP_SIZE], [usize; ENTRIES_SIZE]),
-    //         ([Node; SCHEM_SIZE], [usize; ENTRIES_SIZE]),
-    //         ([Node; CANVAS_SIZE], [usize; ENTRIES_SIZE]),
-    //     ),
-    //     Self,
-    // ) {
-    //     let mut base = ([Node::default(); BASE_SIZE], [0; ENTRIES_SIZE]);
-    //     let mut tmp = ([Node::default(); TMP_SIZE], [0; ENTRIES_SIZE]);
-    //     let mut schem = ([Node::default(); SCHEM_SIZE], [0; ENTRIES_SIZE]);
-    //     let mut canvas = ([Node::default(); CANVAS_SIZE], [0; ENTRIES_SIZE]);
-
-    //     (
-    //         (base, tmp, schem, canvas),
-    //         RawPlat {
-    //             //controller: Controller::new(depth, chunk_level, segment_level),
-    //             position: (0, 0, 0),
-    //             rotation: (0, 0, 0),
-    //             depth,
-    //             base: Layer::new(depth, &mut base.0, &mut base.1),
-    //             tmp: Layer::new(depth, &mut tmp.0, &mut tmp.1),
-    //             schem: Layer::new(depth, &mut schem.0, &mut schem.1),
-    //             canvas: Layer::new(depth, &mut canvas.0, &mut canvas.1),
-    //         },
-    //     )
-    // }
     pub fn depth(&self) -> usize {
         self.depth as usize
     }
@@ -123,7 +82,7 @@ impl<'a> IndexMut<usize> for RawPlat<'a> {
         &mut self.layers[index_mut]
     }
 }
-#[deprecated = "No easy way to import in scope with shortcuts. Use [Layer] associated constants instead: [Lr::BASE]"]
+// #[deprecated = "No easy way to import in scope with shortcuts. Use [Layer] associated constants instead: [Lr::BASE]"]
 #[repr(usize)]
 pub enum LayerIndex {
     Base = 0,

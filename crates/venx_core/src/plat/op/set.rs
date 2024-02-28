@@ -1,13 +1,10 @@
-use crate::plat::{node_l2::NodeL2, raw_plat::RawPlat};
+use crate::plat::node_l2::NodeL2;
 
-use spirv_std::{
-    glam::{uvec3, UVec3},
-    macros::debug_printfln,
-};
-#[macro_use(print)]
+use spirv_std::glam::UVec3;
+
 use crate::{
     plat::{layer::layer::Layer, node::Node},
-    utils::{l2s},
+    utils::l2s,
 };
 
 impl Layer<'_> {
@@ -68,14 +65,12 @@ impl Layer<'_> {
     }
 }
 
-#[cfg(feature = "bitcode_support")]
+#[cfg(feature = "std")]
 #[cfg(test)]
 
 mod tests {
     extern crate alloc;
     extern crate std;
-
-    use std::dbg;
 
     use alloc::vec::Vec;
     use rand::thread_rng;
@@ -85,85 +80,6 @@ mod tests {
         plat::{node::Node, raw_plat::RawPlat},
         quick_raw_plat,
     };
-
-    // #[test]
-    // fn set_voxel() {
-    //     quick_raw_plat!(plat, depth 6, len 32, lenrest 32);
-
-    //     plat[1].set(uvec3(0, 0, 0), 1);
-    //     plat[1].set(uvec3(0, 0, 0), 2);
-    //     // Incorrect entry
-    //     plat[1].set(uvec3(0, 1, 0), 0);
-    //     // Out of bound
-    //     plat[1].set(uvec3(0, 7, 0), 1);
-    //     plat[1].set(uvec3(0, 8, 0), 2);
-
-    //     let nodes = &plat[1].nodes;
-
-    //     // std::println!("{:?}", &plat[1].entries[0..10]);
-    //     // std::println!("{:?}", nodes);
-
-    //     // assert_eq!(
-    //     //     nodes[0],
-    //     //     Node {
-    //     //         flag: -1,
-    //     //         children: [0; 8]
-    //     //     }
-    //     // );
-
-    //     dbg!(nodes);
-    //     dbg!(&plat[1].level_2);
-
-    //     assert_eq!(
-    //         nodes[1],
-    //         Node {
-    //             flag: 0,
-    //             children: [2, 0, 0, 0, 0, 0, 0, 0]
-    //         }
-    //     );
-    //     assert_eq!(
-    //         nodes[2],
-    //         Node {
-    //             flag: 0,
-    //             children: [4, 0, 0, 0, 0, 0, 0, 0]
-    //         }
-    //     );
-    //     assert_eq!(
-    //         nodes[3],
-    //         Node {
-    //             flag: 0,
-    //             children: [5, 0, 0, 0, 0, 0, 0, 0]
-    //         }
-    //     );
-    //     assert_eq!(
-    //         nodes[4],
-    //         Node {
-    //             flag: -3,
-    //             children: [1, 3, 2, 6, 0, 0, 0, 0]
-    //         }
-    //     );
-    //     assert_eq!(
-    //         nodes[5],
-    //         Node {
-    //             flag: 0,
-    //             children: [1, 0, 0, 0, 0, 0, 0, 0]
-    //         }
-    //     );
-    //     assert_eq!(
-    //         nodes[6],
-    //         Node {
-    //             flag: 0,
-    //             children: [7, 0, 8, 0, 0, 0, 0, 0]
-    //         }
-    //     );
-    //     assert_eq!(
-    //         nodes[7],
-    //         Node {
-    //             flag: 0,
-    //             children: [2, 0, 0, 0, 0, 0, 0, 0]
-    //         }
-    //     );
-    // }
 
     #[test]
     fn set_count() {
@@ -382,6 +298,7 @@ mod tests {
         assert_eq!(fork_count, 65536);
     }
 
+    // TODO:
     // #[test]
     // fn set_single() {
     //     /*

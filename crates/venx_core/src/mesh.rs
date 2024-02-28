@@ -2,7 +2,7 @@ use spirv_std::glam::*;
 
 use crate::{
     plat::{chunk::chunk::Chunk, raw_plat::RawPlat},
-    utils::{l2s, Grid},
+    utils::l2s,
 };
 
 type MeshHelper = Chunk;

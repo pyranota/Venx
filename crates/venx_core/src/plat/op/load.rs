@@ -1,74 +1,31 @@
-use spirv_std::glam::{uvec3, UVec3};
+use spirv_std::glam::UVec3;
 
-use crate::{
-    plat::{
-        chunk::chunk::{Chunk, ChunkMeta},
-        layer::layer::Layer,
-        node::NodeAddr,
-        raw_plat::RawPlat,
-    },
-    utils::l2s,
-};
+use crate::plat::{chunk::chunk::Chunk, layer::layer::Layer};
 
 impl Layer<'_> {
     #[inline(always)]
     pub fn load_chunk_gpu(&self, chunk: &mut Chunk) {
-        // for x in 0..chunk.size() {
-        //     for y in 0..chunk.size() {
-        //         for z in 0..chunk.size() {
-        //             let res =
-        //                 self.get_node(uvec3(x, y, z) + chunk.position() * chunk.width(), 0, None);
-
-        //             if res.is_some() {
-        //                 chunk.set(uvec3(x, y, z), res.voxel_id as u32);
-        //             }
-        //         }
-        //     }
-        // }
-        // #[cfg(feature = "bitcode_support")]
-        // panic!("{:?}", chunk.position());
-
-        self.traverse_new(chunk.position(), 0..=(chunk.chunk_level()), |p| {
+        self.traverse(chunk.position(), 0..=(chunk.chunk_level()), |p| {
             if p.level == 0 {
-                if p.entry != 0 {
-                    chunk.set_global(*p.position, p.entry as u32);
-                }
+                chunk.set_global(*p.position, p.voxel_id as u32);
             }
         });
-
-        // let node_idx = self.get_node_idx_gpu(chunk.position() * chunk.width(), chunk.chunk_level());
-
-        // if node_idx != 0 {
-        //     self.traverse_gpu(0, node_idx, UVec3::ZERO, true, 5, |(level, entry, p)| {
-        // if level == 0 {
-        //     if entry != 0 {
-        //         chunk.set(p, entry as u32);
-        //     }
-        // }
-        //     });
-        // }
     }
 
     pub fn load_chunk(&self, position: UVec3, lod_level: usize, chunk_level: usize) -> Chunk {
         let mut chunk = Chunk::new(position, lod_level, chunk_level);
-
         self.load_chunk_gpu(&mut chunk);
-
         chunk
     }
 }
-#[cfg(feature = "bitcode_support")]
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
-    use std::{dbg, println};
+    use std::dbg;
 
-    use alloc::vec;
     use spirv_std::glam::{uvec3, UVec3};
 
-    use crate::{
-        plat::{chunk::chunk::Chunk, layer::layer::Layer, node::Node, raw_plat::RawPlat},
-        quick_raw_plat, *,
-    };
+    use crate::{plat::layer::layer::Layer, quick_raw_plat};
 
     extern crate alloc;
     extern crate std;
@@ -89,19 +46,9 @@ mod tests {
         assert!(chunk.get(uvec3(15, 150, 15)).is_none());
         assert!(chunk.get(uvec3(60, 60, 60)).is_none());
 
-        // plat[0].traverse_new(UVec3::ZERO, 0..=6, |p| {
-        //     if p.level == 0 {
-        //         dbg!(p.position);
-        //     }
-        // });
-
-        plat[0].traverse_new(UVec3::ONE, 0..=5, |p| {
+        plat[0].traverse(UVec3::ONE, 0..=5, |p| {
             if p.level == 0 {
                 dbg!(p.position);
-
-                //let mut chunk = Chunk::new(UVec3::ONE, 0, 5);
-
-                //chunk.set_global(*p.position, 2);
             }
         });
 

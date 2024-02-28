@@ -1,7 +1,8 @@
-#{    cargo r --package bevy_venx --features "dyn" --example {{EXAMPLE}}}
+
 # print this message
 help:
     just --list
+
 
 # run specified example
 run EXAMPLE="":
@@ -43,6 +44,10 @@ clean:
 # test specific package in project. Default is venx
 test +PACKAGE='venx':
     cargo test --package {{PACKAGE}}
+
+# clippy specified package (Borked)
+clippy +PACKAGE='venx':
+    cargo clippy --package {{PACKAGE}} 
 
 _to_shader TARGET='wgsl' NAME='venx_shaders' SPV_V='1.1':
     cargo b --package venx_shaders

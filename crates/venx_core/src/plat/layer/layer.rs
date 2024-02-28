@@ -1,16 +1,8 @@
 use core::ops::{Index, IndexMut};
 
-use bytemuck::{Pod, Zeroable};
-use spirv_std::glam::{uvec3, UVec3};
-
-use crate::{
-    plat::{
-        node::{AllocatableNode, Node, NodeAddr},
-        node_l2::NodeL2,
-        op::{get::GetNodeResult, traverse::Props},
-        stack::EStack,
-    },
-    utils::l2s,
+use crate::plat::{
+    node::{AllocatableNode, Node},
+    node_l2::NodeL2,
 };
 
 /// Alias for layer
@@ -166,6 +158,7 @@ impl<'a> Layer<'a> {
         }
     }
 
+    // TODO: Rework and move to [super::op]
     pub fn iter_fork<C: FnMut(&mut ForkIterProps)>(&self, mut fork_idx: usize, callback: &mut C) {
         if !self[fork_idx as usize].is_fork() {
             panic!()
@@ -201,7 +194,7 @@ impl<'a> Layer<'a> {
             }
         }
     }
-
+    // TODO: Rework and move to [super::op]
     /// Allows to work without even thinking about forks
     /// Usefull if node points to fork, but this abstracts it, and just returns idx to node below this all
     pub fn set_child(
@@ -320,12 +313,11 @@ impl<'a> IndexMut<usize> for Layer<'a> {
     }
 }
 
-#[cfg(feature = "bitcode_support")]
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
-    use std::dbg;
 
-    use crate::{quick_raw_plat, test_utils::set_rand_plat, traverse};
+    use crate::{quick_raw_plat, test_utils::set_rand_plat};
 
     extern crate alloc;
     extern crate std;

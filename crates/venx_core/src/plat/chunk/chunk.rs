@@ -1,9 +1,6 @@
 use bytemuck::{Pod, Zeroable};
-use bytes_cast::BytesCast;
-use spirv_std::{
-    glam::{uvec3, UVec3},
-    num_traits::Zero,
-};
+
+use spirv_std::glam::{uvec3, UVec3};
 
 use crate::utils::l2s;
 
@@ -62,29 +59,6 @@ unsafe impl Pod for ChunkLoadRequest {}
 
 unsafe impl Zeroable for ChunkLoadRequest {}
 
-#[derive(Clone, Copy, Pod, Zeroable)]
-#[repr(C)]
-pub struct ChunkMeta {
-    x: usize,
-    y: usize,
-    z: usize,
-    lod_level: usize,
-    chunk_level: usize,
-    size: usize,
-    // TODO:
-    // neighbor chunk levels
-}
-
-pub unsafe fn any_as_u8_slice<T: Sized>(p: &T) -> &[u8] {
-    ::core::slice::from_raw_parts((p as *const T) as *const u8, ::core::mem::size_of::<T>())
-}
-
-pub unsafe fn u8_slice_as_any<T: Sized>(p: &[u8]) -> &[T] {
-    // ::core::slice::from_raw_parts((p as *const u8) as *const T, ::core::mem::size_of::<T>())
-
-    todo!()
-}
-
 impl Chunk {
     pub fn lod_level(&self) -> usize {
         self.data[3] as usize
@@ -120,30 +94,6 @@ impl Chunk {
     pub fn width(&self) -> u32 {
         l2s(self.chunk_level())
     }
-
-    // pub fn to_send(self) -> ([u32; MAX_SIZE], ChunkMeta) {
-    //     (
-    //         self.flatten,
-    //         ChunkMeta {
-    //             x: self.position.x as usize,
-    //             y: self.position.y as usize,
-    //             z: self.position.z as usize,
-    //             lod_level: self.lod_level,
-    //             chunk_level: self.chunk_level,
-    //             size: self.size,
-    //         },
-    //     )
-    // }
-
-    // pub fn receive(flatten: [u32; MAX_SIZE], meta: ChunkMeta) -> Self {
-    //     Self {
-    //         flatten,
-    //         position: uvec3(meta.x as u32, meta.y as u32, meta.z as u32),
-    //         lod_level: meta.lod_level,
-    //         chunk_level: meta.chunk_level,
-    //         size: meta.size,
-    //     }
-    // }
 
     pub fn new(position: impl Into<UVec3>, lod_level: usize, chunk_level: usize) -> Self {
         let mut data = [0; MAX_SIZE + 6];
@@ -241,14 +191,6 @@ impl Chunk {
         self.set(position, block);
     }
 
-    #[deprecated]
-    /// Sets local positioned block
-    pub fn set_many<const SIZE: usize>(&mut self, many: [u32; SIZE]) {
-        //let idx = self.flatten_value(position);
-        for idx in 0..many.len() {
-            //self.data[idx + 6] = many[idx];
-        }
-    }
     /// Iterating over local positions and blocks
     pub fn iter<F>(&self, mut callback: F)
     where
@@ -263,26 +205,8 @@ impl Chunk {
             }
         }
     }
-    /// Warning! In chunk you have global position, in segment local
-    pub fn iter_mut<F>(&mut self, mut callback: F)
-    where
-        F: FnMut(UVec3, &mut u32),
-    {
-        todo!("Is anybody even using it?")
-        // let size = self.size();
-        // for (x, x_row) in self.mtx.iter_mut().enumerate() {
-        //     for (y, y_row) in x_row.iter_mut().enumerate() {
-        //         for (z, block) in y_row.iter_mut().enumerate() {
-        //             callback(
-        //                 uvec3(x as u32, y as u32, z as u32) + (self.position * size),
-        //                 block,
-        //             );
-        //         }
-        //     }
-        // }
-    }
 }
-#[cfg(feature = "bitcode_support")]
+#[cfg(feature = "std")]
 #[cfg(test)]
 mod tests {
     use rand::Rng;
@@ -350,13 +274,13 @@ mod tests {
     #[test]
     fn check_stack_overflow_limit() {
         // 4
-        let chunk = Chunk::new((0, 0, 0), 0, 2);
+        Chunk::new((0, 0, 0), 0, 2);
         // 8
-        let chunk = Chunk::new((0, 0, 0), 0, 3);
+        Chunk::new((0, 0, 0), 0, 3);
         // 16
-        let chunk = Chunk::new((0, 0, 0), 0, 4);
+        Chunk::new((0, 0, 0), 0, 4);
         // 32
-        let chunk = Chunk::new((0, 0, 0), 0, 5);
+        Chunk::new((0, 0, 0), 0, 5);
         // // 64
         // let chunk = Chunk::new((0, 0, 0), 0, 6);
     }

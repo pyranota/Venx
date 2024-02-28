@@ -33,7 +33,7 @@ impl LayerInterface for CpuPlat {
                 let layer = &mut plat[layer];
 
                 if lvl == 2 {
-                    layer.traverse_new(position.to_array().into(), 0..=(level as usize), |p| {
+                    layer.traverse(position.to_array().into(), 0..=(level as usize), |p| {
                         if p.level == lvl {
                             let node = &layer.level_2[p.node_idx];
                             if let Some(shared_idx) = lookup_table_l2.get(node) {
@@ -46,7 +46,7 @@ impl LayerInterface for CpuPlat {
                         }
                     });
                 } else {
-                    layer.traverse_new(position.to_array().into(), 0..=(level as usize), |p| {
+                    layer.traverse(position.to_array().into(), 0..=(level as usize), |p| {
                         if p.level == lvl {
                             let mut node = layer[p.node_idx];
                             node.flag = 0;

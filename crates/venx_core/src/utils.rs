@@ -27,15 +27,11 @@ pub mod test_utils {
     #[macro_export]
     macro_rules! traverse {
         ($plat:ident, lr $layer:literal, $callback:tt) => {
-            $plat[$layer].traverse_new(UVec3::ZERO, 0..=$plat.depth, $callback);
+            $plat[$layer].traverse(UVec3::ZERO, 0..=$plat.depth, $callback);
         };
         ($plat:ident, $callback:tt) => {
             for layer_idx in 0..4 {
-                $plat[layer_idx].traverse_new(
-                    spirv_std::glam::UVec3::ZERO,
-                    0..=$plat.depth,
-                    $callback,
-                );
+                $plat[layer_idx].traverse(spirv_std::glam::UVec3::ZERO, 0..=$plat.depth, $callback);
             }
         };
     }
@@ -43,11 +39,11 @@ pub mod test_utils {
     #[macro_export]
     macro_rules! traverse_region {
         ($plat:ident, lr $layer:literal, rng $range:expr, pos $position:expr, $callback:tt) => {
-            $plat[$layer].traverse_new($position, $range, $callback);
+            $plat[$layer].traverse($position, $range, $callback);
         };
         ($plat:ident, rng $range:expr, pos $position:expr, $callback:tt) => {
             for layer_idx in 0..4 {
-                $plat[layer_idx].traverse_new($position, $range, $callback);
+                $plat[layer_idx].traverse($position, $range, $callback);
             }
         };
     }

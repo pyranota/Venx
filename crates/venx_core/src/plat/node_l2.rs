@@ -43,7 +43,7 @@ impl NodeL2 {
         (self.packed_children[idx] >> (3 - offset) * 8) & 0b11_11_11_11
     }
     /// Get child on 0th level. index must be 0 to (8 * 8 - 1). Returns value between 0 and 1
-    pub fn index_l0(&self, index: usize) -> bool {
+    pub fn index_l0(&self, _index: usize) -> bool {
         todo!()
     }
     /// Unset voxel within `4x4x4` grid
@@ -88,8 +88,10 @@ impl AllocatableNode for NodeL2 {
         self.packed_children[index] = child
     }
 
-    fn set_flag(&mut self, flag: i32) {
+    fn set_flag(&mut self, _flag: i32) {
         // Ye we defenitely doing this work here. Lol
+        // Btw flags will be removed at some point in future
+        // Plus child in regular [Node] will take up 3 bytes instead of 4
     }
 
     fn get_first_free_link(layer: &super::layer::layer::Layer) -> u32 {
@@ -138,16 +140,13 @@ mod tests {
     extern crate alloc;
     extern crate std;
 
-    use std::{dbg, println};
+    use std::dbg;
 
-    use alloc::{borrow::ToOwned, format, string::String, vec::Vec};
+    use alloc::{borrow::ToOwned, format, vec::Vec};
     use rand::Rng;
     use spirv_std::glam::uvec3;
 
-    use crate::{
-        plat::node::{Node, NodeAddr},
-        test_utils::gen_rand_mtx,
-    };
+    use crate::{plat::node::NodeAddr, test_utils::gen_rand_mtx};
 
     use super::NodeL2;
 

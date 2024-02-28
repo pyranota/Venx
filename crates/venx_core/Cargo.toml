@@ -16,9 +16,11 @@ rand =  {version = "0.8.4", optional = true }
 
 
 [features]
-default = ["bitcode_support"]
-gpu = []
-bitcode_support = ["dep:bitcode", "dep:serde", "dep:rand"]
+default = ["bitcode_support", "std"]
+gpu = ["no_std"]
+no_std = []
+std = []
+bitcode_support = ["dep:bitcode", "dep:serde", "dep:rand", "std"]
 
 [profile.dev]
 incremental = true

@@ -8,7 +8,7 @@ use spirv_std::{
 use venx_core::plat::{
     chunk::{
         self,
-        chunk::{Chunk, ChunkLoadRequest, ChunkMeta},
+        chunk::{Chunk, ChunkLoadRequest},
     },
     layer::layer::Layer,
     node::{Node, NodeAddr},

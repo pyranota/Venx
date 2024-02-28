@@ -1,12 +1,9 @@
-use core::{
-    iter::Rev,
-    ops::{Range, RangeInclusive},
-};
+use core::ops::RangeInclusive;
 
-use spirv_std::glam::{uvec3, UVec3};
+use spirv_std::glam::UVec3;
 
 use crate::{
-    plat::{layer::layer::Layer, node::Node, raw_plat::RawPlat, stack::EStack},
+    plat::{layer::layer::Layer, node::Node, stack::EStack},
     utils::l2s,
 };
 
@@ -19,18 +16,12 @@ pub struct Props<'a> {
     pub positioned: bool,
     /// Idx of parent node for given node. If 0, than there is no parents (works only for root node)
     pub parent_idx: &'a usize,
-    /// Actual Node data
-    pub node: &'a Node,
     /// Node idx
     pub node_idx: usize,
     /// Level of node
     pub level: usize,
     /// Forwarded entry index
-    pub entry: u32,
-    /// By default each callback prop has `drop_tree = false`.
-    /// If you want to drop traversing of current node and all its children, set to `true`
-    /// Be aware, it wont drop traversal of entire graph
-    pub drop_tree: bool,
+    pub voxel_id: u32,
 }
 
 impl Props<'_> {
@@ -39,224 +30,7 @@ impl Props<'_> {
     }
 }
 
-impl RawPlat<'_> {
-    // pub fn traverse_unpositioned<F>(
-    //     &self,
-    //     layer_opts: LayerOpts,
-    //     entry_opts: EntryOpts,
-    //     callback: &mut F,
-    // ) where
-    //     F: FnMut(&mut Props),
-    // {
-    //     todo!()
-    //     // Iterate over all layers and nodes
-    //     // self.opts(
-    //     //     None,
-    //     //     layer_opts,
-    //     //     entry_opts,
-    //     //     true,
-    //     //     &mut |_plat, (layer, layer_id), entry| {
-    //     //         layer.traverse(
-    //     //             entry,
-    //     //             entry as usize,
-    //     //             UVec3::ZERO,
-    //     //             false,
-    //     //             self.depth,
-    //     //             callback,
-    //     //         );
-    //     //         return None as Option<()>;
-    //     //     },
-    //     // );
-    // }
-
-    // /// Traversing all nodes on all levels with voxel overlapping
-    // /// layers and voxels can overlap
-    // /// So if you specify a single layer, there are no overlaps
-    // /// Also region_position is just some value in global space within this region
-    // /// Dont traverse from level == depth, use normal `traverse`
-    // pub fn traverse_region<F>(
-    //     &self,
-    //     region_position: UVec3,
-    //     region_level: usize,
-    //     entry_opts: EntryOpts,
-    //     layer_opts: LayerOpts,
-    //     callback: &mut F,
-    // ) where
-    //     F: FnMut(&mut Props),
-    // {
-    //     let fork_level = 4;
-    //     assert!(region_level > fork_level);
-
-    //     for layer_idx in 0..4 {
-    //         let layer = &self[layer_idx];
-
-    //         let node_idx =
-    //             layer.get_node_idx_gpu(region_position * l2s(region_level), region_level);
-
-    //         if node_idx != 0 {
-    //             layer.traverse(0, node_idx, UVec3::ZERO, true, region_level, callback)
-    //         }
-    //     }
-    // }
-}
-
 impl Layer<'_> {
-    /// Depth-first traversal of layer.
-    /// `entry: u32`, `from_node_position: UVec3` are used to adjust data in `Props`
-    pub fn traverse<F>(
-        &self,
-        entry: u32,
-        from_node_idx: usize,
-        from_node_position: UVec3,
-        positioned: bool,
-        from_level: usize,
-        callback: &mut F,
-    ) where
-        F: FnMut(&mut Props),
-    {
-        // TODO: use assert!
-        if cfg!(feature = "bitcode_support") {
-            assert_ne!(from_node_idx, 0);
-        }
-
-        // Emulate stack with max depth 21 (max graph depth)
-        // Why? This code should compile to SpirV
-        let mut stack: EStack<(
-            /* 0 node_idx */
-            usize,
-            /* 1 parent_idx */
-            usize,
-            /* 2 node_position */
-            UVec3,
-            /* level */
-            usize,
-            /* voxel_id */
-            usize,
-            /* index (progress of iterator in specific node) */
-            usize,
-        )> = EStack::new((from_node_idx, 0, from_node_position, from_level, 0, 0));
-
-        loop {
-            // Read without pulling it
-            let (node_idx, parent_idx, mut position, level, voxel_id, index) = stack.read();
-            // Exit
-            if *index > 7 && *level == from_level {
-                break;
-            }
-
-            // Some cache going on here
-            let node = &self[*node_idx];
-
-            if node.is_fork() {
-                if *index % 2 != 0 {
-                    panic!()
-                }
-
-                // Out of bound
-                if *index == 8 {
-                    let flag = node.flag;
-                    if flag > 0 {
-                        // Switch to next fork in chain
-                        *node_idx = flag as usize;
-                        // Reset index
-                        *index = 0;
-
-                        continue;
-                    } else if flag == -3 {
-                        stack.pop();
-                        continue;
-                    } else {
-                        panic!()
-                    }
-                }
-                let voxel_id = &node.children[*index];
-                let child_id = &node.children[*index + 1];
-
-                *index += 2;
-
-                if *child_id != 0 {
-                    // if *index == 4 {
-                    //     panic!();
-                    // }
-                    let (node_idx, level) = (node_idx.clone(), level.clone());
-
-                    stack.push((
-                        *child_id as usize,
-                        node_idx,
-                        position.clone(),
-                        level,
-                        *voxel_id as usize,
-                        0,
-                    ));
-
-                    continue;
-                } else {
-                    // Exit fork chain
-                    stack.pop();
-                    continue;
-                }
-            }
-
-            // Iterated over all children
-            if *index > 7 {
-                stack.pop();
-                continue;
-            }
-
-            // Call for each enter once
-            // If remove, it will call this callback 7 extra times
-            if *index == 0 {
-                let mut props = Props {
-                    // TODO: Make use of positions
-                    position: &position,
-                    positioned,
-                    parent_idx: &parent_idx,
-                    node: &node,
-                    node_idx: *node_idx,
-                    entry: *voxel_id as u32,
-                    level: *level,
-                    drop_tree: false,
-                };
-
-                // let ret = callback(props);
-                callback(&mut props);
-
-                // Drop subtree traversal
-                if props.drop_tree || *level == 0 {
-                    stack.pop();
-                    continue;
-                }
-            }
-
-            let size = l2s(*level) / 2;
-
-            // Actual node idx in layer.nodes
-            let child_id = &node.children[*index];
-
-            // Increment ahead, so if child_id == 0, it will still do some progress
-            *index += 1;
-
-            if *child_id != 0 && *level > 0 {
-                // TODO: Profile, it might be slow to handle position this way
-                if positioned {
-                    position += Node::get_child_position(*index as u32 - 1) * size;
-                }
-
-                // TODO: Do we need this cache?
-                let (node_idx, level, voxel_id) =
-                    (node_idx.clone(), level.clone(), voxel_id.clone());
-
-                stack.push((
-                    *child_id as usize,
-                    node_idx,
-                    position.clone(),
-                    level - 1,
-                    voxel_id,
-                    0,
-                ));
-            }
-        }
-    }
     /// Very smarty method ^_^ Its been rewritten so many times, that i have already lost the count.
     ///
     /// I think i have never seen more complicated control flow :/
@@ -269,7 +43,7 @@ impl Layer<'_> {
     ///
     /// `levels`: 1..5 and `from_node_position`: (x, y, z) will traverse just region given on specified position and level
     /// until level 1
-    pub fn traverse_new<F>(
+    pub fn traverse<F>(
         &self,
         mut from_node_position: UVec3,
         levels: RangeInclusive<usize>,
@@ -278,7 +52,8 @@ impl Layer<'_> {
         F: FnMut(Props),
     {
         let from_level = *levels.end();
-        let until_level = *levels.start();
+        // TODO: Implement until_level
+        let _until_level = *levels.start();
         let fork_level = 4;
 
         from_node_position *= l2s(from_level);
@@ -312,7 +87,7 @@ impl Layer<'_> {
 
         loop {
             // Read without pulling it
-            let (node_idx, parent_idx, mut position, ref level, voxel_id, index) = stack.read();
+            let (node_idx, _parent_idx, ref position, ref level, voxel_id, index) = stack.read();
 
             let level = *level;
             // Exit
@@ -350,7 +125,7 @@ impl Layer<'_> {
 
             if child != 0 && level > 0 {
                 let size = l2s(level) / 2;
-                let mut push_position = position + Node::get_child_position(*index as u32) * size;
+                let mut push_position = *position + Node::get_child_position(*index as u32) * size;
                 let mut push_voxel_id: usize = *voxel_id;
                 let mut push_level: usize = level - 1;
                 let mut push_node_idx: usize = child as usize;
@@ -369,7 +144,7 @@ impl Layer<'_> {
                     push_node_idx = node.children[*index + 1] as usize;
                     call_closure = false;
                     push_level = level;
-                    push_position = position;
+                    push_position = *position;
                     *index += 2;
 
                     // Out of bound
@@ -398,11 +173,9 @@ impl Layer<'_> {
                         position: &push_position,
                         positioned: true,
                         parent_idx: &push_parent_idx,
-                        node: &Node::default(),
                         node_idx: push_node_idx as usize,
-                        entry: push_voxel_id as u32,
+                        voxel_id: push_voxel_id as u32,
                         level: push_level,
-                        drop_tree: false,
                     };
                     callback(props);
                 }
@@ -426,164 +199,6 @@ impl Layer<'_> {
             }
         }
     }
-
-    /// Depth-first traversal of layer.
-    /// `entry: u32`, `from_node_position: UVec3` are used to adjust data in `Props`
-    pub fn traverse_gpu<F>(
-        &self,
-        entry: u32,
-        from_node_idx: usize,
-        from_node_position: UVec3,
-        positioned: bool,
-        from_level: usize,
-        mut callback: F,
-    ) where
-        // level, entry, position
-        F: FnMut((usize, usize, UVec3)),
-    {
-        // TODO: use assert!
-        if cfg!(feature = "bitcode_support") {
-            assert_ne!(from_node_idx, 0);
-        }
-
-        // Emulate stack with max depth 21 (max graph depth)
-        // Why? This code should compile to SpirV
-        let mut stack: EStack<(
-            /* 0 node_idx */
-            usize,
-            /* 1 parent_idx */
-            usize,
-            /* 2 node_position */
-            UVec3,
-            /* level */
-            usize,
-            /* voxel_id */
-            usize,
-            /* index (progress of iterator in specific node) */
-            usize,
-        )> = EStack::new((from_node_idx, 0, from_node_position, from_level, 0, 0));
-
-        loop {
-            // Read without pulling it
-            let (node_idx, parent_idx, mut position, level, voxel_id, index) = stack.read();
-            // Exit
-            if *index > 7 && *level == from_level {
-                break;
-            }
-
-            // Some cache going on here
-            let node = &self[*node_idx];
-
-            if node.is_fork() {
-                if *index % 2 != 0 {
-                    panic!()
-                }
-
-                // Out of bound
-                if *index == 8 {
-                    let flag = node.flag;
-                    if flag > 0 {
-                        // Switch to next fork in chain
-                        *node_idx = flag as usize;
-                        // Reset index
-                        *index = 0;
-
-                        continue;
-                    } else if flag == -3 {
-                        stack.pop();
-                        continue;
-                    } else {
-                        panic!()
-                    }
-                }
-                let voxel_id = &node.children[*index];
-                let child_id = &node.children[*index + 1];
-
-                *index += 2;
-
-                if *child_id != 0 {
-                    // if *index == 4 {
-                    //     panic!();
-                    // }
-                    let (node_idx, level) = (node_idx.clone(), level.clone());
-
-                    stack.push((
-                        *child_id as usize,
-                        node_idx,
-                        position.clone(),
-                        level,
-                        *voxel_id as usize,
-                        0,
-                    ));
-
-                    continue;
-                } else {
-                    // Exit fork chain
-                    stack.pop();
-                    continue;
-                }
-            }
-
-            // Iterated over all children
-            if *index > 7 {
-                stack.pop();
-                continue;
-            }
-
-            // Call for each enter once
-            // If remove, it will call this callback 7 extra times
-            if *index == 0 {
-                // let mut props = Props {
-                //     // TODO: Make use of positions
-                //     position: &position,
-                //     positioned,
-                //     parent_idx: &parent_idx,
-                //     node: &node,
-                //     node_idx: *node_idx,
-                //     entry: *voxel_id as u32,
-                //     level: *level,
-                //     drop_tree: false,
-                // };
-
-                // let ret = callback(props);
-                callback((*level, *voxel_id, position));
-
-                // // Drop subtree traversal
-                // if props.drop_tree || *level == 0 {
-                //     stack.pop();
-                //     continue;
-                // }
-            }
-
-            let size = l2s(*level) / 2;
-
-            // Actual node idx in layer.nodes
-            let child_id = &node.children[*index];
-
-            // Increment ahead, so if child_id == 0, it will still do some progress
-            *index += 1;
-
-            if *child_id != 0 && *level > 0 {
-                // TODO: Profile, it might be slow to handle position this way
-                if positioned {
-                    position += Node::get_child_position(*index as u32 - 1) * size;
-                }
-
-                // TODO: Do we need this cache?
-                let (node_idx, level, voxel_id) =
-                    (node_idx.clone(), level.clone(), voxel_id.clone());
-
-                stack.push((
-                    *child_id as usize,
-                    node_idx,
-                    position.clone(),
-                    level - 1,
-                    voxel_id,
-                    0,
-                ));
-            }
-        }
-    }
 }
 #[cfg(feature = "bitcode_support")]
 #[cfg(test)]
@@ -591,25 +206,13 @@ mod tests {
     extern crate alloc;
     extern crate std;
     use crate::{plat::layer::layer::Lr, test_utils::set_rand_plat, *};
-    use core::borrow::{Borrow, BorrowMut};
-    use std::{collections::HashSet, dbg, println};
+    use std::dbg;
 
-    use alloc::{
-        borrow::ToOwned,
-        boxed::Box,
-        vec::{self, Vec},
-    };
-    use rand::{thread_rng, Rng};
+    use alloc::vec::Vec;
+    use rand::thread_rng;
     use spirv_std::glam::{uvec3, UVec3};
 
-    use crate::{
-        plat::{
-            chunk::chunk::Chunk,
-            node::{Node, NodeAddr},
-            raw_plat::{LayerIndex, RawPlat},
-        },
-        utils::l2s,
-    };
+    use crate::plat::{node::Node, raw_plat::RawPlat};
 
     use self::test_utils::gen_rand_mtx;
 
@@ -678,65 +281,6 @@ mod tests {
 
         assert_eq!(seq, [uvec3(40, 40, 40),]);
     }
-
-    // #[test]
-    // fn traverse_check_props_node_idx() {
-    //     quick_raw_plat!(plat, depth 6, len 1_000);
-
-    //     plat[0].set((0, 12, 8).into(), 22);
-    //     plat[0].set((1, 12, 8).into(), 32);
-    //     plat[0].set((2, 12, 8).into(), 52);
-    //     plat[0].set((5, 12, 4).into(), 12);
-    //     plat[0].set((1, 2, 11).into(), 2);
-
-    //     // plat.traverse(super::EntryOpts::All, LayerOpts::All, &mut |p| {
-    //     //     assert_eq!(
-    //     //         plat[0].get_node_idx_gpu(*p.position, p.level, Some(p.entry as usize)),
-    //     //         p.node_idx
-    //     //     )
-    //     // });
-    // }
-
-    // #[test]
-    // fn traverse_check_props_node() {
-    //     quick_raw_plat!(plat, depth 6, len 1_000);
-
-    //     plat[0].set((0, 12, 8).into(), 22);
-    //     plat[0].set((1, 12, 8).into(), 32);
-    //     plat[0].set((2, 12, 8).into(), 52);
-    //     plat[0].set((5, 12, 4).into(), 12);
-    //     plat[0].set((1, 2, 11).into(), 2);
-
-    //     // plat.traverse(super::EntryOpts::All, LayerOpts::All, &mut |p| {
-    //     //     assert_eq!(
-    //     //         &plat[0].nodes[plat[0].get_node_idx_gpu(*p.position, p.level, None)],
-    //     //         p.node
-    //     //     )
-    //     // });
-    // }
-
-    // #[test]
-    // fn traverse_check_props_parent_idx() {
-    //     quick_raw_plat!(plat, depth 6, len 100);
-
-    //     plat[0].set((0, 12, 8).into(), 2);
-    //     plat[0].set((1, 12, 8).into(), 2);
-    //     plat[0].set((2, 12, 8).into(), 2);
-    //     plat[0].set((5, 12, 4).into(), 2);
-    //     plat[0].set((1, 2, 11).into(), 2);
-
-    //     let mut seq = alloc::vec![];
-    //     let mut parent_helper = [UVec3::ZERO; 8];
-    //     traverse!(plat, {
-    //         |p| {
-    //             parent_helper[p.level] = *p.position;
-
-    //             seq.push((*p.parent_idx, (p.level), p.node_idx));
-    //         }
-    //     });
-
-    //     // assert_eq!(seq, alloc::vec![])
-    // }
 
     #[test]
     fn traverse_many() {
@@ -860,10 +404,10 @@ mod tests {
                             .get_node(
                                 *p.position,
                                 p.level,
-                                if p.entry == 0 {
+                                if p.voxel_id == 0 {
                                     None
                                 } else {
-                                    Some(p.entry as usize)
+                                    Some(p.voxel_id as usize)
                                 },
                             )
                             .node_idx,
@@ -1126,63 +670,63 @@ mod tests {
         traverse_region!(plat, rng 0..=6, pos UVec3::ZERO, {|p|{
             if p.level == 0 {
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 mtx[p.position.x as usize][p.position.y as usize][p.position.z as usize]
             );
 
-            assert_eq!(p.entry, plat.get_voxel(*p.position).voxel_id as u32);
+            assert_eq!(p.voxel_id, plat.get_voxel(*p.position).voxel_id as u32);
         }}});
 
         // traverse_region!(plat, rng 0..=6, pos UVec3::ZERO, {|p|{           }});
 
         traverse_region!(plat, rng 0..=6, pos uvec3(0, 1, 0), {|p|{                  if p.level == 0 {
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 mtx[p.position.x as usize][p.position.y as usize]
                     [p.position.z as usize]
             );
 
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 plat.get_voxel(*p.position).voxel_id as u32
             );
         }}});
 
         traverse_region!(plat, rng 0..=6, pos uvec3(1, 1, 1), {|p|{                      if p.level == 0 {
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 mtx[p.position.x as usize][p.position.y as usize]
                     [p.position.z as usize ]
             );
 
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 plat.get_voxel(*p.position).voxel_id as u32
             );
         }     }});
 
         traverse_region!(plat, rng 0..=5, pos uvec3(1, 1, 1), {|p|{     if p.level == 0 {
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 mtx[p.position.x as usize][p.position.y as usize]
                     [p.position.z as usize]
             );
 
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 plat.get_voxel(*p.position).voxel_id as u32
             );
         }       }});
 
         traverse_region!(plat, rng 0..=5, pos  uvec3(2, 2, 2), {|p|{                     if p.level == 0 {
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 mtx[p.position.x as usize][p.position.y as usize]
                     [p.position.z as usize ]
             );
 
             assert_eq!(
-                p.entry,
+                p.voxel_id,
                 plat.get_voxel(*p.position).voxel_id as u32
             );
         }      }});
@@ -1190,13 +734,13 @@ mod tests {
         traverse_region!(plat, rng 0..=5, pos         uvec3(3, 2, 1), {|p|{      
             if p.level == 0 {
                 assert_eq!(
-                    p.entry,
+                    p.voxel_id,
                     mtx[p.position.x as usize][p.position.y as usize]
                         [p.position.z as usize]
                 );
 
                 assert_eq!(
-                    p.entry,
+                    p.voxel_id,
                     plat.get_voxel(*p.position ).voxel_id as u32
                 );
         } }});
@@ -1284,14 +828,14 @@ mod tests {
     fn traverse_single() {
         quick_raw_plat!(plat, depth 5);
         // Base
-        plat[Base].set(uvec3(7, 20, 5), 1);
+        plat[Lr::BASE].set(uvec3(7, 20, 5), 1);
 
         let mut seq = alloc::vec![];
 
         traverse!(plat, {
             |p| {
                 if p.level == 0 {
-                    seq.push((p.position.clone(), p.entry));
+                    seq.push((p.position.clone(), p.voxel_id));
                 }
             }
         });
@@ -1303,11 +847,11 @@ mod tests {
     fn traverse() {
         quick_raw_plat!(plat, depth 5);
         // Base
-        plat[Base].set(uvec3(14, 14, 14), 1);
-        plat[Base].set(uvec3(0, 0, 0), 1);
-        plat[Base].set(uvec3(5, 15, 5), 1);
-        plat[Base].set(uvec3(0, 10, 0), 1);
-        plat[Base].set(uvec3(15, 15, 15), 1);
+        plat[Lr::BASE].set(uvec3(14, 14, 14), 1);
+        plat[Lr::BASE].set(uvec3(0, 0, 0), 1);
+        plat[Lr::BASE].set(uvec3(5, 15, 5), 1);
+        plat[Lr::BASE].set(uvec3(0, 10, 0), 1);
+        plat[Lr::BASE].set(uvec3(15, 15, 15), 1);
 
         let mut seq = alloc::vec![];
 

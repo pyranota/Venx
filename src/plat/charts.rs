@@ -32,7 +32,7 @@ impl VenxPlat {
         let mut non_zero_flags = vec![];
         let mut g_counter = 0;
 
-        lr.traverse_new(UVec3::ZERO, 0..=(rplat.depth()), |p| {
+        lr.traverse(UVec3::ZERO, 0..=(rplat.depth()), |p| {
             if p.level > 2 {
                 let node = &lr[p.node_idx];
                 if node.flag != 0 {

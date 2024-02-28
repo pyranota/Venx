@@ -52,12 +52,6 @@ impl Node {
         let z = if pos.z < child_size { 0 } else { 1 };
         (x + y * 2 + z * 4) as usize
     }
-    pub fn new(level: usize, flag: i32) -> Self {
-        Self {
-            flag,
-            children: Default::default(),
-        }
-    }
 }
 
 impl AllocatableNode for Node {
@@ -89,6 +83,7 @@ impl AllocatableNode for Node {
         &mut layer[index]
     }
 
+    // TODO: Remove it from here and use some other way.
     fn name() -> &'static str {
         "Node"
     }
