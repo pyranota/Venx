@@ -26,8 +26,6 @@ impl BufferRW for Buffer {
 
         f(a);
 
-        drop(a);
-
         self.unmap();
     }
 

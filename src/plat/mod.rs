@@ -1,34 +1,23 @@
 use std::{
-    borrow::Borrow,
     collections::HashMap,
     fs::{create_dir_all, read, read_to_string, File},
-    io::{Read, Write},
+    io::Write,
     ops::Range,
     usize,
 };
 
-use anyhow::bail;
-
-use easy_compute::{
-    include_spirv, BindGroupBuilder, BufferRW, ComputePassDescriptor, ComputeServer,
-    PipelineBuilder,
-};
 use glam::{uvec3, UVec3, Vec3, Vec4};
 use log::info;
 use serde::{Deserialize, Serialize};
 use venx_core::{
     plat::{
         chunk::chunk::Chunk,
-        layer::{self, layer::Layer},
         node::Node,
         node_l2::NodeL2,
         op::get::GetNodeResult,
-        raw_plat::{
-            LayerIndex::{Base, Canvas, Schem, Tmp},
-            RawPlat,
-        },
+        raw_plat::LayerIndex::{Base, Canvas, Schem, Tmp},
     },
-    utils::{l2s, Grid},
+    utils::Grid,
 };
 
 use self::{
@@ -162,7 +151,7 @@ impl VenxPlat {
         VenxPlat { plat: plat }
     }
     /// tmp
-    pub(crate) fn new_with_length(
+    pub(crate) fn _new_with_length(
         depth: usize,
         chunk_level: usize,
         segment_level: usize,
@@ -224,7 +213,7 @@ impl VenxPlat {
         chunk_range_x: Range<u32>,
         chunk_range_y: Range<u32>,
         chunk_range_z: Range<u32>,
-        mut lod: Option<usize>,
+        _lod: Option<usize>,
     ) -> Vec<(Vec<[f32; 3]>, Vec<[f32; 4]>, Vec<[f32; 3]>)> {
         let chunks_amount = (chunk_range_x.end - chunk_range_x.start)
             * (chunk_range_z.end - chunk_range_z.start)
@@ -263,6 +252,7 @@ impl VenxPlat {
 
                     if lod_level > 2 {
                         lod_level = 2;
+                        let _ = lod_level;
                     }
 
                     // lod_level = 0;
@@ -334,22 +324,13 @@ impl LoadInterface for VenxPlat {
 
     fn load_chunks(&self, blank_chunks: Box<Vec<venx_core::plat::chunk::chunk::ChunkLoadRequest>>) {
         match &self.plat {
-            Plat::Cpu(plat) => todo!(),
+            Plat::Cpu(_plat) => todo!(),
             Plat::Gpu(plat) => plat.load_chunks(blank_chunks),
         }
     }
 }
 
 impl LayerInterface for VenxPlat {
-    fn set_segment<const SIZE: usize>(
-        &mut self,
-        layer: usize,
-        segment: Grid<SIZE>,
-        position: glam::UVec3,
-    ) {
-        todo!()
-    }
-
     fn set_voxel(&mut self, layer: usize, position: glam::UVec3, ty: usize) {
         match &mut self.plat {
             Plat::Cpu(ref mut plat) => plat.set_voxel(layer, position, ty),
@@ -370,14 +351,14 @@ impl LayerInterface for VenxPlat {
             Plat::Cpu(plat) => {
                 plat.compress(layer, position, level, lookup_tables, lookup_table_l2)
             }
-            Plat::Gpu(plat) => todo!(),
+            Plat::Gpu(_plat) => todo!(),
         }
     }
 
     fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
         match &self.plat {
             Plat::Cpu(plat) => plat.get_voxel(position),
-            Plat::Gpu(plat) => todo!(),
+            Plat::Gpu(_plat) => todo!(),
         }
     }
 }

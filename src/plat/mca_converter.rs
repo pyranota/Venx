@@ -1,15 +1,15 @@
 use anyhow::{bail, Result};
 use fastanvil::{complete, Chunk, Region};
-use glam::{uvec3, Vec2, Vec3};
+use glam::uvec3;
 use log::info;
-use pollster::block_on;
+
 use std::{collections::HashMap, fs, ops::Range, path::PathBuf, usize};
 use venx_core::{
     plat::{node::Node, node_l2::NodeL2},
     utils::s2l,
 };
 
-use super::{interfaces::layer::LayerInterface, Plat, VenxPlat};
+use super::{interfaces::layer::LayerInterface, VenxPlat};
 
 pub type RegionX = i32;
 pub type RegionZ = RegionX;

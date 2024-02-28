@@ -1,4 +1,4 @@
-pub fn match_block(name: &str) -> u32 {
+pub fn _match_block(name: &str) -> u32 {
     match name {
         "minecraft:acacia_log" => 25,
         "minecraft:acacia_planks" => 26,

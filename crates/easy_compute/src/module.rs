@@ -1,11 +1,9 @@
 use std::borrow::Cow;
 
-use anyhow::bail;
-
 // use naga::Module;
 // use naga_oil::compose::{ComposableModuleDescriptor, NagaModuleDescriptor, ShaderLanguage};
+use wgpu::ShaderModule;
 use wgpu::ShaderModuleDescriptor;
-use wgpu::{ShaderModule, ShaderModuleDescriptorSpirV, ShaderSource};
 
 use crate::ComputeServer;
 use anyhow::Result;

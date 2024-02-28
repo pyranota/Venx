@@ -7,7 +7,7 @@ use plotters::{
     drawing::IntoDrawingArea,
     element::Rectangle,
     series::Histogram,
-    style::{Color, GREEN, RED, WHITE},
+    style::{Color, RED, WHITE},
 };
 use venx_core::{glam::UVec3, plat::layer::layer::Lr};
 
@@ -76,6 +76,7 @@ impl VenxPlat {
             total += forks;
             total += compact_forks;
             total += free;
+            let _ = total;
             // FIXME
             // assert_eq!(total, lr.nodes.len());
         }

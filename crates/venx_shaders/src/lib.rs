@@ -1,19 +1,12 @@
 #![cfg_attr(target_arch = "spirv", no_std)]
 mod primitive;
-use primitive::cube;
-use spirv_std::{
-    glam::{ivec3, uvec3, vec4, UVec3},
-    spirv,
-};
+
+use spirv_std::{glam::UVec3, spirv};
 use venx_core::plat::{
-    chunk::{
-        self,
-        chunk::{Chunk, ChunkLoadRequest},
-    },
+    chunk::chunk::{Chunk, ChunkLoadRequest},
     layer::layer::Layer,
-    node::{Node, NodeAddr},
+    node::Node,
     node_l2::NodeL2,
-    raw_plat::{LayerIndex::Base, RawPlat},
 };
 
 #[spirv(compute(threads(1)))]
@@ -23,7 +16,7 @@ pub fn load_chunk(
     #[spirv(storage_buffer, descriptor_set = 0, binding = 0)] nodes: &mut [Node],
     #[spirv(storage_buffer, descriptor_set = 0, binding = 1)] l2: &mut [NodeL2],
 
-    #[spirv(storage_buffer, descriptor_set = 4, binding = 0)] meta: &mut [usize],
+    #[spirv(storage_buffer, descriptor_set = 4, binding = 0)] _meta: &mut [usize],
     #[spirv(storage_buffer, descriptor_set = 5, binding = 0)] chunks: &mut [Chunk],
     #[spirv(storage_buffer, descriptor_set = 5, binding = 1)]
     chunks_requests: &[ChunkLoadRequest],
@@ -43,8 +36,6 @@ pub fn load_chunk(
         request.lod_level as usize,
         request.chunk_level as usize,
     );
-
-    let lod_level = chunk.lod_level();
 
     // for i in 6..(32 * 32 * 32 + 6) {
     //     let p = chunk.from_flatten(i);

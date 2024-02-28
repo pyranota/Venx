@@ -8,7 +8,7 @@
     Hopefully it will provide any ideas how to improve the situation.
 
     Potential outcomes:
-        Use forked structure? (Accepted)
+        Use forked structure? (Accepted and implemented)
         Lookup tables?
         Dont do anything?
 
@@ -17,11 +17,10 @@
 
 // TODO: compare get_node(position, LayerOpts::Single(0), EntryOpts::Single(n)) and NodeAddr::from_position(position);
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use log::warn;
+use criterion::{criterion_group, criterion_main, Criterion};
 use rand::Rng;
 use venx::plat::{interfaces::layer::LayerInterface, VenxPlat};
-use venx_core::{glam::uvec3, plat::node::NodeAddr};
+use venx_core::plat::node::NodeAddr;
 
 fn criterion_benchmark(c: &mut Criterion) {
     // let plat = VenxPlat::load("mca_small_all_blocks").unwrap_or_else(|e| {
@@ -208,7 +207,7 @@ fn criterion_benchmark(c: &mut Criterion) {
                 rng.gen_range(0..512),
             );
 
-            let addr = NodeAddr::from_position(random_position.into(), 9, 0);
+            let _addr = NodeAddr::from_position(random_position.into(), 9, 0);
         })
     });
 }
