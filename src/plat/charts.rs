@@ -42,7 +42,7 @@ impl VenxPlat {
                     g_counter += 1;
                     visited_nodes.insert(p.node_idx);
 
-                    branches[p.level as usize] += 1;
+                    branches[p.level] += 1;
                 } else if p.level == 3 {
                     merged_on_level_3 += 1;
                 }

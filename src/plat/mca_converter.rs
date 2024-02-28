@@ -15,8 +15,8 @@ pub type RegionX = i32;
 pub type RegionZ = RegionX;
 
 impl VenxPlat {
-    pub fn load_mca<'a>(
-        dir_path: &'a str,
+    pub fn load_mca(
+        dir_path: &str,
         region_range: (Range<RegionX>, Range<RegionZ>),
         ignore_water: bool,
         height: isize,
@@ -134,8 +134,8 @@ impl VenxPlat {
 
         Ok(plat)
     }
-    pub fn load_mca_untyped<'a>(
-        dir_path: &'a str,
+    pub fn load_mca_untyped(
+        dir_path: &str,
         region_range: (Range<RegionX>, Range<RegionZ>),
     ) -> Result<Self> {
         let rr = region_range.clone();
@@ -209,7 +209,7 @@ impl VenxPlat {
 }
 
 fn pos_from_name(name: &str) -> Option<[f32; 2]> {
-    let parts: Vec<_> = name.split(".").collect();
+    let parts: Vec<_> = name.split('.').collect();
 
     if parts.len() >= 3
         && parts[0] == "r"

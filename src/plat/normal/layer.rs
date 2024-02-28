@@ -1,10 +1,8 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
 use log::{info, warn};
 
-use venx_core::{
-    plat::{node::Node, node_l2::NodeL2, op::get::GetNodeResult},
-};
+use venx_core::plat::{node::Node, node_l2::NodeL2, op::get::GetNodeResult};
 
 use crate::plat::interfaces::layer::LayerInterface;
 
@@ -112,9 +110,9 @@ impl LayerInterface for CpuPlat {
         let res = self.borrow_raw_plat().get_voxel(position.to_array().into());
 
         if res.is_some() {
-            return Some(res);
+            Some(res)
         } else {
-            return None;
+            None
         }
     }
 }

@@ -147,7 +147,7 @@ impl VenxPlat {
     pub fn new(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         let plat = Plat::Cpu(CpuPlat::new_plat(depth, chunk_level, segment_level));
 
-        VenxPlat { plat: plat }
+        VenxPlat { plat }
     }
     /// tmp
     pub(crate) fn _new_with_length(
@@ -163,7 +163,7 @@ impl VenxPlat {
             len,
         ));
 
-        VenxPlat { plat: plat }
+        VenxPlat { plat }
     }
     /// Get depth and verify that its synced
     pub fn depth(&self) -> usize {

@@ -1,5 +1,3 @@
-
-
 use ouroboros::*;
 
 use venx_core::{
@@ -48,8 +46,8 @@ impl CpuPlat {
         //     vec![NodeL2::default(); 6 * (l2s(depth) * l2s(depth)) as usize + 80_000],
         // );
         let base = (
-            vec![Node::default(); 1 * (l2s(depth) * l2s(depth)) as usize + 590_000],
-            vec![NodeL2::default(); 1 * (l2s(depth) * l2s(depth)) as usize + 80_000],
+            vec![Node::default(); (l2s(depth) * l2s(depth)) as usize + 590_000],
+            vec![NodeL2::default(); (l2s(depth) * l2s(depth)) as usize + 80_000],
         );
         let tmp = (vec![Node::default(); 8], vec![NodeL2::default(); 2]);
         let (schem, canvas) = (tmp.clone(), tmp.clone());

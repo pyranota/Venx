@@ -245,7 +245,7 @@ impl GpuPlat {
         // Allocate buffers
 
         // Metadata layer
-        let raw_plat_depth = cs.new_buffer(bytemuck::cast_slice(&[depth as usize]));
+        let raw_plat_depth = cs.new_buffer(bytemuck::cast_slice(&[depth]));
         let raw_plat_bg = BindGroupBuilder::new()
             .insert(0, false, raw_plat_depth.as_entire_binding())
             .build(&cs);

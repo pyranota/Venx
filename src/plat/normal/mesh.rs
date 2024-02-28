@@ -64,7 +64,7 @@ impl CpuPlat {
                 // TOP
                 self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_up,
-                    &chunk,
+                    chunk,
                     block,
                     pos,
                     0,
@@ -79,7 +79,7 @@ impl CpuPlat {
                 // BOTTOM
                 self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_down,
-                    &chunk,
+                    chunk,
                     block,
                     pos,
                     0,
@@ -94,7 +94,7 @@ impl CpuPlat {
                 // LEFT
                 self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_left,
-                    &chunk,
+                    chunk,
                     block,
                     pos,
                     2,
@@ -109,7 +109,7 @@ impl CpuPlat {
                 // RIGHT
                 self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_right,
-                    &chunk,
+                    chunk,
                     block,
                     pos,
                     2,
@@ -124,7 +124,7 @@ impl CpuPlat {
                 // FRONT
                 self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_front,
-                    &chunk,
+                    chunk,
                     block,
                     pos,
                     0,
@@ -139,7 +139,7 @@ impl CpuPlat {
                 // BACK
                 self.borrow_raw_plat().greedy_runner(
                     &mut mesh_helper_back,
-                    &chunk,
+                    chunk,
                     block,
                     pos,
                     0,
