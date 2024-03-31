@@ -13,7 +13,9 @@ use venx_core::{
     utils::l2s,
 };
 
-use crate::plat::{interfaces::PlatInterface, turbo::gpu_plat::GpuPlat};
+use crate::plat::interfaces::PlatInterface;
+#[cfg(feature = "turbo")]
+use crate::plat::turbo::gpu_plat::GpuPlat;
 
 // #[derive(bitcode::Encode, bitcode::Decode)]
 #[self_referencing]
@@ -150,6 +152,7 @@ impl CpuPlat {
         .build()
     }
 
+    #[cfg(feature = "turbo")]
     pub(crate) async fn transfer_to_gpu(self) -> GpuPlat {
         //
 

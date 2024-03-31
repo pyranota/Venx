@@ -10,15 +10,17 @@ name = "bevy"
 path = "bin/temp_bevy_integration/example.rs"
 
 [dependencies]
-bevy = { version = "0.12" } 
+bevy = { version = "0.12", default-features = false, features = ["bevy_asset", "bevy_render", "bevy_pbr"]} 
 bevy_water = "0.12"
 bevy_panorbit_camera = "0.13.0"
-pollster = "0.3.0"
+# pollster = "0.3.0"
 venx = { path = "../" }
 glam = "*"
-downcast-rs = "1.2.0"
+# downcast-rs = "1.2.0"
+bytemuck = { version = "1.14.3", features = ["derive"] }
+futures-intrusive = "0.5.0"
+rand = "0.8.5"
 
 [features]
-# Enables parallel processing support by enabling the "rayon" feature of jpeg-decoder.
 dyn = ["bevy/dynamic_linking"]
 

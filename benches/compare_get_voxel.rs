@@ -16,12 +16,12 @@
 */
 
 // TODO: compare get_node(position, LayerOpts::Single(0), EntryOpts::Single(n)) and NodeAddr::from_position(position);
-
+#[cfg(feature = "bench")]
 use criterion::{criterion_group, criterion_main, Criterion};
 use rand::Rng;
 use venx::plat::{interfaces::layer::LayerInterface, VenxPlat};
 use venx_core::plat::node::NodeAddr;
-
+#[cfg(feature = "bench")]
 fn criterion_benchmark(c: &mut Criterion) {
     // let plat = VenxPlat::load("mca_small_all_blocks").unwrap_or_else(|e| {
     //     warn!("Plat wasnt found on device, creating new and saving ({e})");
@@ -211,6 +211,10 @@ fn criterion_benchmark(c: &mut Criterion) {
         })
     });
 }
-
+#[cfg(feature = "bench")]
 criterion_group!(benches, criterion_benchmark);
+#[cfg(feature = "bench")]
 criterion_main!(benches);
+
+#[cfg(not(feature = "bench"))]
+fn main(){}
