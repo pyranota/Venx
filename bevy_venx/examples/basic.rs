@@ -1,21 +1,27 @@
-
-
 use bevy::{
-    pbr::{
-        wireframe::Wireframe, CascadeShadowConfigBuilder, DirectionalLightShadowMap,
-    },
+    diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
+    pbr::{wireframe::Wireframe, CascadeShadowConfigBuilder, DirectionalLightShadowMap},
     prelude::*,
     render::render_resource::PrimitiveTopology,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
+use bevy_venx::fps_counter::{fps_counter_showhide, fps_setup_counter, fps_text_update_system};
 use venx::plat::VenxPlat;
 
 fn main() {
     App::new()
-        .add_plugins((DefaultPlugins, bevy_panorbit_camera::PanOrbitCameraPlugin))
+        .add_plugins((
+            DefaultPlugins,
+            bevy_panorbit_camera::PanOrbitCameraPlugin,
+            FrameTimeDiagnosticsPlugin,
+            // Adds a system that prints diagnostics to the console
+            LogDiagnosticsPlugin::default(),
+        ))
         .add_systems(Startup, setup)
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)))
         .insert_resource(DirectionalLightShadowMap { size: 512 })
+        .add_systems(Startup, fps_setup_counter)
+        .add_systems(Update, (fps_counter_showhide, fps_text_update_system))
         .run();
 }
 fn setup(
@@ -24,16 +30,9 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Its small-sized plat, its slow to convert it from mca each run, it will be saved
-    let plat = VenxPlat::load("sm").unwrap_or_else(|e| {
-        warn!("Plat wasnt found on device, creating new and saving ({e})");
-        // Convert from minecraft map
-        let plat = VenxPlat::load_mca_untyped("./assets/mca/4/", (0..4, 0..4)).unwrap();
-        plat.save("sm").unwrap();
-        plat
-    });
-
+    let plat = VenxPlat::load("sm").unwrap();
     // let plat = VenxPlat::load_mca("./assets/mca/1/", (0..5, 0..5), true, 100, true).unwrap();
-    for mesh in plat.static_mesh(0..16, 3..8, 0..16, Some(0)) {
+    for mesh in plat.static_mesh(0..16, 4..10, 0..16, Some(0)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());

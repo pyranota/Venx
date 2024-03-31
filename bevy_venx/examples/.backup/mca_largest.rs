@@ -1,8 +1,8 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    core_pipeline::experimental::taa::{TemporalAntiAliasPlugin},
-    math::{vec3},
+    core_pipeline::experimental::taa::TemporalAntiAliasPlugin,
+    math::vec3,
     pbr::{
         CascadeShadowConfigBuilder, DirectionalLightShadowMap, NotShadowCaster,
         ScreenSpaceAmbientOcclusionBundle, ScreenSpaceAmbientOcclusionQualityLevel,
@@ -47,14 +47,7 @@ fn setup(
     mut water_materials: ResMut<Assets<StandardWaterMaterial>>,
 ) {
     // Its mid-sized plat, its slow to convert it from mca each run, it will be saved
-    let plat = VenxPlat::load("lg_l2").unwrap_or_else(|e| {
-        warn!("Plat wasnt found on device, creating new and saving ({e})");
-        // Convert from minecraft map
-        let plat = VenxPlat::load_mca("./assets/mca/49/", (0..8, 0..8), false, 0, true).unwrap();
-        plat.save("lg_l2").unwrap();
-        plat
-    });
-
+    let plat = VenxPlat::load("lg_l2").unwrap();
     for mesh in plat.static_mesh(0..(16 * 6), 3..6, 0..(16 * 6), Some(1)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 

@@ -1,10 +1,7 @@
 use std::f32::consts::PI;
 
 use bevy::{
-    math::vec3,
-    pbr::wireframe::{Wireframe},
-    prelude::*,
-    render::render_resource::PrimitiveTopology,
+    math::vec3, pbr::wireframe::Wireframe, prelude::*, render::render_resource::PrimitiveTopology,
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use venx::plat::VenxPlat;
@@ -22,13 +19,15 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Its small-sized plat, its slow to convert it from mca each run, it will be saved
-    let plat = VenxPlat::load("ALOD").unwrap_or_else(|e| {
-        warn!("Plat wasnt found on device, creating new and saving ({e})");
-        // Convert from minecraft map
-        let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1), false, 0, true).unwrap();
-        plat.save("ALOD").unwrap();
-        plat
-    });
+    // let plat = VenxPlat::load("ALOD").unwrap_or_else(|e| {
+    //     warn!("Plat wasnt found on device, creating new and saving ({e})");
+    //     // Convert from minecraft map
+    //     let plat = VenxPlat::load_mca("./assets/mca/1/", (0..1, 0..1), false, 0, true).unwrap();
+    //     plat.save("ALOD").unwrap();
+    //     plat
+    // });
+
+    let plat = VenxPlat::load("ALOD").unwrap();
     for mesh in plat.static_mesh(0..16, 3..7, 0..16, Some(1)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
