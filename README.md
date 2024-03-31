@@ -1,4 +1,4 @@
-<img src="assets/venx-splash.png" alt="Venx" />
+<img src="assets/icons/splash.svg" alt="Venx" />
 
 
 _GTX1060 x i5-7400 (60FPS)_:
