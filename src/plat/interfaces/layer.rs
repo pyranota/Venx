@@ -1,27 +1,29 @@
-use std::{collections::HashMap};
+use std::collections::HashMap;
 
+use async_trait::async_trait;
 use glam::UVec3;
-use venx_core::{
-    plat::{node::Node, node_l2::NodeL2, op::get::GetNodeResult},
-    utils::Grid,
-};
+use venx_core::plat::{node::Node, node_l2::NodeL2, op::get::GetNodeResult};
 
+#[async_trait]
 pub trait LayerInterface {
-    // fn new_image(&mut self, name: &str) -> usize;
-    /// Set segment with overwriting everything within its bounding box.
-    /// Alternatively you can set it with `set_voxel` and than call `compress` on its location
-    /// Be aware, that you should do it only if you understand what are u doing
-    fn set_segment<const SIZE: usize>(
-        &mut self,
-        _layer: usize,
-        _segment: Grid<SIZE>,
-        _position: UVec3,
-    ) {
+    async fn compress_dag(&mut self, _layer: usize, _position: UVec3, _level: u32) {
         todo!()
     }
-    fn set_voxel(&mut self, _layer: usize, _position: UVec3, _ty: usize) {
+
+    async fn set_voxel(&mut self, _layer: usize, _position: UVec3, _voxel_id: usize) {
         todo!()
     }
+
+    async fn set_voxel_many(&mut self, _layer: usize, _voxels: (UVec3, usize)) {
+        todo!()
+    }
+
+    // TODO: Make async
+    fn get_voxel(&self, _position: UVec3) -> Option<GetNodeResult> {
+        todo!()
+    }
+
+    #[deprecated = "Use [compress_dag]"]
     fn compress(
         &mut self,
         _layer: usize,
@@ -32,18 +34,4 @@ pub trait LayerInterface {
     ) {
         todo!()
     }
-
-    fn get_voxel(&self, _position: UVec3) -> Option<GetNodeResult> {
-        todo!()
-    }
-    // fn get_image(&self, handle: usize) -> &Image;
-    // fn get_image_mut(&mut self, handle: usize) -> &mut Image;
-
-    // fn new_canvas(&mut self, name: &str) -> usize;
-    // fn get_canvas(&self, handle: usize) -> &Canvas;
-    // fn get_canvas_mut(&mut self, handle: usize) -> &mut Canvas;
-
-    // fn get_layers
-    // fn get_layers_mut
-    // remove_layer
 }

@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+use async_trait::async_trait;
 use log::{info, warn};
 
 use venx_core::plat::{node::Node, node_l2::NodeL2, op::get::GetNodeResult};
@@ -7,9 +8,9 @@ use venx_core::plat::{node::Node, node_l2::NodeL2, op::get::GetNodeResult};
 use crate::plat::interfaces::layer::LayerInterface;
 
 use super::cpu_plat::CpuPlat;
-
+#[async_trait]
 impl LayerInterface for CpuPlat {
-    fn set_voxel(&mut self, layer: usize, position: glam::UVec3, ty: usize) {
+    async fn set_voxel(&mut self, layer: usize, position: glam::UVec3, ty: usize) {
         self.with_raw_plat_mut(|plat| plat[layer].set(position.to_array().into(), ty as u32));
     }
 
