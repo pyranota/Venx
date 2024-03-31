@@ -1,5 +1,3 @@
-
-
 use log::trace;
 use venx_core::{glam::*, plat::chunk::chunk::Chunk};
 
