@@ -20,7 +20,7 @@ pub trait LayerInterface {
     /// It removes all free nodes and make layer as small as possible
     ///
     /// Use [reserve] to unfreeze
-    fn freeze(&self, _layer: usize) {
+    fn freeze(&mut self, _layer: usize) {
         todo!()
     }
 

@@ -6,7 +6,7 @@ use bevy::{
 };
 use bevy_panorbit_camera::PanOrbitCamera;
 use bevy_venx::fps_counter::{fps_counter_showhide, fps_setup_counter, fps_text_update_system};
-use venx::plat::VenxPlat;
+use venx::plat::{interfaces::layer::LayerInterface, VenxPlat};
 
 fn main() {
     App::new()
@@ -30,9 +30,9 @@ fn setup(
     mut materials: ResMut<Assets<StandardMaterial>>,
 ) {
     // Its small-sized plat, its slow to convert it from mca each run, it will be saved
-    let plat = VenxPlat::load("sm").unwrap();
+    let mut plat = VenxPlat::load("sm").unwrap();
     // let plat = VenxPlat::load_mca("./assets/mca/1/", (0..5, 0..5), true, 100, true).unwrap();
-    for mesh in plat.static_mesh(0..16, 4..10, 0..16, Some(0)) {
+    for mesh in plat.static_mesh(0..16, 3..10, 0..16, 10, true, Some(0)) {
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
@@ -52,6 +52,25 @@ fn setup(
         .insert(Wireframe);
     }
 
+    dbg!(plat.length(0));
+    dbg!(plat.free(0));
+
+    plat.freeze(0);
+
+    dbg!(plat.free(0));
+    // let len_l2 = plat.get_normal_unchecked().borrow_raw_plat().layers[0]
+    //     .level_2
+    //     .len();
+    // let len = plat.get_normal_unchecked().borrow_raw_plat().layers[0]
+    //     .nodes
+    //     .len();
+    // plat.get_normal_unchecked()
+    //     .with_raw_plat_mut(|plat| plat.layers[0].freeze_upper(&mut vec![0; len_l2]));
+    // dbg!(plat.get_normal_unchecked().borrow_raw_plat().layers[0].free());
+
+    // dbg!(plat.get_normal_unchecked().borrow_raw_plat().layers[0].free_l2());
+
+    // panic!();
     // ambient light
     cmd.insert_resource(AmbientLight {
         color: Color::WHITE,

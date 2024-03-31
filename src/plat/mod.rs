@@ -288,6 +288,17 @@ impl LayerInterface for VenxPlat {
         };
     }
 
+    fn free(&self, layer: usize) -> (u32, u32) {
+        match &self.plat {
+            Plat::Cpu(ref plat) => {
+                let layer = &plat.borrow_raw_plat().layers[layer];
+                (layer.free() as u32, layer.free_l2() as u32)
+            }
+            #[cfg(feature = "turbo")]
+            Plat::Gpu(ref plat) => todo!(),
+        }
+    }
+
     fn length(&self, layer: usize) -> (u32, u32) {
         match &self.plat {
             Plat::Cpu(ref plat) => {
@@ -299,6 +310,17 @@ impl LayerInterface for VenxPlat {
         }
     }
 
+    fn freeze(&mut self, layer: usize) {
+        let (len_l2, _len_upper) = self.length(layer);
+        match &mut self.plat {
+            Plat::Cpu(ref mut plat) => {
+                let mut helper_l2 = vec![0; len_l2 as usize];
+                plat.with_raw_plat_mut(|plat| plat.layers[layer].freeze_upper(&mut helper_l2));
+            }
+            #[cfg(feature = "turbo")]
+            Plat::Gpu(ref mut plat) => todo!(),
+        };
+    }
     fn compress(
         &mut self,
         layer: usize,
