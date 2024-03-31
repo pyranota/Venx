@@ -139,16 +139,19 @@ impl VenxPlat {
         }
     }
 
-    /// Load meshes for given chunks. Used for debug purposes and examples
-    /// Its block-on operation
-    /// Returns Vec of (Vertices, Colors, Normals)
+    /// Load meshes for given chunks. Used for debug purposes and examples.
+    #[rustfmt::skip]
     pub fn static_mesh(
         &self,
         chunk_range_x: Range<u32>,
         chunk_range_y: Range<u32>,
         chunk_range_z: Range<u32>,
+        _rendering_distance: u8,
+        _enable_lod: bool,
         _lod: Option<usize>,
-    ) -> Vec<(Vec<[f32; 3]>, Vec<[f32; 4]>, Vec<[f32; 3]>)> {
+    )
+    //            Vertex          Color         Normal
+     -> Vec<(Vec<[f32; 3]>, Vec<[f32; 4]>, Vec<[f32; 3]>)> {
         let chunks_amount = (chunk_range_x.end - chunk_range_x.start)
             * (chunk_range_z.end - chunk_range_z.start)
             * (chunk_range_y.end - chunk_range_y.start);
@@ -221,9 +224,9 @@ impl VenxPlat {
                         // To prevent leaking zero attributes into actual mesh, we check it
                         // Dont create blocks with color Vec4::ZERO, it will break the mesh
                         if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
-                            if count != 0 {
-                                dbg!(count / 6);
-                            }
+                            // if count != 0 {
+                                // dbg!(count / 6);
+                            // }
 
                             break 'mesh;
                         }
@@ -283,6 +286,17 @@ impl LayerInterface for VenxPlat {
             #[cfg(feature = "turbo")]
             Plat::Gpu(ref mut plat) => plat.set_voxel(layer, position, ty),
         };
+    }
+
+    fn length(&self, layer: usize) -> (u32, u32) {
+        match &self.plat {
+            Plat::Cpu(ref plat) => {
+                let layer = &plat.borrow_raw_plat().layers[layer];
+                (layer.nodes.len() as u32, layer.level_2.len() as u32)
+            }
+            #[cfg(feature = "turbo")]
+            Plat::Gpu(ref plat) => todo!(),
+        }
     }
 
     fn compress(
