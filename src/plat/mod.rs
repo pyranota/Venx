@@ -246,6 +246,23 @@ impl VenxPlat {
     }
 }
 
+macro_rules! plat_helper {
+    ($self:ident, method $method:ident, $($y:ident),+) => {
+        match &$self.plat {
+            Plat::Cpu(plat) => plat.$method($($y),+),
+            #[cfg(feature = "turbo")]
+            Plat::Gpu(plat) => plat.$method($($y),+),
+        }
+    };
+    (mut $self:ident, method $method:ident, $($y:ident),+) => {
+        match &mut $self.plat {
+            Plat::Cpu(plat) => plat.$method($($y),+),
+            #[cfg(feature = "turbo")]
+            Plat::Gpu(plat) => plat.$method($($y),+),
+        }
+    };
+}
+
 impl PlatInterface for VenxPlat {}
 
 impl LoadInterface for VenxPlat {
@@ -255,71 +272,33 @@ impl LoadInterface for VenxPlat {
         lod_level: usize,
         chunk_level: usize,
     ) -> Box<Chunk> {
-        match &self.plat {
-            Plat::Cpu(plat) => plat.load_chunk(position, lod_level, chunk_level),
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(plat) => plat.load_chunk(position, lod_level, chunk_level),
-        }
+        plat_helper!(self, method load_chunk, position, lod_level, chunk_level)
     }
 
     fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> Mesh {
-        match &self.plat {
-            Plat::Cpu(plat) => plat.compute_mesh_from_chunk(chunk),
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(plat) => plat.compute_mesh_from_chunk(chunk),
-        }
+        plat_helper!(self, method compute_mesh_from_chunk,  chunk)
     }
 
     fn load_chunks(&self, blank_chunks: Box<Vec<venx_core::plat::chunk::chunk::ChunkLoadRequest>>) {
-        match &self.plat {
-            Plat::Cpu(_plat) => todo!(),
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(plat) => plat.load_chunks(blank_chunks),
-        }
+        plat_helper!(self, method load_chunks,  blank_chunks)
     }
 }
 #[async_trait]
 impl LayerInterface for VenxPlat {
     async fn set_voxel(&mut self, layer: usize, position: glam::UVec3, ty: usize) {
-        match &mut self.plat {
-            Plat::Cpu(ref mut plat) => plat.set_voxel(layer, position, ty),
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(ref mut plat) => plat.set_voxel(layer, position, ty),
-        };
+        plat_helper!(mut self, method set_voxel,  layer, position, ty);
     }
 
     fn free(&self, layer: usize) -> (u32, u32) {
-        match &self.plat {
-            Plat::Cpu(ref plat) => {
-                let layer = &plat.borrow_raw_plat().layers[layer];
-                (layer.free() as u32, layer.free_l2() as u32)
-            }
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(ref plat) => todo!(),
-        }
+        plat_helper!(self, method free,  layer)
     }
 
     fn length(&self, layer: usize) -> (u32, u32) {
-        match &self.plat {
-            Plat::Cpu(ref plat) => {
-                let layer = &plat.borrow_raw_plat().layers[layer];
-                (layer.nodes.len() as u32, layer.level_2.len() as u32)
-            }
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(ref plat) => todo!(),
-        }
+        plat_helper!(self, method length,  layer)
     }
 
     fn freeze(&mut self, layer: usize) {
-        let (len_l2, _len_upper) = self.length(layer);
-        match &mut self.plat {
-            Plat::Cpu(ref mut plat) => {
-                let mut helper_l2 = vec![0; len_l2 as usize];
-                plat.with_raw_plat_mut(|plat| plat.layers[layer].freeze_upper(&mut helper_l2));
-            }
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(ref mut plat) => todo!(),
-        };
+        plat_helper!(mut self, method freeze,  layer);
     }
     fn compress(
         &mut self,
@@ -329,22 +308,11 @@ impl LayerInterface for VenxPlat {
         lookup_tables: &mut Vec<std::collections::HashMap<venx_core::plat::node::Node, usize>>,
         lookup_table_l2: &mut HashMap<NodeL2, usize>,
     ) {
-        info!("Compress");
-        match &mut self.plat {
-            Plat::Cpu(plat) => {
-                plat.compress(layer, position, level, lookup_tables, lookup_table_l2)
-            }
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(_plat) => todo!(),
-        }
+        plat_helper!(mut self, method compress,  layer, position, level, lookup_tables, lookup_table_l2);
     }
 
     fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
-        match &self.plat {
-            Plat::Cpu(plat) => plat.get_voxel(position),
-            #[cfg(feature = "turbo")]
-            Plat::Gpu(_plat) => todo!(),
-        }
+        plat_helper!(self, method get_voxel,  position)
     }
 }
 

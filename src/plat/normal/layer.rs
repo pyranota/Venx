@@ -14,6 +14,19 @@ impl LayerInterface for CpuPlat {
         self.with_raw_plat_mut(|plat| plat[layer].set(position.to_array().into(), ty as u32));
     }
 
+    fn freeze(&mut self, layer: usize) {
+        let (len_l2, _len_upper) = self.length(layer);
+        let mut helper_l2 = vec![0; len_l2 as usize];
+        self.with_raw_plat_mut(|plat| plat.layers[layer].freeze_upper(&mut helper_l2));
+    }
+    fn length(&self, layer: usize) -> (u32, u32) {
+        let layer = &self.borrow_raw_plat().layers[layer];
+        (layer.nodes.len() as u32, layer.level_2.len() as u32)
+    }
+    fn free(&self, layer: usize) -> (u32, u32) {
+        let layer = &self.borrow_raw_plat().layers[layer];
+        (layer.free() as u32, layer.free_l2() as u32)
+    }
     fn compress(
         &mut self,
         layer: usize,
