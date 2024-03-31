@@ -5,6 +5,7 @@ target
 saves
 assets/mca/*
 .cache/*
+languages.toml
 
 # Added by cargo
 #
