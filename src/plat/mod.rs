@@ -6,7 +6,8 @@ use std::{
     usize,
 };
 
-use glam::{uvec3, UVec3, Vec3, Vec4};
+use async_trait::async_trait;
+use glam::{uvec3, Quat, UVec3, Vec3, Vec4};
 use log::info;
 use serde::{Deserialize, Serialize};
 use venx_core::plat::{
@@ -18,21 +19,30 @@ use venx_core::plat::{
 };
 
 use self::{
+    block_collections::smbc::SMBC,
     interfaces::{layer::LayerInterface, load::LoadInterface, PlatInterface},
+    loader::VenxLoader,
     normal::{cpu_plat::CpuPlat, mesh::Mesh},
-    turbo::gpu_plat::GpuPlat,
 };
 
+mod block_collections;
 mod charts;
+pub mod fs;
+
 pub mod interfaces;
+pub mod loader;
 #[cfg(feature = "mca_converter")]
 mod mca_converter;
 mod minecraft_blocks;
 pub mod normal;
+#[cfg(feature = "turbo")]
 pub mod turbo;
 
+// TODO: Get rid of [VenxPlat] and just use [Plat]
 pub struct VenxPlat {
     plat: Plat,
+    loader: VenxLoader,
+    smbcs: Vec<SMBC>,
 }
 
 pub(crate) enum Plat {
@@ -49,120 +59,33 @@ struct MetaSerDeser {
 }
 
 impl VenxPlat {
-    /// Save plat to .cache directory
-    pub fn save(&self, name: &str) -> anyhow::Result<()> {
-        info!("Saving {name}.plat");
-        let path = ".cache/".to_owned() + name;
-        // TODO: Make .cache in custom location
-        create_dir_all(format!("{}.plat", path))?;
-        create_dir_all(format!("{}.plat/layers/", path))?;
-        create_dir_all(format!("{}.plat/report", path))?;
-
-        self.chart_node_destibution(&format!("{}.plat/report/node_destribution", path), name)?;
-
-        let mut file = File::create(format!("{}.plat/meta.ron", path))?;
-
-        // TODO: make use of transfer.    XXXXXXXXXXXXXXXXXXXXX
-        let raw_plat = self.get_normal_unchecked().borrow_raw_plat();
-        let meta: String = ron::ser::to_string_pretty(
-            &MetaSerDeser {
-                depth: raw_plat.depth,
-                position: (0., 0., 0.),
-                rotation: (0., 0., 0.),
-            },
-            ron::ser::PrettyConfig::default(),
-        )?;
-        file.write_all(meta.as_bytes())?;
-
-        // Create layers dirs
-        for (layer_name, layer) in raw_plat.layers() {
-            let layer_path = format!("{path}.plat/layers/{layer_name}");
-
-            create_dir_all(&layer_path)?;
-
-            let encoded_entries: Vec<u8> = bitcode::encode(layer.level_2).unwrap();
-            let encoded_nodes: Vec<u8> = bitcode::encode(layer.nodes).unwrap();
-
-            let mut l2_file = File::create(format!("{}/level_2", layer_path))?;
-            l2_file.write_all(&encoded_entries)?;
-
-            let mut nodes_file = File::create(format!("{}/nodes", layer_path))?;
-            nodes_file.write_all(&encoded_nodes)?;
-        }
-
-        Ok(())
-    }
-
-    pub fn load(name: &str) -> anyhow::Result<Self> {
-        info!("Loading {name}.plat");
-        let path = ".cache/".to_owned() + name;
-        let meta: MetaSerDeser = ron::from_str(&read_to_string(format!("{path}.plat/meta.ron"))?)?;
-
-        let mut components = [
-            (vec![], vec![]),
-            (vec![], vec![]),
-            (vec![], vec![]),
-            (vec![], vec![]),
-        ];
-
-        for (i, layer_name) in ["base", "tmp", "schem", "canvas"].iter().enumerate() {
-            let l2_path = format!("{path}.plat/layers/{layer_name}/level_2");
-            let nodes_path = format!("{path}.plat/layers/{layer_name}/nodes");
-
-            let l2: Vec<NodeL2> = bitcode::decode(&read(l2_path)?)?;
-            let nodes: Vec<Node> = bitcode::decode(&read(nodes_path)?)?;
-
-            components[i] = (nodes, l2);
-        }
-
-        // TODO: remove bottleneck. Handle this without cloning
-        Ok(VenxPlat {
-            plat: Plat::Cpu(CpuPlat::from_existing(
-                meta.depth,
-                5,
-                5,
-                components[0].clone(),
-                components[1].clone(),
-                components[2].clone(),
-                components[3].clone(),
-            )),
-        })
-    }
-
     pub fn get_normal_unchecked(&self) -> &CpuPlat {
         match &self.plat {
             Plat::Cpu(normal) => normal,
+            #[cfg(feature = "turbo")]
             Plat::Gpu(_) => panic!("Trying to get normal plat while it is turbo"),
         }
     }
+    #[cfg(feature = "turbo")]
     pub fn get_turbo_unchecked(&mut self) -> &mut GpuPlat {
         match &mut self.plat {
             Plat::Cpu(_) => panic!("Trying to get turbo plat while it is normal"),
+            #[cfg(feature = "turbo")]
             Plat::Gpu(turbo) => turbo,
         }
     }
     /// Depth, chunk_level, segment_level
     pub fn new(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
         let plat = Plat::Cpu(CpuPlat::new_plat(depth, chunk_level, segment_level));
+        //let loader = VenxLoader::new(initial_focus, bucket_size, bucket_amount, indirect_buffer, vertex_buffer)
 
-        VenxPlat { plat }
+        VenxPlat {
+            plat,
+            loader: todo!(),
+            smbcs: todo!(),
+        }
     }
-    /// tmp
-    pub(crate) fn _new_with_length(
-        depth: usize,
-        chunk_level: usize,
-        segment_level: usize,
-        len: usize,
-    ) -> Self {
-        let plat = Plat::Cpu(CpuPlat::_new_plat_with_length(
-            depth,
-            chunk_level,
-            segment_level,
-            len,
-        ));
 
-        VenxPlat { plat }
-    }
     /// Get depth and verify that its synced
     pub fn depth(&self) -> usize {
         match &self.plat {
@@ -177,31 +100,45 @@ impl VenxPlat {
 
                 plat_depth
             }
+            #[cfg(feature = "turbo")]
             Plat::Gpu(_) => todo!("You cant get depth from plat on gpu, yet"),
         }
     }
+    #[cfg(feature = "turbo")]
     /// Depth, chunk_level, segment_level
     pub async fn new_turbo(depth: usize, chunk_level: usize, segment_level: usize) -> VenxPlat {
         VenxPlat {
             plat: Plat::Gpu(GpuPlat::new_plat(depth, chunk_level, segment_level).await),
+            loader: todo!(),
+            smbcs: todo!(),
         }
     }
+    #[cfg(feature = "turbo")]
+    /// Will return Normal version if there is not enough free memory on GPU.
+    ///
+    /// So it does not guarantee transfer on GPU
     pub async fn transfer_to_gpu(self) -> Self {
         VenxPlat {
             plat: match self.plat {
                 Plat::Cpu(cpu_plat) => Plat::Gpu(cpu_plat.transfer_to_gpu().await),
                 Plat::Gpu(_) => panic!("It is dumb idea to transfer data from gpu to gpu"),
             },
+            loader: self.loader,
+            smbcs: self.smbcs,
         }
     }
+    #[cfg(feature = "turbo")]
     pub async fn transfer_from_gpu(self) -> Self {
         VenxPlat {
             plat: match self.plat {
                 Plat::Cpu(_) => panic!("It is dumb idea to transfer data from cpu to cpu"),
                 Plat::Gpu(gpu_plat) => Plat::Cpu(gpu_plat.transfer_from_gpu().await),
             },
+            loader: self.loader,
+            smbcs: self.smbcs,
         }
     }
+
     /// Load meshes for given chunks. Used for debug purposes and examples
     /// Its block-on operation
     /// Returns Vec of (Vertices, Colors, Normals)
@@ -271,18 +208,27 @@ impl VenxPlat {
 
                     let mesh_idx = counter / capacity;
 
+                    let mut count = 0;
+
                     'mesh: for attr in vx_mesh.iter() {
                         let (pos, color, normal) = (
                             Vec3::from_slice(&attr[0..3]),
                             Vec4::from_slice(&attr[3..7]),
                             Vec3::from_slice(&attr[7..10]),
                         );
+
                         // Each returned mesh is static length, so not all attributes in that mesh are used
                         // To prevent leaking zero attributes into actual mesh, we check it
                         // Dont create blocks with color Vec4::ZERO, it will break the mesh
                         if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
+                            if count != 0 {
+                                dbg!(count / 6);
+                            }
+
                             break 'mesh;
                         }
+
+                        count += 1;
 
                         counter += 1;
                         meshes[mesh_idx].0.push(pos.to_array());
@@ -308,6 +254,7 @@ impl LoadInterface for VenxPlat {
     ) -> Box<Chunk> {
         match &self.plat {
             Plat::Cpu(plat) => plat.load_chunk(position, lod_level, chunk_level),
+            #[cfg(feature = "turbo")]
             Plat::Gpu(plat) => plat.load_chunk(position, lod_level, chunk_level),
         }
     }
@@ -315,6 +262,7 @@ impl LoadInterface for VenxPlat {
     fn compute_mesh_from_chunk<'a>(&self, chunk: &Chunk) -> Mesh {
         match &self.plat {
             Plat::Cpu(plat) => plat.compute_mesh_from_chunk(chunk),
+            #[cfg(feature = "turbo")]
             Plat::Gpu(plat) => plat.compute_mesh_from_chunk(chunk),
         }
     }
@@ -322,17 +270,19 @@ impl LoadInterface for VenxPlat {
     fn load_chunks(&self, blank_chunks: Box<Vec<venx_core::plat::chunk::chunk::ChunkLoadRequest>>) {
         match &self.plat {
             Plat::Cpu(_plat) => todo!(),
+            #[cfg(feature = "turbo")]
             Plat::Gpu(plat) => plat.load_chunks(blank_chunks),
         }
     }
 }
-
+#[async_trait]
 impl LayerInterface for VenxPlat {
-    fn set_voxel(&mut self, layer: usize, position: glam::UVec3, ty: usize) {
+    async fn set_voxel(&mut self, layer: usize, position: glam::UVec3, ty: usize) {
         match &mut self.plat {
             Plat::Cpu(ref mut plat) => plat.set_voxel(layer, position, ty),
+            #[cfg(feature = "turbo")]
             Plat::Gpu(ref mut plat) => plat.set_voxel(layer, position, ty),
-        }
+        };
     }
 
     fn compress(
@@ -348,6 +298,7 @@ impl LayerInterface for VenxPlat {
             Plat::Cpu(plat) => {
                 plat.compress(layer, position, level, lookup_tables, lookup_table_l2)
             }
+            #[cfg(feature = "turbo")]
             Plat::Gpu(_plat) => todo!(),
         }
     }
@@ -355,6 +306,7 @@ impl LayerInterface for VenxPlat {
     fn get_voxel(&self, position: glam::UVec3) -> Option<GetNodeResult> {
         match &self.plat {
             Plat::Cpu(plat) => plat.get_voxel(position),
+            #[cfg(feature = "turbo")]
             Plat::Gpu(_plat) => todo!(),
         }
     }
@@ -362,37 +314,43 @@ impl LayerInterface for VenxPlat {
 
 #[cfg(test)]
 mod tests {
+    use pollster::block_on;
+
     use super::{interfaces::layer::LayerInterface, VenxPlat};
 
+    #[cfg(feature = "turbo")]
     #[test]
     fn transfer() {
         // Create 2 identical plats
+        let future = async {
+            // First
+            let mut normal_plat_1 = VenxPlat::new(6, 5, 9);
+            // Build something
+            normal_plat_1.set_voxel(0, (4, 4, 4).into(), 1).await;
+            normal_plat_1.set_voxel(0, (4, 5, 4).into(), 1).await;
+            normal_plat_1.set_voxel(0, (5, 5, 5).into(), 2).await;
 
-        // First
-        let mut normal_plat_1 = VenxPlat::new(6, 5, 9);
-        // Build something
-        normal_plat_1.set_voxel(0, (4, 4, 4).into(), 1);
-        normal_plat_1.set_voxel(0, (4, 5, 4).into(), 1);
-        normal_plat_1.set_voxel(0, (5, 5, 5).into(), 2);
+            // Second
+            let mut normal_plat_2 = VenxPlat::new(6, 5, 9);
+            // Build something
+            normal_plat_2.set_voxel(0, (4, 4, 4).into(), 1).await;
+            normal_plat_2.set_voxel(0, (4, 5, 4).into(), 1).await;
+            normal_plat_2.set_voxel(0, (5, 5, 5).into(), 2).await;
 
-        // Second
-        let mut normal_plat_2 = VenxPlat::new(6, 5, 9);
-        // Build something
-        normal_plat_2.set_voxel(0, (4, 4, 4).into(), 1);
-        normal_plat_2.set_voxel(0, (4, 5, 4).into(), 1);
-        normal_plat_2.set_voxel(0, (5, 5, 5).into(), 2);
+            // Transfer first to gpu
+            let turbo_plat = pollster::block_on(normal_plat_1.transfer_to_gpu());
 
-        // Transfer first to gpu
-        let turbo_plat = pollster::block_on(normal_plat_1.transfer_to_gpu());
+            // Transfer back to cpu
+            let transfered_from_gpu = pollster::block_on(turbo_plat.transfer_from_gpu());
 
-        // Transfer back to cpu
-        let transfered_from_gpu = pollster::block_on(turbo_plat.transfer_from_gpu());
+            // Compare
 
-        // Compare
+            assert_eq!(
+                normal_plat_2.get_normal_unchecked().borrow_raw_plat(),
+                transfered_from_gpu.get_normal_unchecked().borrow_raw_plat()
+            );
+        };
 
-        assert_eq!(
-            normal_plat_2.get_normal_unchecked().borrow_raw_plat(),
-            transfered_from_gpu.get_normal_unchecked().borrow_raw_plat()
-        );
+        block_on(future);
     }
 }
