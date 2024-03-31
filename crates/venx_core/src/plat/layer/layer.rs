@@ -88,7 +88,53 @@ impl<'a> Layer<'a> {
 
         (nodes, l2_nodes, depth).into()
     }
+    #[deprecated(note = "Makes slower to deallocate node")]
+    /// Validate if free nodes are in right order and sorted
+    pub fn validate(&self) -> Result<(), String> {
+        self.validate_base()?;
+        self.validate_l2()?;
+        Ok(())
+    }
+    #[deprecated]
+    /// Validate only nodes on base level
+    pub fn validate_base(&self) -> Result<(), String> {
+        // current index
+        let mut cidx = 0;
+        loop {
+            let node = &self.nodes[cidx];
+            let next_idx = node.children[0] as usize;
 
+            if next_idx == 0 {
+                return Ok(());
+            }
+
+            if next_idx < cidx {
+                return Err("base nodes are not sorted, it is a bug.".into());
+            }
+
+            cidx = next_idx;
+        }
+    }
+    #[deprecated]
+    /// Validate only nodes on 2 level
+    pub fn validate_l2(&self) -> Result<(), String> {
+        // current index
+        let mut cidx = 0;
+        loop {
+            let node = &self.level_2[cidx];
+            let next_idx = node.packed_children[0] as usize;
+
+            if next_idx == 0 {
+                return Ok(());
+            }
+
+            if next_idx < cidx {
+                return Err("level-2 nodes are not sorted, it is a bug.".into());
+            }
+
+            cidx = next_idx;
+        }
+    }
     /// Show free space in Nodes
     pub fn free(&self) -> usize {
         let mut idx = 0;
@@ -317,8 +363,11 @@ impl<'a> IndexMut<usize> for Layer<'a> {
 #[cfg(test)]
 mod tests {
 
-    use crate::{quick_raw_plat, test_utils::set_rand_plat};
+    use rand::Rng;
 
+    use crate::plat::node_l2::NodeL2;
+    use crate::plat::raw_plat::RawPlat;
+    use crate::{plat::node::Node, quick_raw_plat, test_utils::set_rand_plat};
     extern crate alloc;
     extern crate std;
     #[test]
@@ -344,5 +393,58 @@ mod tests {
         // }
 
         assert_eq!(free_count, plat[0].free());
+    }
+
+    #[test]
+    fn count_free_l2_after_creation() {
+        quick_raw_plat!(plat, depth 10, len 600_060, len2 600_000, lenrest 10);
+
+        assert_eq!(plat.layers[0].level_2.len() - 1, plat[0].free_l2());
+    }
+
+    #[ignore]
+    #[test]
+    fn check_if_sorted() {
+        quick_raw_plat!(plat, depth 10, len 1000, len2 1000, lenrest 1000);
+
+        let layer = &mut plat.layers[0];
+
+        let mut rng = rand::thread_rng();
+
+        for _ in 0..rng.gen_range(1..1000) {
+            layer.allocate_node::<Node>();
+            layer.allocate_node::<NodeL2>();
+        }
+
+        for _ in 0..100 {
+            layer.deallocate_node::<Node>(rng.gen_range(0..1000));
+            layer.deallocate_node::<NodeL2>(rng.gen_range(0..1000));
+        }
+
+        // for _ in 0..100 {
+        //     layer.allocate_node::<Node>();
+        //     layer.allocate_node::<NodeL2>();
+        // }
+
+        assert_eq!(layer.validate(), Ok(()));
+    }
+    #[test]
+    fn deallocate_non_allocated_node() {
+        quick_raw_plat!(plat, depth 10, len 1000, len2 1000, lenrest 1000);
+        let layer = &mut plat.layers[0];
+
+        layer.deallocate_node::<Node>(10);
+        layer.deallocate_node::<NodeL2>(10);
+        // TODO
+        panic!("This actually can lead to undefined behaviour, deallocator can never know if node allocated or not")
+    }
+    #[test]
+    fn deallocate_non_existing() {
+        quick_raw_plat!(plat, depth 10, len 1000, len2 1000, lenrest 1000);
+        let layer = &mut plat.layers[0];
+
+        // TODO: Make some nice error wrapper
+        layer.deallocate_node::<Node>(1002);
+        layer.deallocate_node::<NodeL2>(1002);
     }
 }
