@@ -28,19 +28,17 @@ pub struct VenxLoader {
 }
 
 impl VenxLoader {
-    pub fn new(
-        initial_focus: (Vec3, Quat, Fov),
-        bucket_size: u32,
-        bucket_amount: u32,
-        indirect_buffer: ExternalBufferObject,
-        vertex_buffer: ExternalBufferObject,
-    ) -> Self {
+    pub fn new(initial_focus: (Vec3, Quat, Fov), vertex_pool: VertexPool) -> Self {
         VenxLoader {
             focus: initial_focus,
             chunk_map: ChunkMap {
                 chunk_mesh_vec: vec![],
             },
             task_queue: TaskQueue::default(),
+            vertex_pool,
+        }
+    }
+
     pub fn get_bucket_size(&self) -> u32 {
         self.vertex_pool.bucket_size
     }
