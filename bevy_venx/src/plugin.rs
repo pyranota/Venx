@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 
 use crate::{
-    plat_material::setup_voxel_pool,
+    plat_material::{setup_voxel_pool, CustomMaterialPlugin, PlatMaterialData},
     res::{BevyPlat, LoadPlat, LoadPlatOr, PlFocus},
 };
 
@@ -9,13 +9,14 @@ pub struct BevyVenx;
 
 impl Plugin for BevyVenx {
     fn build(&self, app: &mut App) {
-        app.add_event::<LoadPlat>()
+        app.add_plugins(CustomMaterialPlugin)
+            .add_event::<LoadPlat>()
             .add_event::<LoadPlatOr>()
             .add_systems(Startup, setup_voxel_pool)
             .add_systems(
                 Update,
                 (
-                    set_focus,
+                    // set_focus,
                     crate::task_runner::submit_tasks,
                     crate::task_runner::poll_tasks,
                 ),
