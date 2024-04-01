@@ -10,7 +10,7 @@ use crate::plat::{
     MetaSerDeser, Plat,
 };
 
-use super::VenxPlat;
+use super::{loader::vertex_pool::VertexPool, VenxPlat};
 
 impl VenxPlat {
     /// Save plat to .cache directory
@@ -92,13 +92,7 @@ impl VenxPlat {
                 components[2].clone(),
                 components[3].clone(),
             )),
-            loader: VenxLoader::new(
-                ([0., 0., 0.].into(), Quat::default(), 50),
-                10,
-                10,
-                Box::new(FakeBuffer),
-                Box::new(FakeBuffer),
-            ),
+            loader: VenxLoader::new(([0., 0., 0.].into(), Quat::default(), 50), vertex_pool),
             smbcs: vec![],
         })
     }
