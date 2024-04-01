@@ -8,17 +8,11 @@ use bevy::{
 };
 use venx::plat::loader::external_buffer::ExternalBuffer;
 
-#[derive(Component)]
-pub(crate) struct VertexPool {
-    indirect_buffer: PoolBuffer,
-    vertex_buffer: PoolBuffer,
-}
-
-struct PoolBuffer {
-    device: RenderDevice,
-    queue: RenderQueue,
-    buffer: Buffer,
-    staging_buffer: Buffer,
+pub struct PoolBuffer {
+    pub device: RenderDevice,
+    pub queue: RenderQueue,
+    pub buffer: Buffer,
+    pub staging_buffer: Buffer,
 }
 impl ExternalBuffer for PoolBuffer {
     fn set(&self, bounds: (u64, u64), data: Vec<u8>) {
