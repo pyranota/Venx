@@ -20,16 +20,13 @@ pub struct VertexPool {
 }
 
 impl VertexPool {
-    pub(super) fn new(
+    pub fn new(
         bucket_size: u32,
         bucket_amount: u32,
+        bucket_usage: Vec<u32>,
         indirect_buffer: ExternalBufferObject,
         vertex_buffer: ExternalBufferObject,
     ) -> Self {
-        let bucket_usage = vec![500, 1000, 5000];
-        let bucket_size = 256;
-        let bucket_amount = 6500;
-
         assert_eq!(bucket_amount, bucket_usage.iter().sum::<u32>());
 
         VertexPool {
