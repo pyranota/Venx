@@ -1,7 +1,7 @@
 use std::{future::Future, process::Output};
 
 use anyhow::bail;
-use glam::{Quat, UVec3, Vec3};
+use glam::{Quat, UVec3, Vec3, Vec4};
 use venx_core::{mesh::Mesh, plat::chunk::chunk::Chunk};
 
 use crate::plat::{interfaces::load::LoadInterface, VenxPlat};
@@ -59,7 +59,7 @@ pub struct VertexPoolChunk {
 impl ChunkMap {
     pub fn set_focus(&mut self, focus_translation: [f32; 3], focus_rotation: [f32; 4]) {
         let focus_translation = Vec3::from_array(focus_translation);
-        let focus_rotation = Quat::from_array(focus_rotation);
+        let _focus_rotation = Quat::from_array(focus_rotation);
 
         self.update_distances(focus_translation);
 
@@ -94,16 +94,5 @@ impl ChunkMap {
 
     fn allocate_buckets(&mut self, face_count: u32) -> Vec<usize> {
         todo!()
-    }
-}
-
-impl VenxPlat {
-    fn land_chunk(&mut self) {
-        let chunk = self.load_chunk(UVec3::ZERO, 0, 0);
-        let mesh = self.compute_mesh_from_chunk(&chunk);
-        /*
-        external_buffer.set(0..10, mesh[..]).await;
-
-         */
     }
 }
