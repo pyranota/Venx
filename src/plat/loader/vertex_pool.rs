@@ -1,5 +1,7 @@
 use anyhow::bail;
 
+use crate::plat::normal::mesh::Mesh;
+
 use super::{external_buffer::ExternalBuffer, BucketIdx};
 
 pub type ExternalBufferObject = Box<dyn ExternalBuffer + 'static + Send + Sync>;
