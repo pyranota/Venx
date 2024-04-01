@@ -1,7 +1,10 @@
+use std::borrow::BorrowMut;
+
 use bevy::{
     prelude::*,
+    reflect::List,
     render::{
-        render_resource::Buffer,
+        render_resource::{encase::internal::BufferMut, Buffer},
         renderer::{RenderDevice, RenderQueue},
     },
     tasks::block_on,
@@ -15,9 +18,9 @@ pub struct PoolBuffer {
     pub staging_buffer: Buffer,
 }
 impl ExternalBuffer for PoolBuffer {
-    fn set(&self, bounds: (u64, u64), data: Vec<u8>) {
+    fn set(&self, offset: u32, data: &[u8]) {
         let future = async move {
-            let size = 2;
+            let input_data_len = data.len();
 
             let buffer_slice = self.staging_buffer.slice(..);
 
@@ -29,10 +32,11 @@ impl ExternalBuffer for PoolBuffer {
 
             // Awaits until `buffer_future` can be read from
             if let Some(Ok(())) = receiver.receive().await {
-                let mut data = buffer_slice.get_mapped_range_mut();
-                let draw_indirect_slice: &mut [u8] = bytemuck::cast_slice_mut(data.as_mut());
-
-                //draw_indirect_slice = data;
+                let mut mapped_data = buffer_slice.get_mapped_range_mut();
+                // TODO: Optimize
+                for (i, d) in mapped_data.as_mut().iter_mut().enumerate() {
+                    *d = data[i];
+                }
             }
 
             self.staging_buffer.unmap();
@@ -45,7 +49,13 @@ impl ExternalBuffer for PoolBuffer {
                 },
             );
 
-            encoder.copy_buffer_to_buffer(&self.staging_buffer, 0, &self.buffer, 0, size);
+            encoder.copy_buffer_to_buffer(
+                &self.staging_buffer,
+                0,
+                &self.buffer,
+                offset as u64,
+                input_data_len as u64,
+            );
 
             self.queue.submit(Some(encoder.finish()));
         };
