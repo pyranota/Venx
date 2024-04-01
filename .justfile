@@ -3,10 +3,18 @@
 help:
     just --list
 
-
 # run specified example
 run EXAMPLE="":
     cargo r --package bevy_venx --features "dyn" --example {{EXAMPLE}}
+
+# convert supported format into .plat
+convert PATH FORMAT="mca" OUT=".cache":
+    if "{{FORMAT}}" != "mca" { "Unsupported format ({{FORMAT}})" } else { "TODO" }
+
+# Open .plat in basic environment
+open PATH="plats/basic.plat":
+    echo "TODO"
+    # TODO: Open in demo?
 
 # run example with release flag
 run-release EXAMPLE:
