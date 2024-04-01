@@ -4,19 +4,19 @@ use super::{external_buffer::ExternalBuffer, BucketIdx};
 
 pub type ExternalBufferObject = Box<dyn ExternalBuffer + 'static + Send + Sync>;
 
-pub(super) struct VertexPool {
+pub struct VertexPool {
     // TODO: Use linked list?
-    free_buckets: Vec<BucketIdx>,
+    pub free_buckets: Vec<BucketIdx>,
     /// Amount of faces (one face = 6 vertices) in single bucket
-    bucket_size: u32,
+    pub bucket_size: u32,
     /// Amount of buckets
-    bucket_amount: u32,
+    pub bucket_amount: u32,
     // TODO: Write docs about it
     // TODO: Create abstraction
     // Smthg like Unit, where Unit = Bucket * BucketSize
-    bucket_usage: Vec<u32>,
-    indirect_buffer: ExternalBufferObject,
-    vertex_buffer: ExternalBufferObject,
+    pub bucket_usage: Vec<u32>,
+    pub indirect_buffer: ExternalBufferObject,
+    pub vertex_buffer: ExternalBufferObject,
 }
 
 impl VertexPool {
