@@ -59,9 +59,9 @@ impl VenxPlat {
         Ok(())
     }
 
-    pub fn load(name: &str) -> anyhow::Result<Self> {
-        info!("Loading {name}.plat");
-        let path = ".cache/".to_owned() + name;
+    pub fn load(path: &str, vertex_pool: VertexPool) -> anyhow::Result<Self> {
+        info!("Loading {path}.plat");
+        let path = ".cache/".to_owned() + path;
         let meta: MetaSerDeser = ron::from_str(&read_to_string(format!("{path}.plat/meta.ron"))?)?;
 
         let mut components = [
