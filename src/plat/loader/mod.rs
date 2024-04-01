@@ -21,12 +21,10 @@ pub type Fov = usize;
 /// Manages loading meshes and chunks
 pub struct VenxLoader {
     /// Position of camera in world
-    focus: (Vec3, Quat, Fov),
-    chunk_map: ChunkMap,
-
-    task_queue: TaskQueue,
-
-    vertex_pool: VertexPool,
+    pub(crate) focus: (Vec3, Quat, Fov),
+    pub(crate) chunk_map: ChunkMap,
+    pub(crate) task_queue: TaskQueue,
+    pub(crate) vertex_pool: VertexPool,
 }
 
 impl VenxLoader {
