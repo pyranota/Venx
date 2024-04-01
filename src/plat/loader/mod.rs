@@ -41,13 +41,11 @@ impl VenxLoader {
                 chunk_mesh_vec: vec![],
             },
             task_queue: TaskQueue::default(),
-            vertex_pool: VertexPool::new(
-                bucket_size,
-                bucket_amount,
-                indirect_buffer,
-                vertex_buffer,
-            ),
-        }
+    pub fn get_bucket_size(&self) -> u32 {
+        self.vertex_pool.bucket_size
+    }
+    pub fn get_bucket_amount(&self) -> u32 {
+        self.vertex_pool.bucket_amount
     }
 }
 
