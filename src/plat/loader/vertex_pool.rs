@@ -51,4 +51,23 @@ impl VertexPool {
     pub(super) fn deallocate(&mut self, mut buckets: Vec<BucketIdx>) {
         self.free_buckets.append(&mut buckets);
     }
+
+    // TODO: Make gpu-friendly
+    pub(super) fn load_mesh(&mut self, mesh: Mesh, buckets: Vec<BucketIdx>) {
+        let bucket_size = self.bucket_size as usize;
+        // Divide all mesh on submeshes each one of them is size of single bucket
+        // Iterate over submeshes and buckets at the same time
+        // When buckets run out, we automatically exit this iteration
+        // It leaves the rest of the mesh (which is potentially flooded with zeros)
+        // We have allocated amount of buckets from other stages outside of this method
+        // Which should be enough for entire mesh
+        //
+        // In other words, if submesh has atleast one non-zero vertex, it will be loaded
+        for (submesh, bucket_idx) in mesh.chunks(bucket_size).zip(buckets.iter()) {
+            self.vertex_buffer.set(
+                (bucket_idx * bucket_size) as u32,
+                bytemuck::cast_slice(submesh),
+            )
+        }
+    }
 }
