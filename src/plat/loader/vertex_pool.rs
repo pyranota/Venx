@@ -40,12 +40,12 @@ impl VertexPool {
             bucket_usage,
         }
     }
-    pub(super) fn allocate(&mut self, amount: u32) -> anyhow::Result<Vec<BucketIdx>> {
+    pub(super) fn allocate(&mut self, bucket_amount: u32) -> anyhow::Result<Vec<BucketIdx>> {
         let buckets = &mut self.free_buckets;
-        if buckets.len() as u32 >= amount {
+        if buckets.len() as u32 >= bucket_amount {
             bail!("You ran out of free buckets, cannot allocate anymore. \n Consider deallocating some before trying again");
         }
-        Ok(buckets.split_off(buckets.len() - amount as usize))
+        Ok(buckets.split_off(buckets.len() - bucket_amount as usize))
     }
 
     pub(super) fn deallocate(&mut self, mut buckets: Vec<BucketIdx>) {
