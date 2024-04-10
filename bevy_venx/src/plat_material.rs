@@ -1,3 +1,7 @@
+use std::any::Any;
+
+use bevy::math::vec3;
+use bevy::render::renderer::RenderQueue;
 use bevy::{core::Pod, prelude::*, render::render_resource::PrimitiveTopology};
 
 use bevy::render::render_resource::BufferInitDescriptor;
@@ -27,6 +31,10 @@ use bevy::{
         Render, RenderApp, RenderSet,
     },
 };
+use venx::plat::loader::external_buffer::EXTERNAL_BUFFER_RESOLUTION;
+use venx::plat::loader::vertex_pool::VertexPool;
+
+use crate::vertex_pool::PoolBuffer;
 
 #[repr(C)]
 #[derive(Clone, Copy, Pod, Zeroable)]
@@ -50,12 +58,15 @@ impl DrawIndirectPacked {
         ]
     }
 }
+// TODO: Remove
 /// Amount of faces (vertices * 6) per bucket
-const BUCKET_SIZE: u32 = 512;
+pub const BUCKET_SIZE: u32 = 512;
 
+// TODO: Remove
 /// Amount of buckets in entire vertex pool
-const VP_SIZE: u32 = 1024;
+const VP_SIZE: u32 = 1024 * 6;
 
+// TODO: Remove
 /// Amount of draw calls.
 /// Also amount of possible bucket amount at the time
 const DRAW_CALLS: u32 = VP_SIZE / BUCKET_SIZE;
@@ -64,67 +75,142 @@ pub(super) fn setup_voxel_pool(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     device: Res<RenderDevice>,
+    queue: Res<RenderQueue>,
 ) {
-    let contents: Vec<u8> = (0..DRAW_CALLS)
-        .map(|i| -> Vec<u8> {
-            bytemuck::cast_slice(
-                &DrawIndirectPacked {
-                    vertex_count: BUCKET_SIZE * 6,
-                    instance_count: 1,
-                    base_vertex: i * BUCKET_SIZE * 6,
-                    base_instance: 0,
-                }
-                .to_arr(),
-            )
-            .to_vec()
-        })
-        .collect::<Vec<Vec<u8>>>()
-        .concat();
+    // Indirect buffer accessible with PlatMaterial and VertexPoolComponent
+    let indirect_pool_buffer;
+    let indirect_buffer;
+    {
+        // Each Bucket uses single draw call
+        let contents: Vec<u8> = (0..DRAW_CALLS)
+            .map(|i| -> Vec<u8> {
+                bytemuck::cast_slice(
+                    &DrawIndirectPacked {
+                        vertex_count: BUCKET_SIZE * 6,
+                        instance_count: 1,
+                        // Basically offset of bucket
+                        base_vertex: i * BUCKET_SIZE * 6,
+                        base_instance: 0,
+                    }
+                    .to_arr(),
+                )
+                .to_vec()
+            })
+            .collect::<Vec<Vec<u8>>>()
+            .concat();
 
-    let indirect_buffer = device.create_buffer_with_data(&BufferInitDescriptor {
-        label: Some("Venx plat indirect buffer"),
-        contents: &contents,
-        usage: BufferUsages::VERTEX | BufferUsages::INDIRECT | BufferUsages::COPY_DST,
-    });
+        indirect_buffer = device.create_buffer_with_data(&BufferInitDescriptor {
+            label: Some("Venx plat indirect buffer"),
+            contents: &contents,
+            usage: BufferUsages::VERTEX | BufferUsages::INDIRECT | BufferUsages::COPY_DST,
+        });
 
-    // Zero'ing mesh.
-    let mesh = Box::new(vec![Vec3::ZERO; (BUCKET_SIZE * 6 * VP_SIZE) as usize]);
+        let indirect_staging_buffer = device.create_buffer(&BufferDescriptor {
+            label: Some("Venx plat staging indirect buffer"),
+            usage: BufferUsages::VERTEX | BufferUsages::INDIRECT | BufferUsages::COPY_DST,
+            size: EXTERNAL_BUFFER_RESOLUTION,
+            mapped_at_creation: false,
+        });
 
-    // Feeding to bevy
-    let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
-    bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, *mesh.clone());
-    bevy_mesh.insert_attribute(
-        Mesh::ATTRIBUTE_COLOR,
-        vec![[0., 0., 0., 0.]; mesh.clone().len()],
-    );
-    bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0., 0.]; mesh.len()]);
-    bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, *mesh);
+        indirect_pool_buffer = PoolBuffer {
+            device: device.clone(),
+            queue: queue.clone(),
+            buffer: indirect_buffer.clone(),
+            staging_buffer: indirect_staging_buffer,
+        };
+    }
+    // Create primary vertex buffer with all vertices data.
+    // This buffer is known and can be mapped at any time
+    // Accessible with [VertexPoolComponent]
+    let vertex_buffer;
+    let vertex_pool_buffer;
+    {
+        // Zero'ing mesh.
+        let mut mesh = Box::new(vec![Vec3::ZERO; (BUCKET_SIZE * 6 * VP_SIZE) as usize]);
+
+        for (i, vertices) in mesh.as_mut_slice().chunks_mut(3).enumerate() {
+            let offset = vec3(i as f32, i as f32, i as f32);
+            vertices[0] = vec3(0., 10., 0.) + offset;
+            vertices[1] = vec3(10., 0., 0.) + offset;
+            vertices[2] = vec3(0., 0., 10.) + offset;
+        }
+
+        // Feeding to bevy
+        let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, *mesh.clone());
+        bevy_mesh.insert_attribute(
+            Mesh::ATTRIBUTE_COLOR,
+            vec![[0., 0., 1., 0.5]; mesh.clone().len()],
+        );
+        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0., 0.]; mesh.len()]);
+        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, *mesh);
+
+        let vertex_buffer_data = bevy_mesh.get_vertex_buffer_data();
+        vertex_buffer = device.create_buffer_with_data(&BufferInitDescriptor {
+            usage: BufferUsages::VERTEX,
+            label: Some("Mesh Vertex Buffer"),
+            contents: &vertex_buffer_data,
+        });
+        let vertex_staging_buffer = device.create_buffer(&BufferDescriptor {
+            label: Some("Venx plat staging vertex buffer"),
+            usage: BufferUsages::VERTEX | BufferUsages::COPY_SRC,
+            size: EXTERNAL_BUFFER_RESOLUTION,
+            mapped_at_creation: false,
+        });
+        vertex_pool_buffer = PoolBuffer {
+            device: device.clone(),
+            queue: queue.clone(),
+            buffer: vertex_buffer.clone(),
+            staging_buffer: vertex_staging_buffer,
+        };
+    }
+    // We need this mesh to provide right mesh layout and to tweak position of platform
+    // TODO: Unhardcode mesh layout
+    let mut sm_bevy_mesh;
+    {
+        let small_mesh = Box::new(vec![Vec3::ZERO; 3]);
+        sm_bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
+        sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, *small_mesh.clone());
+        sm_bevy_mesh.insert_attribute(
+            Mesh::ATTRIBUTE_COLOR,
+            vec![[0., 0., 1., 0.5]; small_mesh.clone().len()],
+        );
+        sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0., 0.]; small_mesh.len()]);
+        sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, *small_mesh);
+    }
 
     commands.spawn((
-        meshes.add(bevy_mesh),
+        meshes.add(sm_bevy_mesh.clone()),
         SpatialBundle::INHERITED_IDENTITY,
         PlatMaterialData {
-            indirect_buffer,
+            indirect_buffer: indirect_buffer.clone(),
             draw_calls_count: DRAW_CALLS,
+            vertex_buffer,
         },
-        // NOTE: Frustum culling is done based on the Aabb of the Mesh and the GlobalTransform.
-        // As the cube is at the origin, if its Aabb moves outside the view frustum, all the
-        // instanced cubes will be culled.
-        // The InstanceMaterialData contains the 'GlobalTransform' information for this custom
-        // instancing, and that is not taken into account with the built-in frustum culling.
-        // We must disable the built-in frustum culling by adding the `NoFrustumCulling` marker
-        // component to avoid incorrect culling.
         NoFrustumCulling,
-        // VertexPool{
-
-        // },
+        VertexPoolComponent {
+            vertex_pool: VertexPool::new(
+                // TODO: Unhardcode
+                256,
+                6500,
+                vec![500, 1000, 5000],
+                Box::new(indirect_pool_buffer),
+                Box::new(vertex_pool_buffer),
+            ),
+        },
     ));
 }
 
 #[derive(Component)]
-struct PlatMaterialData {
-    indirect_buffer: Buffer,
-    draw_calls_count: u32,
+pub struct VertexPoolComponent {
+    vertex_pool: VertexPool,
+}
+
+#[derive(Component)]
+pub struct PlatMaterialData {
+    pub indirect_buffer: Buffer,
+    pub draw_calls_count: u32,
+    pub vertex_buffer: Buffer,
 }
 
 impl ExtractComponent for PlatMaterialData {
@@ -136,6 +222,7 @@ impl ExtractComponent for PlatMaterialData {
         Some(PlatMaterialData {
             indirect_buffer: item.indirect_buffer.clone(),
             draw_calls_count: item.draw_calls_count.clone(),
+            vertex_buffer: item.vertex_buffer.clone(),
         })
     }
 }
@@ -188,7 +275,8 @@ fn queue_custom(
             let Some(mesh) = meshes.get(mesh_instance.mesh_asset_id) else {
                 continue;
             };
-            let key = view_key | MeshPipelineKey::from_primitive_topology(mesh.primitive_topology);
+            let key = view_key
+                | MeshPipelineKey::from_primitive_topology(PrimitiveTopology::TriangleList);
             let pipeline = pipelines
                 .specialize(&pipeline_cache, &custom_pipeline, key, &mesh.layout)
                 .unwrap();
@@ -208,14 +296,17 @@ fn queue_custom(
 #[derive(Component)]
 pub struct InstanceBuffer {
     indirect_buffer: Buffer,
+    vertex_buffer: Buffer,
     draw_calls_count: u32,
 }
 
+// TODO: Remove and just use [PlatMaterialData]
 fn prepare_instance_buffers(mut commands: Commands, query: Query<(Entity, &PlatMaterialData)>) {
     for (entity, instance_data) in &query {
         commands.entity(entity).insert(InstanceBuffer {
             indirect_buffer: instance_data.indirect_buffer.clone(),
             draw_calls_count: instance_data.draw_calls_count,
+            vertex_buffer: instance_data.vertex_buffer.clone(),
         });
     }
 }
@@ -280,21 +371,26 @@ impl<P: PhaseItem> RenderCommand<P> for DrawMeshInstanced {
 
     #[inline]
     fn render<'w>(
-        item: &P,
+        _item: &P,
         _view: (),
         instance_buffer: &'w InstanceBuffer,
-        (meshes, render_mesh_instances): SystemParamItem<'w, '_, Self::Param>,
+        (_meshes, _render_mesh_instances): SystemParamItem<'w, '_, Self::Param>,
         pass: &mut TrackedRenderPass<'w>,
     ) -> RenderCommandResult {
-        let Some(mesh_instance) = render_mesh_instances.get(&item.entity()) else {
-            return RenderCommandResult::Failure;
-        };
-        let gpu_mesh = match meshes.into_inner().get(mesh_instance.mesh_asset_id) {
-            Some(gpu_mesh) => gpu_mesh,
-            None => return RenderCommandResult::Failure,
-        };
+        let vertex_buffer = &instance_buffer.vertex_buffer;
+        // let Some(mesh_instance) = render_mesh_instances.get(&item.entity()) else {
+        //     return RenderCommandResult::Failure;
+        // };
 
-        pass.set_vertex_buffer(0, gpu_mesh.vertex_buffer.slice(..));
+        // let gpu_mesh = match meshes.into_inner().get(mesh_instance.mesh_asset_id) {
+        //     Some(gpu_mesh) => gpu_mesh,
+        //     None => return RenderCommandResult::Failure,
+        // };
+
+        // let vertex_buffer = &gpu_mesh.vertex_buffer;
+
+        // dbg!(gpu_mesh.vertex_buffer.usage());
+        pass.set_vertex_buffer(0, vertex_buffer.slice(..));
 
         pass.multi_draw_indirect(
             &instance_buffer.indirect_buffer,
