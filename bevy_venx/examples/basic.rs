@@ -2,18 +2,49 @@ use bevy::{
     diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin},
     pbr::{wireframe::Wireframe, CascadeShadowConfigBuilder, DirectionalLightShadowMap},
     prelude::*,
-    render::render_resource::PrimitiveTopology,
+    render::{
+        render_resource::{
+            BufferDescriptor, BufferInitDescriptor, BufferUsages, PrimitiveTopology,
+        },
+        renderer::RenderDevice,
+    },
+    window::{PresentMode, WindowTheme},
 };
 use bevy_panorbit_camera::PanOrbitCamera;
-use bevy_venx::fps_counter::{fps_counter_showhide, fps_setup_counter, fps_text_update_system};
-use venx::plat::{interfaces::layer::LayerInterface, VenxPlat};
+use bevy_venx::{
+    fps_counter::{fps_counter_showhide, fps_setup_counter, fps_text_update_system},
+    plat_material::{DrawIndirectPacked, BUCKET_SIZE},
+    plugin::BevyVenx,
+};
+use venx::plat::{interfaces::layer::LayerInterface, loader::vertex_pool::VertexPool, VenxPlat};
 
 fn main() {
     App::new()
         .add_plugins((
-            DefaultPlugins,
+            DefaultPlugins.set(WindowPlugin {
+                primary_window: Some(Window {
+                    title: "I am a window!".into(),
+                    resolution: (500., 300.).into(),
+                    present_mode: PresentMode::Immediate,
+                    // Tells wasm not to override default event handling, like F5, Ctrl+R etc.
+                    prevent_default_event_handling: false,
+                    // window_theme: Some(WindowTheme::Dark),
+                    // enabled_buttons: bevy::window::EnabledButtons {
+                    // maximize: false,
+                    // ..Default::default()
+                    // },
+                    // This will spawn an invisible window
+                    // The window will be made visible in the make_visible() system after 3 frames.
+                    // This is useful when you want to avoid the white window that shows up before the GPU is ready to render the app.
+                    visible: true,
+                    ..default()
+                }),
+                ..default()
+            }),
             bevy_panorbit_camera::PanOrbitCameraPlugin,
             FrameTimeDiagnosticsPlugin,
+            // BevyVenx
+            BevyVenx,
             // Adds a system that prints diagnostics to the console
             LogDiagnosticsPlugin::default(),
         ))
@@ -28,49 +59,57 @@ fn setup(
     mut cmd: Commands,
     mut bevy_meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
+    device: Res<RenderDevice>,
 ) {
+    // let vertex_pool = VertexPool::new(256, 6500, vec![500, 1000, 5000], todo!(), todo!());
     // Its small-sized plat, its slow to convert it from mca each run, it will be saved
-    let mut plat = VenxPlat::load("sm").unwrap();
+    // let mut plat = VenxPlat::load("sm", vertex_pool).unwrap();
     // let plat = VenxPlat::load_mca("./assets/mca/1/", (0..5, 0..5), true, 100, true).unwrap();
-    for mesh in plat.static_mesh(0..16, 3..10, 0..16, 10, true, Some(0)) {
-        let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
+    // for mesh in plat.static_mesh(0..16, 3..10, 0..16, 10, true, Some(0)) {
+    //     let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
 
-        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
-        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, mesh.1.clone());
-        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, mesh.2.clone());
+    //     bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, mesh.0.clone());
+    //     bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, mesh.1.clone());
+    //     bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, mesh.2.clone());
 
-        cmd.spawn(PbrBundle {
-            mesh: bevy_meshes.add(bevy_mesh),
-            material: materials.add(StandardMaterial {
-                reflectance: 0.1,
-                base_color: Color::rgb(1., 1., 1.),
-                // alpha_mode: AlphaMode::Blend,
-                ..default()
-            }),
-            ..default()
-        })
-        .insert(Wireframe);
-    }
+    //     let contents: Vec<u8> = (0..1)
+    //         .map(|i| -> Vec<u8> {
+    //             bytemuck::cast_slice(
+    //                 &DrawIndirectPacked {
+    //                     vertex_count: BUCKET_SIZE * 6,
+    //                     instance_count: 1,
+    //                     base_vertex: i * BUCKET_SIZE * 6,
+    //                     base_instance: 0,
+    //                 }
+    //                 .to_arr(),
+    //             )
+    //             .to_vec()
+    //         })
+    //         .collect::<Vec<Vec<u8>>>()
+    //         .concat();
 
-    dbg!(plat.length(0));
-    dbg!(plat.free(0));
+    //     let indirect_buffer = device.create_buffer_with_data(&BufferInitDescriptor {
+    //         label: Some("Venx plat indirect buffer"),
+    //         contents: &contents,
+    //         usage: BufferUsages::VERTEX | BufferUsages::INDIRECT | BufferUsages::COPY_DST,
+    //     });
+    //     cmd.spawn((
+    //         bevy_meshes.add(bevy_mesh),
+    //         bevy_venx::plat_material::PlatMaterialData {
+    //             indirect_buffer,
+    //             draw_calls_count: 1,
+    //         },
+    //     ));
+    // }
 
-    plat.freeze(0);
+    // plat.land_chunks().unwrap();
 
-    dbg!(plat.free(0));
-    // let len_l2 = plat.get_normal_unchecked().borrow_raw_plat().layers[0]
-    //     .level_2
-    //     .len();
-    // let len = plat.get_normal_unchecked().borrow_raw_plat().layers[0]
-    //     .nodes
-    //     .len();
-    // plat.get_normal_unchecked()
-    //     .with_raw_plat_mut(|plat| plat.layers[0].freeze_upper(&mut vec![0; len_l2]));
-    // dbg!(plat.get_normal_unchecked().borrow_raw_plat().layers[0].free());
+    // dbg!(plat.length(0));
+    // dbg!(plat.free(0));
 
-    // dbg!(plat.get_normal_unchecked().borrow_raw_plat().layers[0].free_l2());
+    // plat.freeze(0);
 
-    // panic!();
+    // dbg!(plat.free(0));
     // ambient light
     cmd.insert_resource(AmbientLight {
         color: Color::WHITE,
