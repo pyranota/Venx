@@ -2,6 +2,7 @@ use std::any::Any;
 
 use bevy::math::vec3;
 use bevy::render::renderer::RenderQueue;
+use bevy::tasks::block_on;
 use bevy::{core::Pod, prelude::*, render::render_resource::PrimitiveTopology};
 
 use bevy::render::render_resource::BufferInitDescriptor;
@@ -31,9 +32,12 @@ use bevy::{
         Render, RenderApp, RenderSet,
     },
 };
+use venx::plat::interfaces::layer::LayerInterface;
 use venx::plat::loader::external_buffer::EXTERNAL_BUFFER_RESOLUTION;
 use venx::plat::loader::vertex_pool::VertexPool;
+use venx::plat::VenxPlat;
 
+use crate::plat::BevyPlat;
 use crate::vertex_pool::PoolBuffer;
 
 #[repr(C)]
@@ -128,12 +132,12 @@ pub(super) fn setup_voxel_pool(
         // Zero'ing mesh.
         let mut mesh = Box::new(vec![Vec3::ZERO; (BUCKET_SIZE * 6 * VP_SIZE) as usize]);
 
-        for (i, vertices) in mesh.as_mut_slice().chunks_mut(3).enumerate() {
-            let offset = vec3(i as f32, i as f32, i as f32);
-            vertices[0] = vec3(0., 10., 0.) + offset;
-            vertices[1] = vec3(10., 0., 0.) + offset;
-            vertices[2] = vec3(0., 0., 10.) + offset;
-        }
+        // for (i, vertices) in mesh.as_mut_slice().chunks_mut(3).enumerate() {
+        //     let offset = vec3(i as f32, i as f32, i as f32);
+        //     vertices[0] = vec3(0., 10., 0.) + offset;
+        //     vertices[1] = vec3(10., 0., 0.) + offset;
+        //     vertices[2] = vec3(0., 0., 10.) + offset;
+        // }
 
         // Feeding to bevy
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
@@ -147,15 +151,14 @@ pub(super) fn setup_voxel_pool(
 
         let vertex_buffer_data = bevy_mesh.get_vertex_buffer_data();
         vertex_buffer = device.create_buffer_with_data(&BufferInitDescriptor {
-            usage: BufferUsages::VERTEX,
+            usage: BufferUsages::VERTEX | BufferUsages::COPY_DST,
             label: Some("Mesh Vertex Buffer"),
             contents: &vertex_buffer_data,
         });
-        let vertex_staging_buffer = device.create_buffer(&BufferDescriptor {
+        let vertex_staging_buffer = device.create_buffer_with_data(&BufferInitDescriptor {
             label: Some("Venx plat staging vertex buffer"),
-            usage: BufferUsages::VERTEX | BufferUsages::COPY_SRC,
-            size: EXTERNAL_BUFFER_RESOLUTION,
-            mapped_at_creation: false,
+            usage: BufferUsages::COPY_SRC | BufferUsages::MAP_WRITE,
+            contents: bytemuck::cast_slice(&vec![0; EXTERNAL_BUFFER_RESOLUTION as usize]),
         });
         vertex_pool_buffer = PoolBuffer {
             device: device.clone(),
@@ -179,6 +182,26 @@ pub(super) fn setup_voxel_pool(
         sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, *small_mesh);
     }
 
+    let vertex_pool = VertexPool::new(
+        // TODO: Unhardcode
+        256,
+        6500,
+        vec![500, 1000, 5000],
+        Box::new(indirect_pool_buffer),
+        Box::new(vertex_pool_buffer),
+    );
+    // TODO: Unhardcode
+    // let mut plat = VenxPlat::load("sm", vertex_pool).unwrap();
+
+    let mut plat = VenxPlat::new(8, 5, 6, vertex_pool);
+    block_on(async {
+        plat.set_voxel(0, (5, 5, 5).into(), 2).await;
+        plat.set_voxel(0, (9, 5, 5).into(), 2).await;
+        plat.set_voxel(0, (1, 5, 5).into(), 2).await;
+        plat.set_voxel(0, (4, 5, 5).into(), 2).await;
+    });
+
+    dbg!(plat.get_voxel((5, 5, 5).into()));
     commands.spawn((
         meshes.add(sm_bevy_mesh.clone()),
         SpatialBundle::INHERITED_IDENTITY,
@@ -188,22 +211,13 @@ pub(super) fn setup_voxel_pool(
             vertex_buffer,
         },
         NoFrustumCulling,
-        VertexPoolComponent {
-            vertex_pool: VertexPool::new(
-                // TODO: Unhardcode
-                256,
-                6500,
-                vec![500, 1000, 5000],
-                Box::new(indirect_pool_buffer),
-                Box::new(vertex_pool_buffer),
-            ),
-        },
+        BevyPlat(plat),
     ));
 }
 
 #[derive(Component)]
 pub struct VertexPoolComponent {
-    vertex_pool: VertexPool,
+    pub vertex_pool: VertexPool,
 }
 
 #[derive(Component)]
