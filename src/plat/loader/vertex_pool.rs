@@ -44,8 +44,15 @@ impl VertexPool {
     }
     pub(super) fn allocate(&mut self, bucket_amount: u32) -> anyhow::Result<Vec<BucketIdx>> {
         let buckets = &mut self.free_buckets;
-        if buckets.len() as u32 >= bucket_amount {
-            bail!("You ran out of free buckets, cannot allocate anymore. \n Consider deallocating some before trying again");
+        let free = buckets.len() as u32;
+        if free < bucket_amount {
+            bail!(
+                "
+                You ran out of free buckets, cannot allocate anymore.
+                Consider deallocating some before trying again \n
+                Free buckets: {free:?}, Requested: {bucket_amount}
+                "
+            );
         }
         Ok(buckets.split_off(buckets.len() - bucket_amount as usize))
     }
@@ -57,7 +64,7 @@ impl VertexPool {
     // TODO: Make gpu-friendly
     pub(super) fn load_mesh(&mut self, mesh: Mesh, buckets: Vec<BucketIdx>) {
         let bucket_size = self.bucket_size as usize;
-        // Divide all mesh on submeshes each one of them is size of single bucket
+        // Divide mesh in submeshes. Each one of them is size of single bucket
         // Iterate over submeshes and buckets at the same time
         // When buckets run out, we automatically exit this iteration
         // It leaves the rest of the mesh (which is potentially flooded with zeros)
@@ -66,6 +73,7 @@ impl VertexPool {
         //
         // In other words, if submesh has atleast one non-zero vertex, it will be loaded
         for (submesh, bucket_idx) in mesh.chunks(bucket_size).zip(buckets.iter()) {
+            dbg!("Iter");
             self.vertex_buffer.set(
                 (bucket_idx * bucket_size) as u32,
                 bytemuck::cast_slice(submesh),
