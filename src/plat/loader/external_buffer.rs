@@ -3,7 +3,7 @@ use log::warn;
 /// Defines how many bytes can transfered within single call
 ///
 /// Or bus size
-pub const EXTERNAL_BUFFER_RESOLUTION: u64 = 100;
+pub const EXTERNAL_BUFFER_RESOLUTION: u64 = 1024 * 4;
 
 pub trait ExternalBuffer {
     /// Set Buffer's data
