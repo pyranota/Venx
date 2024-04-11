@@ -32,10 +32,12 @@ impl ExternalBuffer for PoolBuffer {
 
             // Awaits until `buffer_future` can be read from
             if let Some(Ok(())) = receiver.receive().await {
+                dbg!("Buffer is mapped");
                 let mut mapped_data = buffer_slice.get_mapped_range_mut();
-                // TODO: Optimize
-                for (i, d) in mapped_data.as_mut().iter_mut().enumerate() {
-                    *d = data[i];
+                for (staging_element, input_element) in
+                    mapped_data.as_mut().iter_mut().zip(data.iter())
+                {
+                    *staging_element = *input_element;
                 }
             }
 
