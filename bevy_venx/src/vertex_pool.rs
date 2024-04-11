@@ -30,6 +30,25 @@ impl ExternalBuffer for PoolBuffer {
                 sender.send(v).unwrap()
             });
 
+            let device = self.device.clone();
+            let queue = self.queue.clone();
+
+            let thread_handle = std::thread::spawn(move || {
+                dbg!("Submit");
+                // TODO: Optimize
+                // TODO: Kill with event
+                for _ in 0..500 {
+                    let encoder = device.create_command_encoder(
+                        &bevy::render::render_resource::CommandEncoderDescriptor {
+                            label: Some("Encoder to make possible staging buffer to map"),
+                        },
+                    );
+
+                    queue.submit(Some(encoder.finish()));
+                    // self.device.poll(Maintain::<()>::Poll);
+                } // dbg!("Waiting for buffer to be mapped");
+            });
+
             // Awaits until `buffer_future` can be read from
             if let Some(Ok(())) = receiver.receive().await {
                 dbg!("Buffer is mapped");
