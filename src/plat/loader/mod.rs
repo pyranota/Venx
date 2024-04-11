@@ -72,3 +72,41 @@ impl VenxPlat {
         todo!()
     }
 }
+        let mesh = self.compute_mesh_from_chunk(&chunk);
+
+        let mut count = 0;
+
+        'mesh: for attr in mesh.iter() {
+            let (pos, color, normal) = (
+                Vec3::from_slice(&attr[0..3]),
+                Vec4::from_slice(&attr[3..7]),
+                Vec3::from_slice(&attr[7..10]),
+            );
+
+            // Each returned mesh is static length, so not all attributes in that mesh are used
+            // To prevent leaking zero attributes into actual mesh, we check it
+            // Dont create blocks with color Vec4::ZERO, it will break the mesh
+            if color.to_array() == glam::f32::Vec4::ZERO.to_array() {
+                // if count != 0 {
+                // dbg!(count / 6);
+                // }
+
+                break 'mesh;
+            }
+            count += 1;
+        }
+
+        let bucket_amount = count / self.loader.get_bucket_size() + 1;
+
+        dbg!(bucket_amount);
+
+        dbg!(self.loader.get_bucket_size());
+
+        dbg!(count);
+
+        let bucket_ids = self.loader.vertex_pool.allocate(bucket_amount)?;
+
+        self.loader.vertex_pool.load_mesh(mesh, bucket_ids);
+        Ok(())
+    }
+}
