@@ -21,7 +21,7 @@ use venx_core::plat::{
 use self::{
     block_collections::smbc::SMBC,
     interfaces::{layer::LayerInterface, load::LoadInterface, PlatInterface},
-    loader::VenxLoader,
+    loader::{vertex_pool::VertexPool, VenxLoader},
     normal::{cpu_plat::CpuPlat, mesh::Mesh},
 };
 
@@ -75,14 +75,19 @@ impl VenxPlat {
         }
     }
     /// Depth, chunk_level, segment_level
-    pub fn new(depth: usize, chunk_level: usize, segment_level: usize) -> Self {
+    pub fn new(
+        depth: usize,
+        chunk_level: usize,
+        segment_level: usize,
+        vertex_pool: VertexPool,
+    ) -> Self {
         let plat = Plat::Cpu(CpuPlat::new_plat(depth, chunk_level, segment_level));
         //let loader = VenxLoader::new(initial_focus, bucket_size, bucket_amount, indirect_buffer, vertex_buffer)
 
         VenxPlat {
             plat,
-            loader: todo!(),
-            smbcs: todo!(),
+            loader: VenxLoader::new(([0., 0., 0.].into(), Quat::default(), 50), vertex_pool),
+            smbcs: vec![],
         }
     }
 
