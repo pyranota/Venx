@@ -5,5 +5,5 @@ pub enum MountPlatEv {
     New { depth: usize },
 }
 
-#[derive(Component)]
+#[derive(Component, DerefMut, Deref)]
 pub struct BevyPlat(pub VenxPlat);
