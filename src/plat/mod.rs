@@ -266,6 +266,20 @@ macro_rules! plat_helper {
             Plat::Gpu(plat) => plat.$method($($y),+),
         }
     };
+    (async, $self:ident, method $method:ident, $($y:ident),+) => {
+        match &$self.plat {
+            Plat::Cpu(plat) => plat.$method($($y),+).await,
+            #[cfg(feature = "turbo")]
+            Plat::Gpu(plat) => plat.$method($($y),+).await,
+        }
+    };
+    (async, mut $self:ident, method $method:ident, $($y:ident),+) => {
+        match &mut $self.plat {
+            Plat::Cpu(plat) => plat.$method($($y),+).await,
+            #[cfg(feature = "turbo")]
+            Plat::Gpu(plat) => plat.$method($($y),+).await,
+        }
+    };
 }
 
 impl PlatInterface for VenxPlat {}
@@ -291,7 +305,7 @@ impl LoadInterface for VenxPlat {
 #[async_trait]
 impl LayerInterface for VenxPlat {
     async fn set_voxel(&mut self, layer: usize, position: glam::UVec3, ty: usize) {
-        plat_helper!(mut self, method set_voxel,  layer, position, ty);
+        plat_helper!(async, mut self, method set_voxel,  layer, position, ty);
     }
 
     fn free(&self, layer: usize) -> (u32, u32) {
