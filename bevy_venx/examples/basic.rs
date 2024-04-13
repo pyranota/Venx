@@ -8,7 +8,7 @@ use bevy::{
         render_resource::{
             BufferDescriptor, BufferInitDescriptor, BufferUsages, PrimitiveTopology,
         },
-        renderer::RenderDevice,
+        renderer::{RenderDevice, RenderQueue},
     },
     window::{PresentMode, WindowTheme},
 };
@@ -54,9 +54,28 @@ fn main() {
         .add_systems(Update, setup)
         .insert_resource(ClearColor(Color::rgb(0.52, 0.80, 0.92)))
         .insert_resource(DirectionalLightShadowMap { size: 512 })
-        .add_systems(Startup, fps_setup_counter)
+        .add_systems(Startup, (fps_setup_counter, setup_polling))
         .add_systems(Update, (fps_counter_showhide, fps_text_update_system))
         .run();
+}
+fn setup_polling(queue: Res<RenderQueue>, device: Res<RenderDevice>) {
+    let device = device.clone();
+    let queue = queue.clone();
+    let _thread_handle = std::thread::spawn(move || {
+        // dbg!("Submit");
+        // TODO: Optimize
+        // TODO: Kill with event
+        loop {
+            let encoder = device.create_command_encoder(
+                &bevy::render::render_resource::CommandEncoderDescriptor {
+                    label: Some("Encoder to make possible staging buffer to map"),
+                },
+            );
+
+            queue.submit(Some(encoder.finish()));
+            // self.device.poll(Maintain::<()>::Poll);
+        } // dbg!("Waiting for buffer to be mapped");
+    });
 }
 fn setup(
     mut cmd: Commands,
@@ -227,7 +246,7 @@ fn setup(
                     hdr: true,
                     ..default()
                 },
-                transform: Transform::from_xyz(28.0, 200., 28.0)
+                transform: Transform::from_xyz(28.0, 20., 28.0)
                     .looking_at(Vec3::new(-0.15, -0.05, -0.25), Vec3::Y),
                 ..default()
             },
@@ -254,7 +273,7 @@ fn setup(
             },
             PanOrbitCamera {
                 // Set focal point (what the camera should look at)
-                focus: Vec3::new(280.0, 228., 280.0),
+                focus: Vec3::new(0.0, 0., 0.0),
                 ..Default::default()
             },
         ));

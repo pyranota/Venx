@@ -1,6 +1,7 @@
 use std::borrow::BorrowMut;
 
 use bevy::{
+    ecs::query,
     prelude::*,
     reflect::List,
     render::{
@@ -22,36 +23,18 @@ impl ExternalBuffer for PoolBuffer {
         let future = async move {
             let input_data_len = data.len();
 
+            // dbg!(input_data_len);
             let buffer_slice = self.staging_buffer.slice(..);
-
+            // dbg!("Got buffer slice");
             // Sets the buffer up for mapping, sending over the result of the mapping back to us when it is finished.
             let (sender, receiver) = futures_intrusive::channel::shared::oneshot_channel();
             buffer_slice.map_async(bevy::render::render_resource::MapMode::Write, move |v| {
                 sender.send(v).unwrap()
             });
 
-            let device = self.device.clone();
-            let queue = self.queue.clone();
-
-            let thread_handle = std::thread::spawn(move || {
-                dbg!("Submit");
-                // TODO: Optimize
-                // TODO: Kill with event
-                for _ in 0..500 {
-                    let encoder = device.create_command_encoder(
-                        &bevy::render::render_resource::CommandEncoderDescriptor {
-                            label: Some("Encoder to make possible staging buffer to map"),
-                        },
-                    );
-
-                    queue.submit(Some(encoder.finish()));
-                    // self.device.poll(Maintain::<()>::Poll);
-                } // dbg!("Waiting for buffer to be mapped");
-            });
-
             // Awaits until `buffer_future` can be read from
             if let Some(Ok(())) = receiver.receive().await {
-                dbg!("Buffer is mapped");
+                // dbg!("Buffer is mapped");
                 let mut mapped_data = buffer_slice.get_mapped_range_mut();
                 for (staging_element, input_element) in
                     mapped_data.as_mut().iter_mut().zip(data.iter())

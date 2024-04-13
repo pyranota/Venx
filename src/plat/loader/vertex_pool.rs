@@ -1,4 +1,5 @@
 use anyhow::bail;
+use glam::{UVec3, Vec3};
 
 use crate::plat::normal::mesh::Mesh;
 
@@ -9,7 +10,7 @@ pub type ExternalBufferObject = Box<dyn ExternalBuffer + 'static + Send + Sync>;
 pub struct VertexPool {
     // TODO: Use linked list?
     pub free_buckets: Vec<BucketIdx>,
-    /// Amount of faces (one face = 6 vertices) in single bucket
+    /// Amount of vertices in single bucket
     pub bucket_size: u32,
     /// Amount of buckets
     pub bucket_amount: u32,
@@ -30,6 +31,7 @@ impl VertexPool {
         vertex_buffer: ExternalBufferObject,
     ) -> Self {
         assert_eq!(bucket_amount, bucket_usage.iter().sum::<u32>());
+        assert_eq!(bucket_size % 6, 0);
 
         VertexPool {
             free_buckets: (0..bucket_amount)
@@ -54,7 +56,7 @@ impl VertexPool {
                 "
             );
         }
-        Ok(buckets.split_off(buckets.len() - bucket_amount as usize))
+        Ok(buckets.split_off(free as usize - bucket_amount as usize))
     }
 
     pub(super) fn deallocate(&mut self, mut buckets: Vec<BucketIdx>) {
@@ -62,7 +64,7 @@ impl VertexPool {
     }
 
     // TODO: Make gpu-friendly
-    pub(super) fn load_mesh(&mut self, mesh: Mesh, buckets: Vec<BucketIdx>) {
+    pub(super) fn load_mesh(&mut self, mesh: Vec<[f32; 3]>, buckets: Vec<BucketIdx>) {
         let bucket_size = self.bucket_size as usize;
         // Divide mesh in submeshes. Each one of them is size of single bucket
         // Iterate over submeshes and buckets at the same time
@@ -73,11 +75,15 @@ impl VertexPool {
         //
         // In other words, if submesh has atleast one non-zero vertex, it will be loaded
         for (submesh, bucket_idx) in mesh.chunks(bucket_size).zip(buckets.iter()) {
-            dbg!("Iter");
-            self.vertex_buffer.set(
-                (bucket_idx * bucket_size) as u32,
-                bytemuck::cast_slice(submesh),
-            )
+            // dbg!("Iter");
+            // dbg!(&submesh.len());
+            // dbg!(bucket_idx);
+            //                   u8 * 4 = u32 and we have 3 of it
+            let offset = (bucket_idx * (bucket_size * 4 * 3)) as u32;
+
+            // dbg!(offset);
+            self.vertex_buffer
+                .set(offset, bytemuck::cast_slice(submesh))
         }
     }
 }

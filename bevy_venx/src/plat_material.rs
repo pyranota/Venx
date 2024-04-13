@@ -1,6 +1,7 @@
 use std::any::Any;
 
 use bevy::math::vec3;
+use bevy::render::mesh::MeshVertexAttribute;
 use bevy::render::renderer::RenderQueue;
 use bevy::tasks::block_on;
 use bevy::{core::Pod, prelude::*, render::render_resource::PrimitiveTopology};
@@ -63,12 +64,12 @@ impl DrawIndirectPacked {
     }
 }
 // TODO: Remove
-/// Amount of faces (vertices * 6) per bucket
-pub const BUCKET_SIZE: u32 = 512;
+/// Amount of vertices per bucket
+pub const BUCKET_SIZE: u32 = 600;
 
 // TODO: Remove
 /// Amount of buckets in entire vertex pool
-const VP_SIZE: u32 = 1024 * 6;
+const VP_SIZE: u32 = 10000;
 
 // TODO: Remove
 /// Amount of draw calls.
@@ -86,15 +87,15 @@ pub(super) fn setup_voxel_pool(
     let indirect_buffer;
     {
         // Each Bucket uses single draw call
-        let contents: Vec<u8> = (0..DRAW_CALLS)
+        let contents: Vec<u8> = (0..VP_SIZE)
             .map(|i| -> Vec<u8> {
                 bytemuck::cast_slice(
                     &DrawIndirectPacked {
-                        vertex_count: BUCKET_SIZE * 6,
+                        vertex_count: BUCKET_SIZE,
                         instance_count: 1,
                         // Basically offset of bucket
-                        base_vertex: i * BUCKET_SIZE * 6,
-                        base_instance: 0,
+                        base_vertex: i * BUCKET_SIZE,
+                        base_instance: 1,
                     }
                     .to_arr(),
                 )
@@ -130,7 +131,7 @@ pub(super) fn setup_voxel_pool(
     let vertex_pool_buffer;
     {
         // Zero'ing mesh.
-        let mut mesh = Box::new(vec![Vec3::ZERO; (BUCKET_SIZE * 6 * VP_SIZE) as usize]);
+        let mut mesh = Box::new(vec![Vec3::ZERO; (BUCKET_SIZE * VP_SIZE) as usize]);
 
         // for (i, vertices) in mesh.as_mut_slice().chunks_mut(3).enumerate() {
         //     let offset = vec3(i as f32, i as f32, i as f32);
@@ -142,12 +143,12 @@ pub(super) fn setup_voxel_pool(
         // Feeding to bevy
         let mut bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
         bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, *mesh.clone());
-        bevy_mesh.insert_attribute(
-            Mesh::ATTRIBUTE_COLOR,
-            vec![[0., 0., 1., 0.5]; mesh.clone().len()],
-        );
-        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0., 0.]; mesh.len()]);
-        bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, *mesh);
+        // bevy_mesh.insert_attribute(
+        //     Mesh::ATTRIBUTE_COLOR,
+        //     vec![[0., 0., 1., 0.5]; mesh.clone().len()],
+        // );
+        // bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0., 0.]; mesh.len()]);
+        // bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, *mesh);
 
         let vertex_buffer_data = bevy_mesh.get_vertex_buffer_data();
         vertex_buffer = device.create_buffer_with_data(&BufferInitDescriptor {
@@ -174,40 +175,49 @@ pub(super) fn setup_voxel_pool(
         let small_mesh = Box::new(vec![Vec3::ZERO; 3]);
         sm_bevy_mesh = Mesh::new(PrimitiveTopology::TriangleList);
         sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_POSITION, *small_mesh.clone());
-        sm_bevy_mesh.insert_attribute(
-            Mesh::ATTRIBUTE_COLOR,
-            vec![[0., 0., 1., 0.5]; small_mesh.clone().len()],
-        );
-        sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0., 0.]; small_mesh.len()]);
-        sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, *small_mesh);
+        // sm_bevy_mesh.insert_attribute(
+        //     Mesh::ATTRIBUTE_COLOR,
+        //     vec![[0., 0., 1., 0.5]; small_mesh.clone().len()],
+        // );
+        // sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_UV_0, vec![[0., 0.]; small_mesh.len()]);
+        // sm_bevy_mesh.insert_attribute(Mesh::ATTRIBUTE_NORMAL, *small_mesh);
     }
 
     let vertex_pool = VertexPool::new(
-        // TODO: Unhardcode
-        256,
-        6500,
-        vec![500, 1000, 5000],
+        BUCKET_SIZE,
+        VP_SIZE,
+        vec![4000, 1000, 5000],
         Box::new(indirect_pool_buffer),
         Box::new(vertex_pool_buffer),
     );
     // TODO: Unhardcode
-    // let mut plat = VenxPlat::load("sm", vertex_pool).unwrap();
+    let mut plat = VenxPlat::load("sm", vertex_pool).unwrap();
 
-    let mut plat = VenxPlat::new(8, 5, 6, vertex_pool);
+    // let mut plat = VenxPlat::new(8, 5, 6, vertex_pool);
     block_on(async {
+        // dbg!("Set voxel");
+        plat.set_voxel(0, (0, 0, 0).into(), 2).await;
         plat.set_voxel(0, (5, 5, 5).into(), 2).await;
-        plat.set_voxel(0, (9, 5, 5).into(), 2).await;
         plat.set_voxel(0, (1, 5, 5).into(), 2).await;
         plat.set_voxel(0, (4, 5, 5).into(), 2).await;
     });
 
-    dbg!(plat.get_voxel((5, 5, 5).into()));
+    // dbg!(plat.get_voxel((5, 5, 5).into()));
+
+    // plat.get_normal_unchecked().borrow_raw_plat().layers[0].traverse(UVec3::ZERO, 0..=8, |p| {
+    //     dbg!("Just something :/");
+    //     if p.level == 0 {
+    //         dbg!(p.position);
+    //     }
+    // });
+
+    // panic!();
     commands.spawn((
         meshes.add(sm_bevy_mesh.clone()),
         SpatialBundle::INHERITED_IDENTITY,
         PlatMaterialData {
             indirect_buffer: indirect_buffer.clone(),
-            draw_calls_count: DRAW_CALLS,
+            draw_calls_count: VP_SIZE,
             vertex_buffer,
         },
         NoFrustumCulling,
@@ -344,6 +354,11 @@ impl FromWorld for CustomPipeline {
         }
     }
 }
+const ATTRIBUTE_NORMAL_CUBE: MeshVertexAttribute =
+    MeshVertexAttribute::new("Normal Cube", 988540917, VertexFormat::Uint32);
+
+const ATTRIBUTE_VOXEL_ID: MeshVertexAttribute =
+    MeshVertexAttribute::new("Voxel id", 111541117, VertexFormat::Uint32);
 
 impl SpecializedMeshPipeline for CustomPipeline {
     type Key = MeshPipelineKey;
@@ -353,8 +368,13 @@ impl SpecializedMeshPipeline for CustomPipeline {
         key: Self::Key,
         layout: &MeshVertexBufferLayout,
     ) -> Result<RenderPipelineDescriptor, SpecializedMeshPipelineError> {
-        let mut descriptor = self.mesh_pipeline.specialize(key, layout)?;
+        let vertex_layout = layout.get_layout(&[
+            Mesh::ATTRIBUTE_POSITION.at_shader_location(0),
+            // ATTRIBUTE_NORMAL_CUBE.at_shader_location(1),
+            // ATTRIBUTE_VOXEL_ID.at_shader_location(2),
+        ])?;
 
+        let mut descriptor = self.mesh_pipeline.specialize(key, layout)?;
         // meshes typically live in bind group 2. because we are using bindgroup 1
         // we need to add MESH_BINDGROUP_1 shader def so that the bindings are correctly
         // linked in the shader
@@ -363,7 +383,9 @@ impl SpecializedMeshPipeline for CustomPipeline {
             .shader_defs
             .push("MESH_BINDGROUP_1".into());
 
+        descriptor.vertex.buffers = vec![vertex_layout];
         descriptor.vertex.shader = self.shader.clone();
+        descriptor.primitive.cull_mode = None;
         descriptor.fragment.as_mut().unwrap().shader = self.shader.clone();
         Ok(descriptor)
     }
