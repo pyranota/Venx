@@ -39,6 +39,7 @@ Core crate can be compiled to compute shader and can run on gpu and cpu.
 
 ### Benefits
 - Can be rendered with path-tracing for high-end computers and raster for low-end.
+- Can run on CPU and GPU.
 - No need to (de)compress data when loading world from/to hard drive.
 - No need to load chunks and meshes for physics. You can traverse entire world and do queries even if it has no mesh/chunks loaded.
 - Nice and idiomatic implementation of Level of Details
